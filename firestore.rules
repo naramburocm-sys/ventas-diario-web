@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn()  { return request.auth != null && request.auth.token.email_verified == true; }
+    function myEmail()   { return request.auth.token.email.lower(); }
+    function myDoc()     { return /databases/$(database)/documents/users/$(myEmail()); }
+    function isMember()  { return signedIn() && exists(myDoc()); }
+    function isAdmin()   { return isMember() && get(myDoc()).data.role == 'admin'; }
+
+    // Lista de personas con acceso. Documento = correo en minúsculas.
+    match /users/{email} {
+      allow read:   if signedIn() && (email == myEmail() || isAdmin());
+      // el administrador solo agrega/quita lectores ('viewer') y vendedores ('seller'); el rol admin se crea a mano en la consola
+      allow create: if isAdmin() && request.resource.data.role in ['viewer','seller'];
+      allow update: if isAdmin() && resource.data.role in ['viewer','seller'] && request.resource.data.role in ['viewer','seller'];
+      allow delete: if isAdmin() && resource.data.role in ['viewer','seller'];
+    }
+
+    // Datos de la app: leen administrador y lectores; solo el administrador escribe
+    match /app/{doc} {
+      allow read:  if isMember();
+      allow write: if isAdmin();
+    }
+
+    match /{path=**} { allow read, write: if false; }
+  }
+}
