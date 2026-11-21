@@ -6,7 +6,8 @@
 <title>Control de ventas</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -20,6 +21,7 @@ header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .logo svg{width:26px;height:26px}
 header h1{font-size:18px;margin:0;font-weight:800;line-height:1.1}
 header p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.navlink{margin-left:auto;text-decoration:none;font-size:12px;font-weight:800;padding:7px 12px;border-radius:12px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .hi{font-size:26px;font-weight:800;margin:0 0 2px}
 .sub{color:var(--mute);margin:0 0 16px;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -67,28 +69,22 @@ input:focus{outline:2px solid var(--or);outline-offset:1px}
 .dd.on .bd{background:var(--ink);color:#fff}
 .di{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px}.di b{font-size:16px;color:var(--ink)}
 .dr{text-align:right;display:flex;flex-direction:column;font-size:12px;font-weight:700}.dr b{font-size:17px;color:var(--ink)}
-#lock{position:fixed;inset:0;z-index:100;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
-#lkF{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
-#lock h2{margin:0;font-size:22px}#lock p{max-width:340px;color:var(--mute);margin:0;font-size:14px}
-.app,nav{visibility:hidden}body.in .app,body.in nav{visibility:visible}
 select{width:100%;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font:inherit;font-size:12px;font-weight:700;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:6px 10px;cursor:pointer}
 nav{position:fixed;left:0;right:0;bottom:0;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:8px}
 nav button{flex:1;max-width:170px;font:inherit;font-size:12px;font-weight:700;background:none;border:0;color:var(--mute);padding:6px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:22px;height:22px}
 nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
-button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<div id="lock"><h2 id="lkT">Verificando acceso…</h2><p id="lkP">Un momento, por favor.</p>
-  <div id="lkF" hidden><input id="lkE" type="email" placeholder="tu@correo.com" autocomplete="email" aria-label="Correo"><button class="btn" id="lkS">Enviar enlace de acceso</button></div>
-  <button class="btn g" id="lkB" hidden>Cerrar sesión</button></div>
 <div class="app">
 <header>
   <div class="logo" id="logo"></div>
-  <div><h1 id="cname">Mi Empresa</h1><p id="date"></p></div><span class="pill" id="ro" hidden style="margin-left:auto">Solo lectura</span><button class="btn g" id="out" hidden style="padding:6px 12px;font-size:12px">Salir</button>
+  <div><h1 id="cname">Mi Empresa</h1><p id="date"></p></div>
+  <a class="navlink" href="terminal.html">Mi ruta</a>
 </header>
 
 <main id="v-res">
@@ -171,9 +167,7 @@ button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 
 <main id="v-dat" hidden>
   <p class="hi">Datos</p>
-  <p class="sub">Carga tus archivos; se guardan en la nube y los ven las personas con acceso.</p>
-  <h2 style="margin-top:0">Acceso</h2>
-  <div class="card" id="acc" style="margin-bottom:6px"></div>
+  <p class="sub">Carga tus archivos; se guardan en la nube y se sincronizan con las vistas.</p>
   <div class="card">
     <label for="fVen">Venta diaria (.xls / .xlsx, hoja "VENTAS"; puedes elegir varios)</label>
     <input id="fVen" type="file" accept=".xls,.xlsx" multiple>
@@ -211,13 +205,13 @@ button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 var KEY='ventas-app-v2';
 var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 var AB=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 var R9={'1':.109,'4':.15,'5':.109,'6':.154,'7':.142,'10':.15,'11':.11,'13':.076};
 var DEF={name:'Mi Empresa',user:'equipo',logo:'',
  metas:{'2026-10':{t:18362,r:{'1':.095088,'4':.138275,'5':.104945,'6':.141978,'7':.141978,'10':.166649,'11':.103692,'13':.107396}},'2026-11':{t:17232,r:R9},'2026-12':{t:19404,r:R9}},
  sales:{'2026-11-17':{'1':70,'4':108,'5':91,'6':88,'7':71,'10':142,'11':61,'13':0,'14':13,'15':0,'OXXO':0,'KIOSKO':0}},
  sku:{'2026-11-17':{t355:80,t600:321,t2l:173,yau:47,titan:23,tot:644,r:{"1":{"t355":15,"t600":43,"t2l":5,"yau":3,"titan":4,"tot":70},"4":{"t355":9,"t600":32,"t2l":49,"yau":18,"titan":0,"tot":108},"5":{"t355":5,"t600":52,"t2l":12,"yau":20,"titan":2,"tot":91},"6":{"t355":20,"t600":47,"t2l":20,"yau":0,"titan":1,"tot":88},"7":{"t355":5,"t600":45,"t2l":19,"yau":0,"titan":2,"tot":71},"10":{"t355":9,"t600":65,"t2l":56,"yau":5,"titan":7,"tot":142},"11":{"t355":13,"t600":32,"t2l":11,"yau":0,"titan":5,"tot":61},"13":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"14":{"t355":4,"t600":5,"t2l":1,"yau":1,"titan":2,"tot":13},"15":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"OXXO":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"KIOSKO":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0}}}}};
-/* ===== CONFIGURACIÓN DE FIREBASE (ver README.md) ===== */
-var FB=null,AU=null,ADMIN=false,wt=null,unlocked=false,SESSION={email:'',role:''};
+var FB=null,ADMIN=true,wt=null;
 var S={name:'Mi Empresa',user:'equipo',logo:'',metas:{},sales:{},sku:{},off:[]};
 function flush(){if(!FB||!ADMIN)return;
   Promise.all([FB.doc('app/config').set({name:S.name,user:S.user,logo:S.logo,metas:S.metas,off:S.off}),FB.doc('app/sales').set({sales:S.sales}),FB.doc('app/sku').set({sku:S.sku})])
@@ -254,7 +248,6 @@ function render(){
   $('kProB').style.width=Math.min(pp,100)+'%';
   $('kProR').textContent=wr>0?fm(Math.max(mt.t-mes,0)/wr):'–';
   $('kProS').innerHTML='Meta '+fm(mt.t)+' · día hábil '+we+' de '+wt+' · '+(pro>=mt.t?'superarías la meta por <b class="ok">'+fm(pro-mt.t)+'</b>':'te faltarían <b class="bad">'+fm(mt.t-pro)+'</b>');
-  // semana viernes a jueves; domingo descanso; meta = meta mensual de ruta / días laborables del mes × 6 días
   var dow=(now.getDay()+2)%7,rv={},rm={},wk=0,mon=new Date(Y,M,d-dow),sun=new Date(Y,M,d-dow+6);
   routes.forEach(function(r){rv[r]=0;rm[r]=0});var ex=0,wkr=0;WK={days:[],mon:mon,sun:sun};
   for(var i=0;i<7;i++){var t=new Date(Y,M,d-dow+i);if(t.getDay()===0)continue;
@@ -268,7 +261,6 @@ function render(){
   $('kSemD').textContent=fm(wk>0?sem/wk:0);
   if(rrV==='m'){rv={};rm={};sem=0;gt=0;ex=0;wkr=wr;routes.forEach(function(r){rv[r]=0;rm[r]=(mt.r[r]||0)*mt.t;keys.forEach(function(k){if(k.slice(0,7)===mk)rv[r]+=+S.sales[k][r]||0});sem+=rv[r];gt+=rm[r]})}
   var mm=rrV==='m';$('rtT').textContent=mm?'Venta mensual por ruta':'Venta semanal por ruta';$('rtT2').textContent=mm?'Cumplimiento mensual por ruta':'Cumplimiento por ruta';$('rtL').textContent=mm?'Meta mensual':'Meta semanal';$('rM').className=mm?'btn':'btn g';$('rS').className=mm?'btn g':'btn';
-  // gráfica
   var W=400,H=230,L=44,B=34,T=14,n=routes.length||1;
   var mx=Math.max.apply(null,routes.map(function(r){return Math.max(rv[r],rm[r])}).concat([1]))*1.15;
   var ph=H-B-T,bw=Math.min(40,(W-L)/n*.5),g='';
@@ -413,9 +405,8 @@ function rtOpen(){rtRender();$('rtI').value=RT?rtName(RT):'';$('rtE').textConten
 $('rtC').onclick=function(e){var b=e.target.closest('button');if(!b)return;RT=b.dataset.r;$('rtI').value=rtName(RT);$('rtE').textContent='';rtRender()};
 $('rtI').oninput=function(){var v=this.value,r=rtParse(v);if(!v.trim()){$('rtE').textContent='';return}if(r&&rtRoutes().indexOf(r)>=0){RT=r;$('rtE').textContent='';rtRender()}else $('rtE').textContent='No encontré esa ruta.'};
 $('rtBody').onclick=function(e){var b=e.target.closest('[data-v]');if(!b)return;rtV=b.dataset.v;rtRender()};
-function tab(a){if(a===2&&!ADMIN)a=1;$('v-res').hidden=a!==1;$('v-rt').hidden=a!==4;$('v-cmp').hidden=a!==3;$('v-dat').hidden=a!==2;[1,2,3,4].forEach(function(i){$('t'+i).setAttribute('aria-selected',a===i)});if(a===3)cmpRender();if(a===4)rtOpen();window.scrollTo(0,0)}
+function tab(a){$('v-res').hidden=a!==1;$('v-rt').hidden=a!==4;$('v-cmp').hidden=a!==3;$('v-dat').hidden=a!==2;[1,2,3,4].forEach(function(i){$('t'+i).setAttribute('aria-selected',a===i)});if(a===3)cmpRender();if(a===4)rtOpen();window.scrollTo(0,0)}
 $('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2)};$('t3').onclick=function(){tab(3)};$('t4').onclick=function(){tab(4)};
-var DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 function hideSheet(){$('sheet').hidden=true;document.body.style.overflow=''}
 function showRoute(r){
   var n=WK.days.length;if(!n)return;
@@ -550,65 +541,33 @@ var cl=function(o){return JSON.parse(JSON.stringify(o))};
 function applyCfg(d){if(!d)return;S.name=d.name||S.name;S.user=d.user||S.user;S.logo=d.logo||'';S.metas=cl(d.metas||{});S.off=cl(d.off||[])}
 function applySales(d){S.sales=d?cl(d.sales||{}):{}}
 function applySku(d){S.sku=d?cl(d.sku||{}):{}}
-function showLogin(t,p,nof){document.body.classList.remove('in');$('lock').hidden=false;$('lkT').textContent=t||'Control de ventas';$('lkP').textContent=p||'Inicia sesión con tu correo. Te enviaremos un enlace de acceso.';$('lkF').hidden=!!nof;$('lkB').hidden=true}
-function noAccess(em){showLogin('Sin acceso','El correo '+em+' no tiene acceso a esta aplicación. Pide al administrador que lo agregue.',true);$('lkB').hidden=false}
-function signOut(){(AU?AU.signOut():Promise.resolve()).then(function(){try{localStorage.removeItem('fbEmail')}catch(e){}location.reload()})}
-$('lkB').onclick=signOut;$('out').onclick=signOut;
-$('lkS').onclick=async function(){var e=$('lkE').value.trim().toLowerCase();
-  if(!/^\S+@\S+\.\S+$/.test(e)){$('lkP').textContent='Escribe un correo válido.';return}
-  $('lkS').disabled=true;
-  try{await AU.sendSignInLinkToEmail(e,{url:location.origin+location.pathname,handleCodeInApp:true});
-    try{localStorage.setItem('fbEmail',e)}catch(x){}
-    $('lkP').textContent='Listo. Revisa tu correo ('+e+') y abre el enlace en este mismo dispositivo para entrar.'}
-  catch(x){$('lkP').textContent='No se pudo enviar el enlace: '+(x&&x.message||'error')}
-  $('lkS').disabled=false};
 function seed(){var L=null;try{L=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   var B=(L&&L.sales&&L.metas)?L:cl(DEF);S.name=B.name||S.name;S.user=B.user||S.user;S.logo=B.logo||'';S.metas=B.metas||{};S.sales=B.sales||{};S.sku=B.sku||cl(DEF.sku);S.off=B.off||[];flush()}
-/* administración de accesos (solo administrador) */
-function fillAcc(){var a=$('acc');
-  a.innerHTML='<div class="li"><span>Sesión</span><b id="aEm"></b></div><div class="li"><span>Rol</span><b>Administrador</b></div><div class="lbl" style="margin-top:12px">Personas con acceso</div><div id="uList"></div><label for="uRole">Tipo de acceso</label><select id="uRole"><option value="viewer">Consulta (todas las pantallas)</option><option value="seller">Vendedor (solo terminal de ruta)</option></select><label for="uNew">Agregar correo</label><div style="display:flex;gap:8px"><input id="uNew" type="email" placeholder="correo@ejemplo.com"><button class="btn" id="uAdd">Agregar</button></div><div class="small" id="uMsg" role="status"></div>';
-  $('aEm').textContent=SESSION.email;
-  $('uAdd').onclick=async function(){var e=$('uNew').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){$('uMsg').textContent='Correo no válido.';return}
-    try{await FB.doc('users/'+e).set({role:$('uRole').value});$('uMsg').textContent='Acceso otorgado a '+e+'.';$('uNew').value=''}catch(x){$('uMsg').textContent='No se pudo agregar: '+(x&&x.message||'error')}loadUsers()};
-  $('uList').onclick=async function(ev){var b=ev.target.closest('button');if(!b)return;
-    try{await FB.doc('users/'+b.dataset.e).delete();$('uMsg').textContent='Acceso retirado a '+b.dataset.e+'.'}catch(x){$('uMsg').textContent='No se pudo quitar: '+(x&&x.message||'error')}loadUsers()};
-  loadUsers()}
-async function loadUsers(){var L=$('uList');L.innerHTML='';
-  try{var r=await FB.collection('users').get();var us=[];r.forEach(function(d){var ro=d.data().role||'';if(ro!=='admin')us.push({e:d.id,r:ro})});us.sort(function(x,y){return x.e<y.e?-1:1});
-    us.forEach(function(x){var d=document.createElement('div'),a=document.createElement('span'),b=document.createElement('button');d.className='li';a.textContent=x.e+' · '+(x.r==='seller'?'Vendedor':'Consulta');b.className='btn g';b.style.padding='4px 10px';b.textContent='Quitar';b.dataset.e=x.e;d.appendChild(a);d.appendChild(b);L.appendChild(d)});
-    if(!us.length){var x=document.createElement('div');x.className='small';x.textContent='Aún no has dado acceso a nadie.';L.appendChild(x)}}
-  catch(x){L.textContent='No se pudo cargar la lista.'}}
-function unlock(){unlocked=true;document.body.classList.add('in');$('lock').hidden=true;$('t2').hidden=!ADMIN;$('ro').hidden=ADMIN;$('out').hidden=false;if(ADMIN)fillAcc();lists();render()}
+
 async function boot(){
+  lists();
+  render();
+  if(!window.firebase||typeof FIREBASE_CONFIG==='undefined'||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return;
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  FB=firebase.firestore();
+  var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
   try{
-    if(!window.firebase||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return showLogin('Falta configurar Firebase','Edita FIREBASE_CONFIG en index.html (ver README.md).',true);
-    firebase.initializeApp(FIREBASE_CONFIG);AU=firebase.auth();FB=firebase.firestore();
-    if(AU.isSignInWithEmailLink(location.href)){
-      var e0=null;try{e0=localStorage.getItem('fbEmail')}catch(x){}
-      if(!e0)e0=(prompt('Escribe tu correo para confirmar el acceso:')||'').trim().toLowerCase();
-      try{await AU.signInWithEmailLink(e0,location.href);try{localStorage.removeItem('fbEmail')}catch(x){}history.replaceState(null,'',location.pathname)}
-      catch(x){return showLogin('Enlace no válido','El enlace expiró, ya se usó o el correo no coincide. Pide uno nuevo.')}
-    }
-    var us=await new Promise(function(res){var off=AU.onAuthStateChanged(function(u){off();res(u)})});
-    if(!us)return showLogin();
-    var em=(us.email||'').toLowerCase(),me;
-    try{me=await FB.doc('users/'+em).get()}catch(x){return noAccess(em)}
-    if(!me.exists)return noAccess(em);
-    if(me.data().role==='seller'){location.replace('terminal.html');return}
-    ADMIN=me.data().role==='admin';SESSION={email:em,role:me.data().role};
-    var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
-    if(ADMIN){
-      var sn=await Promise.all(refs.map(function(r){return r.get()}));
-      if(!sn[0].exists&&!sn[1].exists&&!sn[2].exists)seed();
-      else{applyCfg(sn[0].exists?sn[0].data():null);applySales(sn[1].exists?sn[1].data():null);applySku(sn[2].exists?sn[2].data():null)}
-      unlock()
+    var sn=await Promise.all(refs.map(function(r){return r.get()}));
+    if(!sn[0].exists&&!sn[1].exists&&!sn[2].exists){
+      seed();
     }else{
-      var er=function(){if(!unlocked)showLogin('No se pudo cargar','No tienes acceso a los datos o hubo un problema de conexión.',true)};
-      refs[0].onSnapshot(function(x){applyCfg(x.exists?x.data():null);if(unlocked){lists();render()}else unlock()},er);
-      refs[1].onSnapshot(function(x){applySales(x.exists?x.data():null);if(unlocked)render()},er);
-      refs[2].onSnapshot(function(x){applySku(x.exists?x.data():null);if(unlocked)render()},er)
+      applyCfg(sn[0].exists?sn[0].data():null);
+      applySales(sn[1].exists?sn[1].data():null);
+      applySku(sn[2].exists?sn[2].data():null);
+      lists();
+      render();
     }
-  }catch(e){showLogin('No se pudo iniciar','Ocurrió un error al conectar. Revisa tu conexión e intenta de nuevo.',true)}
+  }catch(e){
+    var m=$('msg');if(m){m.textContent='Aviso de conexión Firestore: '+(e&&e.message||'revisa reglas o red');m.className='bad'}
+  }
+  refs[0].onSnapshot(function(x){if(x.exists){applyCfg(x.data());lists();render()}});
+  refs[1].onSnapshot(function(x){if(x.exists){applySales(x.data());lists();render()}});
+  refs[2].onSnapshot(function(x){if(x.exists){applySku(x.data());render()}});
 }
 boot();
 </script>
