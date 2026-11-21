@@ -6,7 +6,9 @@
 <title>Mi ruta</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
 <style>
 :root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -20,6 +22,7 @@ header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .logo svg{width:26px;height:26px}
 header h1{font-size:18px;margin:0;font-weight:800;line-height:1.1}
 header p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.navlink{margin-left:auto;text-decoration:none;font-size:12px;font-weight:800;padding:7px 12px;border-radius:12px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .hi{font-size:26px;font-weight:800;margin:0 0 2px}
 .sub{color:var(--mute);margin:0 0 16px;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -28,66 +31,28 @@ header p{margin:2px 0 0;color:var(--mute);font-size:13px}
 .lbl{font-size:13px;color:var(--mute);font-weight:600}
 .big{font-size:23px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
 .small{font-size:12px;color:var(--mute);margin-top:4px}
-.pill{display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--ink)}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
 .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}.foot b{font-size:17px}
-.bar{height:9px;border-radius:9px;background:var(--soft);margin-top:10px;overflow:hidden}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--or2),var(--or));border-radius:9px}
 h2{font-size:17px;margin:22px 0 10px;font-weight:800}
 .chart svg{width:100%;height:auto;display:block}
 .legend{display:flex;gap:16px;font-size:12px;color:var(--mute);margin-top:6px}
 .legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--or);margin-right:6px;vertical-align:-1px}
 .legend span.m:before{background:var(--ink);height:3px;width:14px;border-radius:2px;vertical-align:3px}
-.tw{overflow-x:auto;padding:12px 8px}
-table{width:100%;border-collapse:collapse;font-size:11.5px}
-th{font-size:10.5px;color:var(--mute);text-align:right;padding:6px 3px;font-weight:600;white-space:nowrap}
-td{padding:9px 3px;text-align:right;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
-th:first-child,td:first-child{text-align:left;font-weight:800}
-tfoot td{font-weight:800}
 label{display:block;font-size:12px;color:var(--mute);font-weight:600;margin:12px 0 5px}
 input{width:100%;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 input:focus{outline:2px solid var(--or);outline-offset:1px}
 .btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 16px;background:var(--or);color:#14213d;cursor:pointer}
 .btn.g{background:var(--soft);color:var(--ink)}
-#msg{font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
-.li{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:1px solid var(--line)}
-#sheet{position:fixed;inset:0;z-index:50}
-.shbg{position:absolute;inset:0;background:rgba(20,33,61,.45)}
-.sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:90vh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(20,33,61,.25)}
-.grab{width:44px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
-.shx{position:absolute;top:18px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);font-size:22px;cursor:pointer}
-.wk{font-size:12px;font-weight:800;color:#8a6300;text-transform:uppercase;padding-right:48px}
-.rt{font-size:26px;font-weight:800;margin:2px 0 12px}.rt small{font-size:16px;margin-left:8px}
-.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--line);border-radius:18px;padding:12px;background:var(--soft)}
-.sum span{display:block;font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase}.sum b{font-size:18px}
-.dh{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;margin:16px 0 4px}
-.dd{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px dashed var(--line);border-radius:18px;margin-bottom:10px;color:var(--mute)}
-.dd.on{border:1px solid var(--line);box-shadow:var(--sh);color:var(--ink)}
-.bd{width:54px;height:54px;border-radius:14px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:800;line-height:1.1;flex:none}.bd b{font-size:20px}
-.dd.on .bd{background:var(--ink);color:#fff}
-.di{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px}.di b{font-size:16px;color:var(--ink)}
-.dr{text-align:right;display:flex;flex-direction:column;font-size:12px;font-weight:700}.dr b{font-size:17px;color:var(--ink)}
-#lock{position:fixed;inset:0;z-index:100;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
-#lkF{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
-#lock h2{margin:0;font-size:22px}#lock p{max-width:340px;color:var(--mute);margin:0;font-size:14px}
-.app,nav{visibility:hidden}body.in .app,body.in nav{visibility:visible}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font:inherit;font-size:12px;font-weight:700;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:6px 10px;cursor:pointer}
-nav{position:fixed;left:0;right:0;bottom:0;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:8px}
-nav button{flex:1;max-width:170px;font:inherit;font-size:12px;font-weight:700;background:none;border:0;color:var(--mute);padding:6px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
-nav button svg{width:22px;height:22px}
-nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
-button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<div id="lock"><h2 id="lkT">Verificando acceso…</h2><p id="lkP">Un momento, por favor.</p>
-  <div id="lkF" hidden><input id="lkE" type="email" placeholder="tu@correo.com" autocomplete="email" aria-label="Correo"><button class="btn" id="lkS">Enviar enlace de acceso</button></div>
-  <button class="btn g" id="lkB" hidden>Cerrar sesión</button></div>
 <div class="app">
 <header>
   <div class="logo" id="logo"></div>
-  <div><h1 id="cname">Mi Empresa</h1><p id="date"></p></div><button class="btn g" id="out" hidden style="margin-left:auto;padding:6px 12px;font-size:12px">Salir</button>
+  <div><h1 id="cname">Mi Empresa</h1><p id="date"></p></div>
+  <a class="navlink" href="index.html">Panel</a>
 </header>
 <p class="hi">Hola 👋</p>
 <p class="sub">Escribe tu ruta para ver tu información · cifras en cajas</p>
@@ -102,7 +67,7 @@ button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 var AB=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 var SKU=[['t355','Tonicol 355 ml'],['t600','Tonicol 600 ml'],['t2l','Tonicol 2 L'],['yau','Yauco 1/2 L'],['titan','Familia Titan']];
-var S={name:'Mi Empresa',user:'',logo:'',metas:{},sales:{},sku:{},off:[]},FB=null,AU=null,TV='m',RT='',unlocked=false;
+var S={name:'Mi Empresa',user:'',logo:'',metas:{},sales:{},sku:{},off:[]},FB=null,TV='m',RT='';
 try{RT=localStorage.getItem('termRoute')||''}catch(e){}
 var $=function(i){return document.getElementById(i)};
 var pad=function(n){return('0'+n).slice(-2)};
@@ -117,8 +82,6 @@ var LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="#14213d" stroke-width="2.
 function applyCfg(d){if(!d)return;S.name=d.name||S.name;S.logo=d.logo||'';S.metas=cl(d.metas||{});S.off=cl(d.off||[])}
 function applySales(d){S.sales=d?cl(d.sales||{}):{}}
 function applySku(d){S.sku=d?cl(d.sku||{}):{}}
-function showLogin(t,p,nof){document.body.classList.remove('in');$('lock').hidden=false;$('lkT').textContent=t||'Mi ruta';$('lkP').textContent=p||'Inicia sesión con tu correo. Te enviaremos un enlace de acceso.';$('lkF').hidden=!!nof;$('lkB').hidden=!nof}
-function noAccess(em){showLogin('Sin acceso','El correo '+em+' no tiene acceso. Pide al administrador que te lo autorice.',true)}
 
 function routes(){var o={};Object.keys(S.sales).forEach(function(k){for(var r in S.sales[k])o[r]=1});Object.keys(S.metas).forEach(function(k){for(var r in S.metas[k].r)o[r]=1});
   var n=function(x){var v=parseInt(x,10);return isNaN(v)?999:v};return Object.keys(o).sort(function(a,b){return n(a)-n(b)||a.localeCompare(b)})}
@@ -185,37 +148,17 @@ function render(){
 $('tB').onclick=function(e){var b=e.target.closest('[data-v]');if(!b)return;TV=b.dataset.v;render()};
 $('tI').oninput=function(){var v=this.value,r=parseR(v);if(!v.trim()){$('tE').textContent='';return}
   if(r&&routes().indexOf(r)>=0){RT=r;try{localStorage.setItem('termRoute',r)}catch(e){}$('tE').textContent='';render()}else $('tE').textContent='No encontré esa ruta.'};
-function signOut(){(AU?AU.signOut():Promise.resolve()).then(function(){try{localStorage.removeItem('fbEmail')}catch(e){}location.reload()})}
-$('lkB').onclick=signOut;$('out').onclick=signOut;
-$('lkS').onclick=async function(){var e=$('lkE').value.trim().toLowerCase();
-  if(!/^\S+@\S+\.\S+$/.test(e)){$('lkP').textContent='Escribe un correo válido.';return}
-  $('lkS').disabled=true;
-  try{await AU.sendSignInLinkToEmail(e,{url:location.origin+location.pathname,handleCodeInApp:true});try{localStorage.setItem('fbEmail',e)}catch(x){}
-    $('lkP').textContent='Listo. Revisa tu correo ('+e+') y abre el enlace en este mismo dispositivo para entrar.'}
-  catch(x){$('lkP').textContent='No se pudo enviar el enlace: '+(x&&x.message||'error')}
-  $('lkS').disabled=false};
-function unlock(){unlocked=true;document.body.classList.add('in');$('lock').hidden=true;$('out').hidden=false;$('tI').value=RT?rName(RT):'';render()}
-async function boot(){
-  try{
-    if(!window.firebase||typeof FIREBASE_CONFIG==='undefined'||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return showLogin('Falta configurar Firebase','Edita config.js (ver README.md).',true);
-    firebase.initializeApp(FIREBASE_CONFIG);AU=firebase.auth();FB=firebase.firestore();
-    if(AU.isSignInWithEmailLink(location.href)){
-      var e0=null;try{e0=localStorage.getItem('fbEmail')}catch(x){}
-      if(!e0)e0=(prompt('Escribe tu correo para confirmar el acceso:')||'').trim().toLowerCase();
-      try{await AU.signInWithEmailLink(e0,location.href);try{localStorage.removeItem('fbEmail')}catch(x){}history.replaceState(null,'',location.pathname)}
-      catch(x){return showLogin('Enlace no válido','El enlace expiró, ya se usó o el correo no coincide. Pide uno nuevo.')}
-    }
-    var us=await new Promise(function(res){var off=AU.onAuthStateChanged(function(u){off();res(u)})});
-    if(!us)return showLogin();
-    var em=(us.email||'').toLowerCase(),me;
-    try{me=await FB.doc('users/'+em).get()}catch(x){return noAccess(em)}
-    if(!me.exists)return noAccess(em);
-    var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
-    var er=function(){if(!unlocked)showLogin('No se pudo cargar','No tienes acceso a los datos o hubo un problema de conexión.',true)};
-    refs[0].onSnapshot(function(x){applyCfg(x.exists?x.data():null);if(unlocked)render();else unlock()},er);
-    refs[1].onSnapshot(function(x){applySales(x.exists?x.data():null);if(unlocked)render()},er);
-    refs[2].onSnapshot(function(x){applySku(x.exists?x.data():null);if(unlocked)render()},er)
-  }catch(e){showLogin('No se pudo iniciar','Ocurrió un error al conectar. Revisa tu conexión e intenta de nuevo.',true)}
+
+function boot(){
+  $('tI').value=RT?rName(RT):'';
+  render();
+  if(!window.firebase||typeof FIREBASE_CONFIG==='undefined')return;
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  FB=firebase.firestore();
+  var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
+  refs[0].onSnapshot(function(x){applyCfg(x.exists?x.data():null);render()});
+  refs[1].onSnapshot(function(x){applySales(x.exists?x.data():null);render()});
+  refs[2].onSnapshot(function(x){applySku(x.exists?x.data():null);render()});
 }
 boot();
 </script>
