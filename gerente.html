@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de ventas · Gerencia Mazatlán</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+.app{max-width:520px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:46px;height:46px;border-radius:14px;background:#ffffff;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;box-shadow:var(--sh);flex:none}
+.logo img{width:100%;height:100%;object-fit:cover}
+.logo svg{width:26px;height:26px}
+header h1{font-size:18px;margin:0;font-weight:800;line-height:1.1}
+header p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.hi{font-size:24px;font-weight:800;margin:0 0 2px;line-height:1.2}
+.sub{color:var(--mute);margin:0 0 16px;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);border:1px solid var(--line)}
+.card.wide{grid-column:1/-1}
+.lbl{font-size:13px;color:var(--mute);font-weight:600}
+.big{font-size:23px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+.small{font-size:12px;color:var(--mute);margin-top:4px}
+.pill{display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}.foot b{font-size:17px}
+.bar{height:9px;border-radius:9px;background:var(--soft);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--or2),var(--or));border-radius:9px}
+h2{font-size:17px;margin:22px 0 10px;font-weight:800}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--mute);margin-top:6px}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--or);margin-right:6px;vertical-align:-1px}
+.legend span.m:before{background:var(--ink);height:3px;width:14px;border-radius:2px;vertical-align:3px}
+.tw{overflow-x:auto;padding:12px 8px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{font-size:10.5px;color:var(--mute);text-align:right;padding:6px 3px;font-weight:600;white-space:nowrap}
+td{padding:9px 3px;text-align:right;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;font-weight:800}
+tfoot td{font-weight:800}
+input{width:100%;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus{outline:2px solid var(--or);outline-offset:1px}
+.btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 16px;background:var(--or);color:#14213d;cursor:pointer}
+.btn.g{background:var(--soft);color:var(--ink)}
+#sheet{position:fixed;inset:0;z-index:50}
+.shbg{position:absolute;inset:0;background:rgba(20,33,61,.45)}
+.sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:90vh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(20,33,61,.25)}
+.grab{width:44px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
+.shx{position:absolute;top:18px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);font-size:22px;cursor:pointer}
+.wk{font-size:12px;font-weight:800;color:#8a6300;text-transform:uppercase;padding-right:48px}
+.rt{font-size:26px;font-weight:800;margin:2px 0 12px}.rt small{font-size:16px;margin-left:8px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--line);border-radius:18px;padding:12px;background:var(--soft)}
+.sum span{display:block;font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase}.sum b{font-size:18px}
+.dh{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;margin:16px 0 4px}
+.dd{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px dashed var(--line);border-radius:18px;margin-bottom:10px;color:var(--mute)}
+.dd.on{border:1px solid var(--line);box-shadow:var(--sh);color:var(--ink)}
+.bd{width:54px;height:54px;border-radius:14px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:800;line-height:1.1;flex:none}.bd b{font-size:20px}
+.dd.on .bd{background:var(--ink);color:#fff}
+.di{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px}.di b{font-size:16px;color:var(--ink)}
+.dr{text-align:right;display:flex;flex-direction:column;font-size:12px;font-weight:700}.dr b{font-size:17px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font:inherit;font-size:12px;font-weight:700;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:6px 10px;cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:12px}
+nav button{flex:1;max-width:210px;font:inherit;font-size:12px;font-weight:700;background:none;border:0;color:var(--mute);padding:6px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:22px;height:22px}
+nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo" id="logo"></div>
+  <div><h1 id="cname">Refrescos Tonicol</h1><p id="date"></p></div>
+</header>
+
+<main id="v-res">
+  <p class="hi">Hola Gerente Mazatlán, así van tus ventas</p>
+  <p class="sub">Cifras en cajas · CEDIS Mazatlán</p>
+  <div class="grid">
+    <div class="card">
+      <div class="lbl">Ventas del mes</div><div class="big" id="kMes">–</div>
+      <div class="foot"><div><div class="lbl">% cumpl.</div><b id="kMesS"></b></div><div style="text-align:right"><div class="lbl">Promedio diario</div><b id="kMesD"></b></div></div>
+    </div>
+    <div class="card">
+      <div class="lbl" id="kSemL">Venta de la semana</div><div class="big" id="kSem">–</div>
+      <div class="foot"><div><div class="lbl">% cumpl.</div><b id="kSemS"></b></div><div style="text-align:right"><div class="lbl">Promedio diario</div><b id="kSemD"></b></div></div>
+    </div>
+    <div class="card wide">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div><div class="lbl">Proyección mensual</div><div class="big" id="kPro">–</div></div>
+        <span class="pill" id="kProP"></span>
+      </div>
+      <div class="bar"><i id="kProB" style="width:0"></i></div>
+      <div class="foot"><div class="small" id="kProS" style="margin:0;flex:1;padding-right:10px"></div><div style="text-align:right;flex:none"><div class="lbl">Promedio requerido</div><b class="bad" id="kProR"></b></div></div>
+    </div>
+  </div>
+
+  <h2 id="rtT">Venta semanal por ruta</h2>
+  <div class="card chart">
+    <div style="display:flex;gap:8px;margin-bottom:6px"><button type="button" class="btn g" id="rM" style="padding:8px 14px">Mes</button><button type="button" class="btn" id="rS" style="padding:8px 14px">Semana</button></div>
+    <svg id="chart" viewBox="0 0 400 230" role="img" aria-label="Venta semanal por ruta contra meta"></svg>
+    <div class="legend"><span>Venta</span><span class="m" id="rtL">Meta semanal</span></div>
+  </div>
+
+  <h2 id="rtT2">Cumplimiento por ruta</h2>
+  <div class="card tw"><table>
+    <thead><tr><th>Ruta</th><th>Venta</th><th>Meta</th><th>% cumpl.</th><th>Dif.</th><th>Req./día</th></tr></thead>
+    <tbody id="tb"></tbody><tfoot id="tf"></tfoot>
+  </table></div>
+  <p class="small" id="note"></p>
+  <h2>Venta por producto</h2>
+  <div class="card">
+    <div style="display:flex;gap:8px;margin-bottom:6px"><button type="button" class="btn" id="sM" style="padding:8px 14px">Mes</button><button type="button" class="btn g" id="sS" style="padding:8px 14px">Semana</button></div>
+    <div class="lbl" id="skuT"></div>
+    <svg id="skuC" viewBox="0 0 400 240" style="width:100%;height:auto;display:block" role="img" aria-label="Venta por producto y participación en la venta total"></svg>
+    <p class="small" id="skuN"></p>
+  </div>
+</main>
+
+<main id="v-cmp" hidden>
+  <p class="hi">Comparar periodos</p>
+  <p class="sub">Venta acumulada por ruta (cajas). Diferencia = Periodo A − Periodo B.</p>
+  <div class="card">
+    <div class="lbl">Periodo A</div><div id="cA" class="chips"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="dA" type="date" aria-label="Agregar día al periodo A"><button type="button" class="btn g" id="aA" style="white-space:nowrap">Agregar día</button></div>
+    <div class="lbl" style="margin-top:14px">Periodo B</div><div id="cB" class="chips"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="dB" type="date" aria-label="Agregar día al periodo B"><button type="button" class="btn g" id="aB" style="white-space:nowrap">Agregar día</button></div>
+  </div>
+  <div class="grid" style="margin-top:12px">
+    <div class="card"><div class="lbl" id="lTA">Total A</div><div class="big" id="vTA">–</div></div>
+    <div class="card"><div class="lbl" id="lTB">Total B</div><div class="big" id="vTB">–</div></div>
+    <div class="card wide"><div class="lbl">Diferencia total (A − B)</div><div class="big" id="vTD">–</div></div>
+  </div>
+  <h2>Diferencia por ruta</h2>
+  <div class="card tw"><table>
+    <thead><tr><th>Ruta</th><th>Periodo A</th><th>Periodo B</th><th>Diferencia</th></tr></thead>
+    <tbody id="cmpB"></tbody><tfoot id="cmpF"></tfoot>
+  </table></div>
+  <p class="small" id="cmpN"></p>
+</main>
+</div>
+
+<div id="sheet" hidden><div class="shbg" id="shBg"></div><div class="sh" role="dialog" aria-modal="true" aria-label="Detalle semanal de la ruta"><div class="grab"></div><button type="button" class="shx" id="shX" aria-label="Cerrar">×</button><div id="shBody"></div></div></div>
+<nav>
+  <button id="t1" type="button" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Resumen</button>
+  <button id="t3" type="button" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12M15 3l4 4-4 4M17 17H5M9 13l-4 4 4 4"/></svg>Comparar</button>
+</nav>
+
+<script>
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAsmfS7LGI65Pi5DF2BlPutlohqT9FP7vc",
+  authDomain: "db-ventas-73ba6.firebaseapp.com",
+  projectId: "db-ventas-73ba6",
+  storageBucket: "db-ventas-73ba6.firebasestorage.app",
+  messagingSenderId: "768024116078",
+  appId: "1:768024116078:web:0a0948c0fd0bfb09699f7f",
+  measurementId: "G-QCKWXRHJXK"
+};
+var KEY='ventas-app-v2';
+var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var AB=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var R9={'1':.109,'4':.15,'5':.109,'6':.154,'7':.142,'10':.15,'11':.11,'13':.076};
+var DEF={name:'Refrescos Tonicol',user:'Gerente Mazatlán',logo:'',
+ metas:{'2026-10':{t:18362,r:{'1':.095088,'4':.138275,'5':.104945,'6':.141978,'7':.141978,'10':.166649,'11':.103692,'13':.107396}},'2026-11':{t:17232,r:R9},'2026-12':{t:19404,r:R9}},
+ sales:{'2026-11-17':{'1':70,'4':108,'5':91,'6':88,'7':71,'10':142,'11':61,'13':0,'14':13,'15':0,'OXXO':0,'KIOSKO':0}},
+ sku:{'2026-11-17':{t355:80,t600:321,t2l:173,yau:47,titan:23,tot:644,r:{"1":{"t355":15,"t600":43,"t2l":5,"yau":3,"titan":4,"tot":70},"4":{"t355":9,"t600":32,"t2l":49,"yau":18,"titan":0,"tot":108},"5":{"t355":5,"t600":52,"t2l":12,"yau":20,"titan":2,"tot":91},"6":{"t355":20,"t600":47,"t2l":20,"yau":0,"titan":1,"tot":88},"7":{"t355":5,"t600":45,"t2l":19,"yau":0,"titan":2,"tot":71},"10":{"t355":9,"t600":65,"t2l":56,"yau":5,"titan":7,"tot":142},"11":{"t355":13,"t600":32,"t2l":11,"yau":0,"titan":5,"tot":61},"13":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"14":{"t355":4,"t600":5,"t2l":1,"yau":1,"titan":2,"tot":13},"15":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"OXXO":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"KIOSKO":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0}}}}};
+var FB=null;
+var S={name:'Refrescos Tonicol',user:'Gerente Mazatlán',logo:'',metas:{},sales:{},sku:{},off:[]};
+var cl=function(o){try{return JSON.parse(JSON.stringify(o))}catch(e){return o||{}}};
+function saveLocal(){
+  try{localStorage.setItem(KEY,JSON.stringify({name:S.name,user:S.user,logo:S.logo,metas:S.metas,sales:S.sales,sku:S.sku,off:S.off}))}catch(e){}
+}
+function applyCfg(d){if(!d)return;S.name=d.name||S.name;S.logo=d.logo||'';S.metas=cl(d.metas||{});S.off=cl(d.off||[]);saveLocal()}
+function applySales(d){S.sales=d?cl(d.sales||{}):{};saveLocal()}
+function applySku(d){S.sku=d?cl(d.sku||{}):{};saveLocal()}
+
+var $=function(i){return document.getElementById(i)};
+var pad=function(n){return('0'+n).slice(-2)};
+var fm=function(n){var v=+n||0;return Math.round(v).toLocaleString('es-MX')};
+var fd=function(n){var v=+n||0;return(v>=0?'+':'−')+fm(Math.abs(v))};
+var kd=function(t){return t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate())};
+var wd=function(t){return t.getDay()!==0&&S.off.indexOf(kd(t))===-1};
+var lab=function(y,m){var n=new Date(y,m+1,0).getDate(),c=0;for(var i=1;i<=n;i++)if(wd(new Date(y,m,i)))c++;return c};
+var WK={days:[]},rrV='s',ALL=[];
+var LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="#14213d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V11M10 19V6M16 19v-9M21 19H3"/></svg>';
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function cls(p){return p>=100?'ok':'bad'}
+
+function render(){
+  try{
+    var now=new Date(),Y=now.getFullYear(),M=now.getMonth(),d=now.getDate(),dim=new Date(Y,M+1,0).getDate(),mk=Y+'-'+pad(M+1);
+    var mt=S.metas[mk]||{t:0,r:{}},routes=Object.keys(mt.r||{}).sort(function(a,b){return(+a||0)-(+b||0)});
+    var keys=Object.keys(S.sales||{}).sort(),cut=keys.length?keys[keys.length-1]:'';
+    $('cname').textContent=S.name||'Refrescos Tonicol';
+    document.title=(S.name||'Refrescos Tonicol')+' · Gerencia Mazatlán';
+    $('logo').innerHTML=S.logo?'<img alt="Logotipo" src="'+S.logo+'">':LOGO;
+    $('date').textContent=cut?'Datos al '+(+cut.slice(8))+' '+AB[+cut.slice(5,7)-1]:'Sin ventas cargadas';
+    var EX=['14','15'].filter(function(x){return routes.indexOf(x)<0}),all=routes.concat(EX),mes=0;ALL=all;
+    keys.forEach(function(k){if(k.slice(0,7)===mk&&S.sales[k])all.forEach(function(r){mes+=+S.sales[k][r]||0})});
+    var cd=cut.slice(0,7)===mk?+cut.slice(8):0;
+    var nd=function(a,b){var c=0;for(var i=a;i<=b;i++)if(wd(new Date(Y,M,i)))c++;return c};
+    var we=nd(1,cd),wt=nd(1,dim),wr=nd(cd+1,dim);
+    var pm=mt.t?mes/mt.t*100:0,pro=we>0?mes/we*wt:0,pp=mt.t?pro/mt.t*100:0;
+    $('kMes').textContent=fm(mes);
+    $('kMesS').textContent=pm.toFixed(0)+'%';$('kMesS').className=cls(pm);
+    $('kMesD').textContent=fm(we>0?mes/we:0);
+    $('kPro').textContent=fm(pro);
+    $('kProP').textContent=pp.toFixed(0)+'% de la meta';$('kProP').className='pill '+cls(pp);
+    $('kProB').style.width=Math.min(Math.max(pp,0),100)+'%';
+    $('kProR').textContent=wr>0?fm(Math.max(mt.t-mes,0)/wr):'–';
+    $('kProS').innerHTML='Meta '+fm(mt.t)+' · día hábil '+we+' de '+wt+' · '+(pro>=mt.t?'superarías la meta por <b class="ok">'+fm(pro-mt.t)+'</b>':'te faltarían <b class="bad">'+fm(mt.t-pro)+'</b>');
+    var dow=(now.getDay()+2)%7,rv={},rm={},wk=0,mon=new Date(Y,M,d-dow),sun=new Date(Y,M,d-dow+6);
+    routes.forEach(function(r){rv[r]=0;rm[r]=0});var ex=0,wkr=0;WK={days:[],mon:mon,sun:sun};
+    for(var i=0;i<7;i++){var t=new Date(Y,M,d-dow+i);if(t.getDay()===0)continue;
+      var k=kd(t),m2=S.metas[t.getFullYear()+'-'+pad(t.getMonth()+1)],ld=lab(t.getFullYear(),t.getMonth())||1;
+      if(wd(t)){if(cut&&k<=cut)wk++;else wkr++}EX.forEach(function(x){if(S.sales[k])ex+=+S.sales[k][x]||0});
+      var de={t:t,k:k,off:!wd(t),has:!!S.sales[k],s:{},g:{}};routes.forEach(function(r){var sv=S.sales[k]?+S.sales[k][r]||0:0,gv=m2&&m2.r&&m2.r[r]?m2.t*m2.r[r]/ld:0;rv[r]+=sv;rm[r]+=gv;de.s[r]=sv;de.g[r]=gv});WK.days.push(de);}
+    var sem=ex,gt=0;routes.forEach(function(r){sem+=rv[r];gt+=rm[r]});
+    var sp=gt?sem/gt*100:0;
+    $('kSemL').textContent='Sem '+mon.getDate()+(mon.getMonth()===sun.getMonth()?'':' '+AB[mon.getMonth()])+' - '+sun.getDate()+' '+AB[sun.getMonth()];
+    $('kSem').textContent=fm(sem);$('kSemS').textContent=sp.toFixed(0)+'%';$('kSemS').className=cls(sp);
+    $('kSemD').textContent=fm(wk>0?sem/wk:0);
+    if(rrV==='m'){rv={};rm={};sem=0;gt=0;ex=0;wkr=wr;routes.forEach(function(r){rv[r]=0;rm[r]=(mt.r[r]||0)*mt.t;keys.forEach(function(k){if(k.slice(0,7)===mk&&S.sales[k])rv[r]+=+S.sales[k][r]||0});sem+=rv[r];gt+=rm[r]})}
+    var mm=rrV==='m';$('rtT').textContent=mm?'Venta mensual por ruta':'Venta semanal por ruta';$('rtT2').textContent=mm?'Cumplimiento mensual por ruta':'Cumplimiento por ruta';$('rtL').textContent=mm?'Meta mensual':'Meta semanal';$('rM').className=mm?'btn':'btn g';$('rS').className=mm?'btn g':'btn';
+    var W=400,H=230,L=44,B=34,T=14,n=routes.length||1;
+    var mx=Math.max.apply(null,routes.map(function(r){return Math.max(rv[r]||0,rm[r]||0)}).concat([1]))*1.15;
+    var ph=H-B-T,bw=Math.min(40,(W-L)/n*.5),g='';
+    for(var q=0;q<=4;q++){var y=T+ph-ph*q/4;g+='<line x1="'+L+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y+4)+'" font-size="10" text-anchor="end" fill="var(--mute)">'+fm(mx*q/4)+'</text>'}
+    routes.forEach(function(r,i){
+      var val=rv[r]||0,meta=rm[r]||0,cx=L+(W-L)/n*(i+.5),h=Math.max(val/mx*ph,0),my=T+ph-meta/mx*ph,p=meta?val/meta*100:0;
+      g+='<g data-r="'+r+'" style="cursor:pointer"><rect x="'+(cx-(W-L)/n/2)+'" y="'+T+'" width="'+((W-L)/n)+'" height="'+(H-T)+'" fill="transparent"/>';
+      g+='<rect x="'+(cx-bw/2)+'" y="'+(T+ph-h)+'" width="'+bw+'" height="'+h+'" rx="6" fill="var(--or)" opacity="'+(p>=100?1:.75)+'"/>';
+      g+='<line x1="'+(cx-bw/2-5)+'" x2="'+(cx+bw/2+5)+'" y1="'+my+'" y2="'+my+'" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>';
+      g+='<text x="'+cx+'" y="'+(H-17)+'" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">R'+r+'</text>';
+      g+='<text x="'+cx+'" y="'+(H-4)+'" font-size="10" text-anchor="middle" fill="var(--'+(p>=100?'ok':'bad')+')">'+p.toFixed(0)+'%</text></g>';
+    });
+    $('chart').innerHTML=g;
+    var tb='',rqt=0;
+    routes.forEach(function(r){var val=rv[r]||0,meta=rm[r]||0,p=meta?val/meta*100:0,df=val-meta,rq=wkr>0?Math.max(meta-val,0)/wkr:0;rqt+=rq;
+      tb+='<tr data-r="'+r+'" style="cursor:pointer"><td>Ruta '+r+'</td><td>'+fm(val)+'</td><td>'+fm(meta)+'</td><td class="'+cls(p)+'">'+p.toFixed(1)+'%</td><td class="'+(df<0?'bad':'ok')+'">'+fd(df)+'</td><td class="bad"><b>'+(wkr>0?fm(rq):'–')+'</b></td></tr>'});
+    $('tb').innerHTML=tb;
+    var ts=sem-ex,tp=gt?ts/gt*100:0,td=ts-gt;
+    $('tf').innerHTML='<tr><td>Total</td><td>'+fm(ts)+'</td><td>'+fm(gt)+'</td><td class="'+cls(tp)+'">'+tp.toFixed(1)+'%</td><td class="'+(td<0?'bad':'ok')+'">'+fd(td)+'</td><td class="bad"><b>'+(wkr>0?fm(rqt):'–')+'</b></td></tr>';
+    $('note').textContent=mt.t?'Las fichas incluyen la venta de las rutas 14 y 15 (sin meta); esta tabla muestra solo rutas con meta. Meta semanal = meta mensual de la ruta ÷ '+lab(Y,M)+' días laborables × 6 días.':'No hay metas cargadas para este mes.';
+    if(rrV==='m'&&mt.t)$('note').textContent='Meta mensual de la ruta = meta total del mes × % de participación. Las fichas incluyen la venta de las rutas 14 y 15 (sin meta); esta tabla muestra solo rutas con meta.';
+    skuChart();
+  }catch(e){}
+}
+
+var CMP={a:['2026-11-17','2026-11-18'],b:['2026-11-09','2026-11-10','2026-11-11']};
+function dl(k){var d=new Date(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8));return DN[d.getDay()].toLowerCase()+' '+d.getDate()+' '+AB[d.getMonth()].toLowerCase()}
+function cmpChips(id,key){var el=$(id);el.innerHTML='';CMP[key].forEach(function(k){var b=document.createElement('button');b.type='button';b.className='chip';b.dataset.k=k;b.textContent=dl(k)+' ✕';b.setAttribute('aria-label','Quitar '+dl(k));el.appendChild(b)})}
+function cmpSum(list){var o={},miss=[];list.forEach(function(k){if(S.sales[k]){for(var r in S.sales[k])o[r]=(o[r]||0)+(+S.sales[k][r]||0)}else miss.push(k)});return{o:o,miss:miss}}
+function cmpRender(){
+  CMP.a.sort();CMP.b.sort();cmpChips('cA','a');cmpChips('cB','b');
+  var A=cmpSum(CMP.a),B=cmpSum(CMP.b),rs={};Object.keys(A.o).concat(Object.keys(B.o)).forEach(function(r){rs[r]=1});
+  var rows=Object.keys(rs).map(function(r){var a=A.o[r]||0,b=B.o[r]||0;return{r:r,a:a,b:b,d:a-b}});
+  rows.sort(function(x,y){return y.d-x.d||(parseInt(x.r,10)||999)-(parseInt(y.r,10)||999)});
+  var ta=0,tb=0;rows.forEach(function(x){ta+=x.a;tb+=x.b});var td=ta-tb;
+  var nm=function(r){return/^\d+$/.test(r)?'Ruta '+r:r};
+  var dc=function(v){return v<0?'<b>'+fd(v)+'</b>':v===0?'0':fd(v)},dk=function(v){return v<0?'bad':v>0?'ok':''};
+  $('cmpB').innerHTML=rows.map(function(x){return '<tr><td>'+nm(x.r)+'</td><td>'+fm(x.a)+'</td><td>'+fm(x.b)+'</td><td class="'+dk(x.d)+'">'+dc(x.d)+'</td></tr>'}).join('')||'<tr><td colspan="4">Sin datos para estos días</td></tr>';
+  $('cmpF').innerHTML='<tr><td>Total</td><td>'+fm(ta)+'</td><td>'+fm(tb)+'</td><td class="'+dk(td)+'">'+dc(td)+'</td></tr>';
+  $('lTA').textContent='Total A · '+CMP.a.length+' día(s)';$('lTB').textContent='Total B · '+CMP.b.length+' día(s)';
+  $('vTA').textContent=fm(ta);$('vTB').textContent=fm(tb);$('vTD').textContent=td===0?'0':fd(td);$('vTD').className='big '+dk(td);
+  var mi=A.miss.concat(B.miss).map(dl);
+  $('cmpN').textContent=(mi.length?'Sin reporte de venta cargado: '+mi.join(', ')+' (cuentan como 0). ':'Todos los días tienen reporte cargado. ')+'Ordenado de mayor a menor diferencia; negativos en rojo. Incluye todas las rutas con venta, también 14, 15, OXXO y KIOSKO.'}
+$('cA').onclick=function(e){var b=e.target.closest('button');if(!b)return;CMP.a=CMP.a.filter(function(k){return k!==b.dataset.k});cmpRender()};
+$('cB').onclick=function(e){var b=e.target.closest('button');if(!b)return;CMP.b=CMP.b.filter(function(k){return k!==b.dataset.k});cmpRender()};
+$('aA').onclick=function(){var v=$('dA').value;if(v&&CMP.a.indexOf(v)===-1)CMP.a.push(v);$('dA').value='';cmpRender()};
+$('aB').onclick=function(){var v=$('dB').value;if(v&&CMP.b.indexOf(v)===-1)CMP.b.push(v);$('dB').value='';cmpRender()};
+
+function tab(a){$('v-res').hidden=a!==1;$('v-cmp').hidden=a!==3;[1,3].forEach(function(i){$('t'+i).setAttribute('aria-selected',a===i)});if(a===3)cmpRender();window.scrollTo(0,0)}
+$('t1').onclick=function(){tab(1)};$('t3').onclick=function(){tab(3)};
+function hideSheet(){$('sheet').hidden=true;document.body.style.overflow=''}
+function showRoute(r){
+  var n=WK.days.length;if(!n)return;
+  var vs=0,mt=0;WK.days.forEach(function(x){vs+=x.s[r]||0;mt+=x.g[r]||0});
+  var p=mt?vs/mt*100:0,df=vs-mt,ga=mt/n,mx=Math.max(ga,1);
+  WK.days.forEach(function(x){if(x.s[r]>mx)mx=x.s[r]});mx*=1.2;
+  var W=340,H=150,L=6,T=22,B=26,ph=H-T-B,cw=(W-2*L)/n,g='';
+  WK.days.forEach(function(x,i){var cx=L+cw*(i+.5),s=x.s[r]||0,h=x.has?Math.max(s/mx*ph,3):3,ok=ga>0&&s>=ga;
+    g+='<rect x="'+(cx-15)+'" y="'+(T+ph-h)+'" width="30" height="'+h+'" rx="6" fill="'+(x.has?(ok?'var(--ok)':'var(--or)'):'var(--soft)')+'"/>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-6)+'" font-size="11" font-weight="800" text-anchor="middle" fill="var(--ink)">'+(x.has?fm(s):'–')+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-8)+'" font-size="10.5" font-weight="600" text-anchor="middle" fill="var(--mute)">'+DN[x.t.getDay()]+' '+x.t.getDate()+'</text>'});
+  var gy=T+ph-ga/mx*ph;
+  g='<line x1="'+L+'" x2="'+(W-L)+'" y1="'+gy+'" y2="'+gy+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>'+g;
+  var a=WK.mon,b=WK.sun;
+  var rows=WK.days.map(function(x){var s=x.s[r]||0,pd=x.g[r]?s/x.g[r]*100:0,nm=DN[x.t.getDay()];
+    return '<div class="dd'+(x.has?' on':'')+'"><div class="bd">'+nm.toUpperCase()+'<b>'+x.t.getDate()+'</b></div><div class="di"><b>'+nm+' '+x.t.getDate()+' '+AB[x.t.getMonth()]+'</b><span class="'+(x.has?'ok':'')+'">'+(x.has?'Reporte cargado':(x.off?'No laborable':'Sin reporte'))+'</span></div>'+(x.has?'<div class="dr"><b>'+fm(s)+' cjs</b><span class="'+cls(pd)+'">'+pd.toFixed(0)+'% meta diaria</span></div>':'<div class="dr">–</div>')+'</div>'}).join('');
+  $('shBody').innerHTML='<div class="wk">Semana '+DN[a.getDay()]+' '+a.getDate()+' '+AB[a.getMonth()]+' – '+DN[b.getDay()]+' '+b.getDate()+' '+AB[b.getMonth()]+' (sin domingo)</div>'
+   +'<div class="rt">Ruta '+r+'<small class="'+cls(p)+'">('+p.toFixed(1)+'%)</small></div>'
+   +'<div class="sum"><div><span>Venta sem.</span><b>'+fm(vs)+' cjs</b></div><div><span>Meta sem.</span><b>'+fm(mt)+' cjs</b></div><div style="text-align:right"><span>Diferencia</span><b class="'+(df<0?'bad':'ok')+'">'+fd(df)+' cjs</b></div></div>'
+   +'<div class="dh"><span>Venta diaria (sin domingo)</span><span>Meta diaria: '+fm(ga)+' cjs ('+n+'d)</span></div>'
+   +'<div class="card" style="padding:8px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="Venta diaria de la ruta '+r+'">'+g+'</svg></div>'
+   +'<div class="dh" style="margin-top:18px"><span>DETALLE DÍA POR DÍA</span></div>'+rows;
+  $('sheet').hidden=false;document.body.style.overflow='hidden';$('shX').focus()}
+function pick(e){var el=e.target.closest('[data-r]');if(el)(rrV==='s'?showRoute:showRouteMonth)(el.getAttribute('data-r'))}
+$('chart').onclick=pick;$('tb').onclick=pick;$('shX').onclick=hideSheet;$('shBg').onclick=hideSheet;
+document.addEventListener('keydown',function(e){if(e.key==='Escape')hideSheet()});
+var SKU=[['t355','Tonicol 355 ml'],['t600','Tonicol 600 ml'],['t2l','Tonicol 2 L'],['yau','Yauco 1/2 L'],['titan','Familia Titan']],skuV='m';
+function skuChart(){
+  var now=new Date(),mk=now.getFullYear()+'-'+pad(now.getMonth()+1),wk={};WK.days.forEach(function(x){wk[x.k]=1});
+  var a={t355:0,t600:0,t2l:0,yau:0,titan:0,tot:0};
+  Object.keys(S.sku||{}).forEach(function(k){if(!S.sku[k])return;if(skuV==='m'?k.slice(0,7)===mk:wk[k])for(var q in a)a[q]+=+S.sku[k][q]||0});
+  $('sM').className=skuV==='m'?'btn':'btn g';$('sS').className=skuV==='s'?'btn':'btn g';
+  $('skuT').textContent='Total '+(skuV==='m'?'del mes':'de la semana')+' (todas las rutas): '+fm(a.tot)+' cajas';
+  var W=400,H=240,T=44,B=46,L=10,ph=H-T-B,n=SKU.length,cw=(W-2*L)/n,bw=46,mx=1,g='';
+  SKU.forEach(function(s){if(a[s[0]]>mx)mx=a[s[0]]});mx*=1.05;
+  g+='<line x1="'+L+'" x2="'+(W-L)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="var(--line)"/>';
+  SKU.forEach(function(s,i){var v=a[s[0]]||0,cx=L+cw*(i+.5),h=v/mx*ph,p=a.tot?v/a.tot*100:0,w=s[1].split(' ');
+    g+='<g data-s="'+s[0]+'"'+(skuV==='s'?' style="cursor:pointer"':'')+'><rect x="'+(cx-cw/2)+'" y="0" width="'+cw+'" height="'+H+'" fill="transparent"/>';
+    g+='<rect x="'+(cx-bw/2)+'" y="'+(T+ph-h)+'" width="'+bw+'" height="'+Math.max(h,2)+'" rx="7" fill="var(--or)"/>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-18)+'" font-size="13" font-weight="800" text-anchor="middle" fill="var(--ink)">'+p.toFixed(1)+'%</text>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-5)+'" font-size="11" text-anchor="middle" fill="var(--mute)">'+fm(v)+' cj</text>';
+    g+='<text x="'+cx+'" y="'+(H-26)+'" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">'+esc(w[0])+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-12)+'" font-size="11" text-anchor="middle" fill="var(--mute)">'+esc(w.slice(1).join(' '))+'</text></g>'});
+  $('skuC').innerHTML=a.tot?g:'';
+  var ot=a.tot-a.t355-a.t600-a.t2l-a.yau-a.titan;
+  $('skuN').textContent=a.tot?'% sobre la venta total de todas las rutas con venta'+(ot>0?' (otros productos: '+fm(ot)+' cajas, '+(ot/a.tot*100).toFixed(1)+'%)':'')+'.'+(skuV==='s'?' Toca una barra para ver las últimas 4 semanas.':''):'Sin datos de productos en este periodo.';
+}
+$('rM').onclick=function(){rrV='m';render()};$('rS').onclick=function(){rrV='s';render()};
+$('sM').onclick=function(){skuV='m';skuChart()};$('sS').onclick=function(){skuV='s';skuChart()};
+function showSku(key){
+  var nm=SKU.filter(function(s){return s[0]===key})[0][1],ws=[];
+  for(var i=3;i>=0;i--){var st=new Date(WK.mon.getFullYear(),WK.mon.getMonth(),WK.mon.getDate()-7*i),v=0,t=0,has=false;
+    for(var j=0;j<7;j++){var k=kd(new Date(st.getFullYear(),st.getMonth(),st.getDate()+j));if(S.sku[k]){has=true;v+=+S.sku[k][key]||0;t+=+S.sku[k].tot||0}}
+    var en=new Date(st.getFullYear(),st.getMonth(),st.getDate()+6),cm=st.getMonth()!==en.getMonth();
+    ws.push({l:'Sem '+st.getDate()+(cm?' '+AB[st.getMonth()]:'')+' - '+en.getDate()+' '+AB[en.getMonth()],a:st.getDate()+' - '+en.getDate(),b:cm?AB[st.getMonth()]+'/'+AB[en.getMonth()]:AB[en.getMonth()],v:v,t:t,has:has,p:t?v/t*100:0,cur:i===0})}
+  var mx=1;ws.forEach(function(x){if(x.v>mx)mx=x.v});mx*=1.15;
+  var W=340,H=200,T=44,B=36,ph=H-T-B,cw=W/4,g='<line x1="0" x2="'+W+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="var(--line)"/>';
+  ws.forEach(function(x,i){var cx=cw*(i+.5),h=x.has?Math.max(x.v/mx*ph,3):3;
+    g+='<rect x="'+(cx-22)+'" y="'+(T+ph-h)+'" width="44" height="'+h+'" rx="7" fill="'+(x.has?(x.cur?'var(--ink)':'var(--or)'):'var(--soft)')+'"/>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-18)+'" font-size="13" font-weight="800" text-anchor="middle" fill="var(--ink)">'+(x.has?x.p.toFixed(1)+'%':'–')+'</text>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-5)+'" font-size="11" text-anchor="middle" fill="var(--mute)">'+(x.has?fm(x.v)+' cj':'sin datos')+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-20)+'" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">'+x.a+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-6)+'" font-size="11" text-anchor="middle" fill="var(--mute)">'+x.b+'</text>'});
+  var rows=ws.map(function(x,i){var pv=i?ws[i-1]:null,vr=pv&&pv.v>0&&x.has?(x.v-pv.v)/pv.v*100:null;
+    return '<tr><td>'+x.l+(x.cur?' *':'')+'</td><td>'+(x.has?fm(x.v):'–')+'</td><td>'+(x.has?x.p.toFixed(1)+'%':'–')+'</td><td class="'+(vr===null?'':vr<0?'bad':'ok')+'">'+(vr===null?'–':(vr>=0?'+':'−')+Math.abs(vr).toFixed(1)+'%')+'</td></tr>'}).join('');
+  $('shBody').innerHTML='<div class="wk">Últimas 4 semanas (vie–jue)</div><div class="rt">'+esc(nm)+'</div>'
+   +'<div class="dh"><span>Cajas y % de participación en la venta total</span></div>'
+   +'<div class="card" style="padding:8px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="Venta de '+esc(nm)+' en las últimas 4 semanas">'+g+'</svg></div>'
+   +'<div class="card tw" style="margin-top:12px"><table><thead><tr><th>Semana</th><th>Cajas</th><th>% partic.</th><th>Var. vs ant.</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+   +'<p class="small">* Semana en curso (barra oscura): solo incluye los días cargados.</p>';
+  $('sheet').hidden=false;document.body.style.overflow='hidden';$('shX').focus()}
+$('skuC').onclick=function(e){if(skuV!=='s')return;var el=e.target.closest('[data-s]');if(el)showSku(el.getAttribute('data-s'))};
+function openSheet(h){$('shBody').innerHTML=h;$('sheet').hidden=false;document.body.style.overflow='hidden';$('shX').focus()}
+function bars(items,W,H,line){
+  var T=44,B=38,ph=H-T-B,cw=W/items.length,mx=Math.max(line||0,1);items.forEach(function(x){if(x.v>mx)mx=x.v;if(x.g>mx)mx=x.g});mx*=1.15;
+  var g='<line x1="0" x2="'+W+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="var(--line)"/>';
+  if(line){var gy=T+ph-line/mx*ph;g+='<line x1="0" x2="'+W+'" y1="'+gy+'" y2="'+gy+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>'}
+  items.forEach(function(x,i){var cx=cw*(i+.5),h=x.has?Math.max(x.v/mx*ph,3):3,bw=Math.min(40,cw*.6);
+    g+='<rect x="'+(cx-bw/2)+'" y="'+(T+ph-h)+'" width="'+bw+'" height="'+h+'" rx="7" fill="'+(!x.has?'var(--soft)':x.hi?'var(--ink)':(x.ok?'var(--ok)':'var(--or)'))+'"/>';
+    g+='<text x="'+cx+'" y="'+(T+ph-h-18)+'" font-size="13" font-weight="800" text-anchor="middle" fill="var(--ink)">'+(x.has?fm(x.v):'–')+'</text>';if(x.g){var ty=T+ph-x.g/mx*ph;g+='<line x1="'+(cx-bw/2-5)+'" x2="'+(cx+bw/2+5)+'" y1="'+ty+'" y2="'+ty+'" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>'}
+    g+='<text x="'+cx+'" y="'+(T+ph-h-5)+'" font-size="10.5" text-anchor="middle" fill="var(--mute)">'+x.sub+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-22)+'" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">'+x.a+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-8)+'" font-size="10.5" text-anchor="middle" fill="var(--mute)">'+x.b+'</text>'});
+  return '<div class="card" style="padding:8px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="Gráfica de venta">'+g+'</svg></div>'}
+function sumBox(a,b,c,cc){return '<div class="sum"><div><span>'+a[0]+'</span><b>'+a[1]+'</b></div><div><span>'+b[0]+'</span><b>'+b[1]+'</b></div><div style="text-align:right"><span>'+c[0]+'</span><b class="'+cc+'">'+c[1]+'</b></div></div>'}
+function showMonth(){
+  var now=new Date(),Y=now.getFullYear(),M=now.getMonth(),mk=Y+'-'+pad(M+1),dim=new Date(Y,M+1,0).getDate(),mt=S.metas[mk]||{t:0},t0=new Date(Y,M,now.getDate());
+  var st=1-(new Date(Y,M,1).getDay()+2)%7,ws=[],tot=0;
+  while(st<=dim){var fv=0,mv=0,has=false,d1=new Date(Y,M,st),d7=new Date(Y,M,st+6);
+    for(var i=0;i<7;i++){var dt=new Date(Y,M,st+i),k=kd(dt);if(S.sales[k]){has=true;var s=0;ALL.forEach(function(r){s+=+S.sales[k][r]||0});fv+=s;if(dt.getMonth()===M)mv+=s}}
+    ws.push({a:d1.getDate()+' - '+d7.getDate(),b:d1.getMonth()===d7.getMonth()?AB[d1.getMonth()]:AB[d1.getMonth()]+'/'+AB[d7.getMonth()],v:fv,mv:mv,has:has,cr:d1.getMonth()!==M||d7.getMonth()!==M,hi:t0>=d1&&t0<=d7});tot+=mv;st+=7}
+  ws.forEach(function(x){x.sub=tot&&x.has?(x.mv/tot*100).toFixed(1)+'%':''});
+  var p=mt.t?tot/mt.t*100:0;
+  var rows=ws.map(function(x){return '<tr><td>'+x.a+' '+x.b+(x.cr?' *':'')+'</td><td>'+(x.has?fm(x.v):'–')+'</td><td>'+(x.has?fm(x.mv):'–')+'</td><td>'+(x.has&&tot?(x.mv/tot*100).toFixed(1)+'%':'–')+'</td></tr>'}).join('');
+  openSheet('<div class="wk">'+MES[M]+' '+Y+'</div><div class="rt">Venta del mes<small class="'+cls(p)+'">('+p.toFixed(1)+'%)</small></div>'
+   +sumBox(['Venta mes',fm(tot)+' cjs'],['Meta mes',fm(mt.t)+' cjs'],['Diferencia',fd(tot-mt.t)+' cjs'],tot-mt.t<0?'bad':'ok')
+   +'<div class="dh"><span>Venta por semana completa (vie–jue)</span><span>% del mes</span></div>'+bars(ws,340,200,0)
+   +'<div class="card tw" style="margin-top:12px"><table><thead><tr><th>Semana</th><th>Sem. completa</th><th>En el mes</th><th>% del mes</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td>Total</td><td>–</td><td>'+fm(tot)+'</td><td>100%</td></tr></tfoot></table></div>'
+   +'<p class="small">* Semana que cruza de mes: la barra y "Sem. completa" suman la semana entera, incluidos los días del otro mes; "En el mes" y el % solo toman los días de '+MES[M]+'. Barra oscura: semana en curso. Incluye rutas 14 y 15.</p>')}
+function showWeek(){
+  var n=WK.days.length;if(!n)return;
+  var rows=WK.days.map(function(x){var s=0;if(S.sales[x.k])ALL.forEach(function(r){s+=+S.sales[x.k][r]||0});var g=0;for(var r in x.g)g+=x.g[r];return{t:x.t,s:s,g:g,has:x.has,off:x.off}});
+  var vs=0,gt=0;rows.forEach(function(x){vs+=x.s;gt+=x.g});var p=gt?vs/gt*100:0,ga=gt/n;
+  var a=WK.mon,b=WK.sun;
+  var its=rows.map(function(x){return{a:DN[x.t.getDay()],b:x.t.getDate()+' '+AB[x.t.getMonth()],v:x.s,has:x.has,ok:x.g>0&&x.s>=x.g,sub:x.has&&x.g?(x.s/x.g*100).toFixed(0)+'%':''}});
+  var list=rows.map(function(x){var pd=x.g?x.s/x.g*100:0,nm=DN[x.t.getDay()];
+    return '<div class="dd'+(x.has?' on':'')+'"><div class="bd">'+nm.toUpperCase()+'<b>'+x.t.getDate()+'</b></div><div class="di"><b>'+nm+' '+x.t.getDate()+' '+AB[x.t.getMonth()]+'</b><span class="'+(x.has?'ok':'')+'">'+(x.has?'Reporte cargado':(x.off?'No laborable':'Sin reporte'))+'</span></div>'+(x.has?'<div class="dr"><b>'+fm(x.s)+' cjs</b><span class="'+cls(pd)+'">'+pd.toFixed(0)+'% meta diaria</span></div>':'<div class="dr">–</div>')+'</div>'}).join('');
+  openSheet('<div class="wk">Semana '+DN[a.getDay()]+' '+a.getDate()+' '+AB[a.getMonth()]+' – '+DN[b.getDay()]+' '+b.getDate()+' '+AB[b.getMonth()]+' (sin domingo)</div><div class="rt">Venta de la semana<small class="'+cls(p)+'">('+p.toFixed(1)+'%)</small></div>'
+   +sumBox(['Venta sem.',fm(vs)+' cjs'],['Meta sem.',fm(gt)+' cjs'],['Diferencia',fd(vs-gt)+' cjs'],vs-gt<0?'bad':'ok')
+   +'<div class="dh"><span>Venta diaria (sin domingo)</span><span>Meta diaria: '+fm(ga)+' cjs</span></div>'+bars(its,340,200,ga)
+   +'<div class="dh" style="margin-top:18px"><span>DETALLE DÍA POR DÍA</span></div>'+list+'<p class="small">Incluye rutas 14 y 15; la meta solo considera rutas con meta.</p>')}
+[['kMes',showMonth],['kSem',showWeek]].forEach(function(q){var c=$(q[0]).parentNode;c.style.cursor='pointer';c.setAttribute('role','button');c.setAttribute('tabindex','0');c.onclick=q[1];c.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();q[1]()}}});
+function showRouteMonth(r){
+  var now=new Date(),Y=now.getFullYear(),M=now.getMonth(),mk=Y+'-'+pad(M+1),dim=new Date(Y,M+1,0).getDate(),mt=S.metas[mk];if(!mt||!mt.r[r])return;
+  var t0=new Date(Y,M,now.getDate()),mg=mt.t*mt.r[r],st=1-(new Date(Y,M,1).getDay()+2)%7,ws=[],tot=0;
+  while(st<=dim){var v=0,g=0,mv=0,has=false,d1=new Date(Y,M,st),d7=new Date(Y,M,st+6);
+    for(var i=0;i<7;i++){var dt=new Date(Y,M,st+i),k=kd(dt);
+      if(S.sales[k]){has=true;var s=+S.sales[k][r]||0;v+=s;if(dt.getMonth()===M)mv+=s}
+      if(dt.getDay()!==0){var m2=S.metas[dt.getFullYear()+'-'+pad(dt.getMonth()+1)];if(m2&&m2.r&&m2.r[r])g+=m2.t*m2.r[r]/(lab(dt.getFullYear(),dt.getMonth())||1)}}
+    ws.push({a:d1.getDate()+' - '+d7.getDate(),b:d1.getMonth()===d7.getMonth()?AB[d1.getMonth()]:AB[d1.getMonth()]+'/'+AB[d7.getMonth()],v:v,g:g,has:has,cr:d1.getMonth()!==M||d7.getMonth()!==M,hi:t0>=d1&&t0<=d7,ok:g>0&&v>=g,sub:g&&has?(v/g*100).toFixed(0)+'%':''});tot+=mv;st+=7}
+  var p=mg?tot/mg*100:0;
+  var rows=ws.map(function(x){var pc=x.g?x.v/x.g*100:0,df=x.v-x.g;return '<tr><td>'+x.a+' '+x.b+(x.cr?' *':'')+'</td><td>'+(x.has?fm(x.v):'–')+'</td><td>'+fm(x.g)+'</td><td class="'+cls(pc)+'">'+(x.has?pc.toFixed(0)+'%':'–')+'</td><td class="'+(df<0?'bad':'ok')+'">'+(x.has?fd(df):'–')+'</td></tr>'}).join('');
+  openSheet('<div class="wk">Semanas de '+MES[M]+' '+Y+'</div><div class="rt">Ruta '+r+'<small class="'+cls(p)+'">('+p.toFixed(1)+'%)</small></div>'
+   +sumBox(['Venta mes',fm(tot)+' cjs'],['Meta mes',fm(mg)+' cjs'],['Diferencia',fd(tot-mg)+' cjs'],tot-mg<0?'bad':'ok')
+   +'<div class="dh"><span>Venta por semana completa (vie–jue)</span><span>Marca = meta semanal</span></div>'+bars(ws,340,210,0)
+   +'<div class="card tw" style="margin-top:12px"><table><thead><tr><th>Semana</th><th>Venta</th><th>Meta</th><th>% cumpl.</th><th>Dif.</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td>Mes</td><td>'+fm(tot)+'</td><td>'+fm(mg)+'</td><td class="'+cls(p)+'">'+p.toFixed(0)+'%</td><td class="'+(tot-mg<0?'bad':'ok')+'">'+fd(tot-mg)+'</td></tr></tfoot></table></div>'
+   +'<p class="small">* Semana que cruza de mes: suma la semana entera (venta y meta de los días de ambos meses). La fila "Mes" solo toma los días de '+MES[M]+'. Barra oscura: semana en curso.</p>')}
+
+function seed(){
+  var L=null;
+  try{L=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  var B=(L&&(L.sales||L.metas))?L:cl(DEF);
+  S.name=B.name||S.name;
+  S.logo=B.logo||'';
+  S.metas=cl(B.metas||DEF.metas);
+  S.sales=cl(B.sales||DEF.sales);
+  S.sku=cl(B.sku||DEF.sku);
+  S.off=cl(B.off||[]);
+  saveLocal();
+}
+
+async function boot(){
+  seed();
+  render();
+  if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.projectId)return;
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    FB=firebase.firestore();
+  }catch(e){return}
+  var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
+  try{
+    var sn=await Promise.all(refs.map(function(r){return r.get()}));
+    if(sn[0].exists)applyCfg(sn[0].data());
+    if(sn[1].exists)applySales(sn[1].data());
+    if(sn[2].exists)applySku(sn[2].data());
+    render();
+  }catch(e){}
+  refs[0].onSnapshot(function(x){if(x&&x.exists){applyCfg(x.data());render()}},function(){});
+  refs[1].onSnapshot(function(x){if(x&&x.exists){applySales(x.data());render()}},function(){});
+  refs[2].onSnapshot(function(x){if(x&&x.exists){applySku(x.data());render()}},function(){});
+}
+boot();
+</script>
+</body>
+</html>
