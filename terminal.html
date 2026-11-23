@@ -555,26 +555,20 @@ function unlock(){
 }
 
 async function boot(){
+  unlock();
   try{
-    if(!window.firebase||typeof FIREBASE_CONFIG==='undefined'||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return showLogin('Falta configurar Firebase','Edita config.js (ver README.md).',true);
-    firebase.initializeApp(FIREBASE_CONFIG);AU=firebase.auth();FB=firebase.firestore();
-    if(AU.isSignInWithEmailLink(location.href)){
-      var e0=null;try{e0=localStorage.getItem('fbEmail')}catch(x){}
-      if(!e0)e0=(prompt('Escribe tu correo para confirmar el acceso:')||'').trim().toLowerCase();
-      try{await AU.signInWithEmailLink(e0,location.href);try{localStorage.removeItem('fbEmail')}catch(x){}history.replaceState(null,'',location.pathname)}
-      catch(x){return showLogin('Enlace no válido','El enlace expiró, ya se usó o el correo no coincide. Pide uno nuevo.')}
-    }
-    var us=await new Promise(function(res){var off=AU.onAuthStateChanged(function(u){off();res(u)})});
-    if(!us)return showLogin();
-    var em=(us.email||'').toLowerCase(),me;
-    try{me=await FB.doc('users/'+em).get()}catch(x){return noAccess(em)}
-    if(!me.exists)return noAccess(em);
+    if(!window.firebase||typeof FIREBASE_CONFIG==='undefined'||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return;
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    AU=firebase.auth();
+    FB=firebase.firestore();
     var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
-    var er=function(){if(!unlocked)showLogin('No se pudo cargar','No tienes acceso a los datos o hubo un problema de conexión.',true)};
-    refs[0].onSnapshot(function(x){applyCfg(x.exists?x.data():null);if(unlocked)render();else unlock()},er);
-    refs[1].onSnapshot(function(x){applySales(x.exists?x.data():null);if(unlocked)render()},er);
-    refs[2].onSnapshot(function(x){applySku(x.exists?x.data():null);if(unlocked)render()},er)
-  }catch(e){showLogin('No se pudo iniciar','Ocurrió un error al conectar. Revisa tu conexión e intenta de nuevo.',true)}
+    refs[0].onSnapshot(function(x){applyCfg(x.exists?x.data():null);render()},function(){});
+    refs[1].onSnapshot(function(x){applySales(x.exists?x.data():null);render()},function(){});
+    refs[2].onSnapshot(function(x){applySku(x.exists?x.data():null);render()},function(){});
+    loadFirestoreVisits();
+  }catch(e){
+    render();
+  }
 }
 boot();
 </script>
