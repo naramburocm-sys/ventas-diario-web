@@ -3,39 +3,119 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Terminal de Vendedores · Control de ventas</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<title>Terminal de Ventas · Ruta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
-.app{max-width:520px;margin:0 auto;padding:16px 16px 56px}
-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.app{max-width:520px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .logo{width:46px;height:46px;border-radius:14px;background:#ffffff;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;box-shadow:var(--sh);flex:none}
 .logo img{width:100%;height:100%;object-fit:cover}
+.logo svg{width:26px;height:26px}
 header h1{font-size:18px;margin:0;font-weight:800;line-height:1.1}
 header p{margin:2px 0 0;color:var(--mute);font-size:13px}
-.navlink{margin-left:auto;text-decoration:none;font-size:12px;font-weight:800;padding:7px 12px;border-radius:12px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.sync{margin-left:auto;font-size:11px;font-weight:800;padding:5px 10px;border-radius:99px;background:var(--soft);color:var(--ink);border:1px solid var(--line);white-space:nowrap}
+.sync.ok{background:#e8f7ee;color:var(--ok);border-color:#bce6cc}
+.sync.bad{background:#fff1f1;color:var(--bad);border-color:#f2b8b8}
+
+/* Selector superior de ruta */
+.rbar{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px;box-shadow:var(--sh);margin-bottom:14px}
+.rbar-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rbar label{margin:0;font-size:12px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.rbar select{width:auto;min-width:165px;padding:8px 12px;font-size:15px;font-weight:800;border-radius:12px;border:1.5px solid var(--or);background:var(--soft);color:var(--ink)}
+
 .hi{font-size:24px;font-weight:800;margin:0 0 2px}
 .sub{color:var(--mute);margin:0 0 14px;font-size:13.5px}
-.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);border:1px solid var(--line);margin-bottom:14px}
-label{display:block;font-size:12px;color:var(--mute);font-weight:600;margin:0 0 5px}
-select{width:100%;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
-select:focus{outline:2px solid var(--or);outline-offset:1px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);border:1px solid var(--line)}
+.card.wide{grid-column:1/-1}
 .lbl{font-size:12.5px;color:var(--mute);font-weight:600}
-.big{font-size:22px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
-.small{font-size:12px;color:var(--mute);margin-top:6px}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
-.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px}
-.foot b{font-size:16px}
-h2{font-size:17px;margin:18px 0 10px;font-weight:800}
-.li{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:9px 0;border-top:1px solid var(--line)}
-.li:first-child{border-top:0;padding-top:0}
+.big{font-size:23px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+.small{font-size:12px;color:var(--mute);margin-top:4px}
 .pill{display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px}.foot b{font-size:16px}
+.bar{height:9px;border-radius:9px;background:var(--soft);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--or2),var(--or));border-radius:9px;transition:width .3s}
+h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+.btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:11px 15px;background:var(--or);color:#14213d;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.g{background:var(--soft);color:var(--ink)}
+.btn.ink{background:var(--ink);color:#fff}
+.btn.sm{padding:7px 11px;font-size:12px;border-radius:11px}
+
+/* Vista Clientes y Mapa */
+.day-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:10px}
+.day-bar label{margin:0;font-size:12px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.day-bar select{flex:1;max-width:225px;font:inherit;font-size:14px;font-weight:800;padding:7px 10px;border-radius:10px;border:1.5px solid var(--or);background:var(--soft);color:var(--ink)}
+
+.search-box{position:relative;margin-bottom:10px}
+.search-box input{width:100%;font:inherit;font-size:14px;padding:10px 36px 10px 12px;border-radius:14px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.search-box input:focus{outline:2px solid var(--or);border-color:var(--or)}
+.search-clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:var(--soft);color:var(--ink);width:26px;height:26px;border-radius:50%;font-weight:800;cursor:pointer;display:none}
+
+.st-filter{display:flex;gap:6px;margin-bottom:12px}
+.stf{flex:1;font:inherit;font-size:11.5px;font-weight:800;padding:7px 6px;border-radius:11px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.stf .dot{width:8px;height:8px;border-radius:50%;flex:none;border:1px solid rgba(20,33,61,.35)}
+.stf[data-st="pend"] .dot{background:#f7b500}
+.stf[data-st="venta"] .dot{background:#1a9a4f}
+.stf[data-st="sin"] .dot{background:#d62828}
+.stf.on{background:var(--soft);color:var(--ink);border-color:var(--or)}
+.stf[data-st="pend"].on{background:#fff8db;border-color:#f7b500;color:#7a5600}
+.stf[data-st="venta"].on{background:#e8f7ee;border-color:#1a9a4f;color:#116b36}
+.stf[data-st="sin"].on{background:#fff1f1;border-color:#d62828;color:#9e1c1c}
+.map-legend{display:flex;align-items:center;gap:12px;padding:6px 12px;background:#fafbfe;border-top:1px solid var(--line);font-size:11px;font-weight:700;color:var(--ink)}
+.map-legend span{display:inline-flex;align-items:center;gap:4px}
+.map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink)}
+
+#mapWrap{border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:12px;position:relative}
+#map{height:255px;width:100%;z-index:1}
+.map-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#fff;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--mute)}
+
+/* Tarjetas de cliente */
+.cli-list{display:flex;flex-direction:column;gap:10px}
+.cli-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:13px 14px;box-shadow:0 3px 10px rgba(20,33,61,.05);transition:border-color .2s}
+.cli-card.st-venta{border-color:#8ed8ad;background:#f8fdf9}
+.cli-card.st-sin{border-color:#f2b8b8;background:#fffafa}
+.cli-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cli-name{font-size:15px;font-weight:800;color:var(--ink);line-height:1.25}
+.cli-badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap;flex:none}
+.cli-badge.new{background:#e0f2fe;color:#0369a1}
+.cli-addr{font-size:12.5px;color:var(--mute);margin-top:4px;line-height:1.35}
+.cli-meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--ink);margin-top:7px;font-weight:600}
+.cli-meta a{color:var(--ink);text-decoration:none;border-bottom:1px dashed var(--or)}
+.cli-days{display:flex;gap:4px;margin-top:8px}
+.cli-days span{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f1f3f8;color:var(--mute)}
+.cli-days span.act{background:var(--soft);color:var(--ink)}
+.cli-actions{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+.act-btn{font:inherit;font-size:12px;font-weight:800;padding:8px 8px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.act-btn.v-on{background:var(--ok);color:#fff;border-color:var(--ok)}
+.act-btn.s-on{background:var(--bad);color:#fff;border-color:var(--bad)}
+.act-btn.gps{background:var(--soft);border-color:var(--or);padding:8px 11px}
+.act-btn.gps.disabled{opacity:.4;pointer-events:none}
+
+/* Detalle días semana en Mi venta */
+.dd{display:flex;align-items:center;gap:12px;padding:11px;border:1.5px dashed var(--line);border-radius:16px;margin-bottom:8px;color:var(--mute);background:#fff}
+.dd.on{border:1px solid var(--line);box-shadow:0 3px 10px rgba(20,33,61,.06);color:var(--ink)}
+.bd{width:48px;height:48px;border-radius:13px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;line-height:1.1;flex:none}.bd b{font-size:18px}
+.dd.on .bd{background:var(--ink);color:#fff}
+.di{flex:1;display:flex;flex-direction:column;gap:2px;font-size:12.5px}.di b{font-size:15px;color:var(--ink)}
+.dr{text-align:right;display:flex;flex-direction:column;font-size:11.5px;font-weight:700}.dr b{font-size:16px;color:var(--ink)}
+
+/* Navegación inferior */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:10px}
+nav button{flex:1;max-width:210px;font:inherit;font-size:12.5px;font-weight:800;background:none;border:0;color:var(--mute);padding:7px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:22px;height:22px}
+nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -43,64 +123,125 @@ h2{font-size:17px;margin:18px 0 10px;font-weight:800}
   <header>
     <div class="logo" id="logo"></div>
     <div>
-      <h1 id="cname">Control de ventas</h1>
-      <p id="cdate">Fuente: Excel diario</p>
+      <h1 id="cname">Terminal de Ruta</h1>
+      <p id="date">Cargando datos...</p>
     </div>
-    <a class="navlink" href="index.html" hidden>Resumen</a>
+    <span class="sync" id="syncBadge">Local</span>
   </header>
 
-  <p class="hi">Terminal de ruta</p>
-  <p class="sub">Consulta de ventas en cajas desde la carga diaria del Excel.</p>
-
-  <div class="card">
-    <label for="selRuta">Selecciona ruta</label>
-    <select id="selRuta"></select>
+  <div class="rbar">
+    <div class="rbar-top">
+      <label for="selRuta">Ruta activa</label>
+      <select id="selRuta" aria-label="Seleccionar ruta"></select>
+    </div>
   </div>
 
-  <div class="grid">
-    <div class="card" style="margin-bottom:0">
-      <div class="lbl">Último día cargado</div>
-      <div class="big" id="vUlt">–</div>
-      <div class="small" id="vUltF">–</div>
-    </div>
-    <div class="card" style="margin-bottom:0">
-      <div class="lbl" id="lSem">Venta semana</div>
-      <div class="big" id="vSem">–</div>
-      <div class="foot">
-        <div><div class="lbl">% cumpl.</div><b id="pSem">–</b></div>
-        <div style="text-align:right"><div class="lbl">Meta sem.</div><b id="mSem">–</b></div>
-      </div>
-    </div>
-    <div class="card" style="grid-column:1/-1;margin-bottom:0">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="lbl">Venta acumulada del mes</div>
-          <div class="big" id="vMes">–</div>
+  <!-- VISTA 1: MI VENTA -->
+  <main id="v-venta">
+    <p class="hi" id="rtTitle">Ruta 1</p>
+    <p class="sub" id="rtSub">Avance de venta y cumplimiento · cifras en cajas</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="lbl">Ventas del mes</div>
+        <div class="big" id="kMes">–</div>
+        <div class="foot">
+          <div><div class="lbl">% cumpl.</div><b id="kMesP">–</b></div>
+          <div style="text-align:right"><div class="lbl">Prom. diario</div><b id="kMesD">–</b></div>
         </div>
-        <span class="pill" id="pMes">–</span>
       </div>
-      <div class="foot">
-        <div class="small" id="dMes" style="margin:0">–</div>
-        <div style="text-align:right"><div class="lbl">Diferencia</div><b id="difMes">–</b></div>
+      <div class="card">
+        <div class="lbl" id="kSemL">Venta semanal</div>
+        <div class="big" id="kSem">–</div>
+        <div class="foot">
+          <div><div class="lbl">% cumpl.</div><b id="kSemP">–</b></div>
+          <div style="text-align:right"><div class="lbl">Prom. diario</div><b id="kSemD">–</b></div>
+        </div>
+      </div>
+      <div class="card wide">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div><div class="lbl">Proyección de cierre mensual</div><div class="big" id="kPro">–</div></div>
+          <span class="pill" id="kProPill">–</span>
+        </div>
+        <div class="bar"><i id="kProBar" style="width:0%"></i></div>
+        <div class="foot">
+          <div class="small" id="kProNote" style="margin:0;flex:1;padding-right:10px"></div>
+          <div style="text-align:right;flex:none"><div class="lbl">Req. diario</div><b class="bad" id="kProReq">–</b></div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <h2>Venta por producto (último día cargado)</h2>
-  <div class="card" id="skuDia">
-    <p class="small" style="margin:0">Sin desglose por producto.</p>
-  </div>
+    <h2>Venta por producto <span class="small" id="skuPeriodLbl" style="margin:0;font-weight:700">Mes</span></h2>
+    <div class="card">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn sm" id="btnSkuM" type="button">Mes</button>
+        <button class="btn g sm" id="btnSkuS" type="button">Semana</button>
+      </div>
+      <div class="lbl" id="skuTotLbl">Total: 0 cajas</div>
+      <div id="skuSvgWrap"></div>
+      <p class="small" id="skuNote"></p>
+    </div>
 
-  <h2>Historial diario de la ruta</h2>
-  <div class="card" id="histRuta">
-    <p class="small" style="margin:0">Sin registros de venta.</p>
-  </div>
+    <h2>Detalle de la semana <span class="small" id="wkRangeLbl" style="margin:0;font-weight:700"></span></h2>
+    <div id="wkDaysList"></div>
+  </main>
 
-  <h2>Base de clientes de la ruta</h2>
-  <div class="card" id="cliRuta">
-    <p class="small" style="margin:0">Sin base de clientes cargada desde Resumen.</p>
-  </div>
+  <!-- VISTA 2: CLIENTES Y MAPA -->
+  <main id="v-clientes" hidden>
+    <p class="hi">Clientes y Mapa</p>
+    <p class="sub" id="cliSub">Cartera asignada a la ruta seleccionada</p>
+
+    <div class="day-bar">
+      <label for="selDay">Día de visita</label>
+      <select id="selDay" aria-label="Filtrar por día de visita"></select>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="cliSearch" placeholder="Buscar cliente, calle, colonia o contacto..." autocomplete="off">
+      <button type="button" class="search-clr" id="cliSearchClr" aria-label="Limpiar búsqueda">×</button>
+    </div>
+
+    <div class="st-filter" id="stFilter">
+      <button type="button" class="stf on" data-st="all">Todos (0)</button>
+      <button type="button" class="stf" data-st="pend">Pend. (0)</button>
+      <button type="button" class="stf" data-st="venta">Venta (0)</button>
+      <button type="button" class="stf" data-st="sin">Sin vta (0)</button>
+    </div>
+
+    <div id="mapWrap">
+      <div id="map"></div>
+      <div class="map-legend">
+        <span><i style="background:#f7b500"></i> Pendiente</span>
+        <span><i style="background:#1a9a4f"></i> Venta</span>
+        <span><i style="background:#d62828"></i> Sin venta</span>
+      </div>
+      <div class="map-bar">
+        <span id="mapCount">0 ubicaciones en mapa</span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn g sm" id="btnMyLoc">Mi ubicación</button>
+          <button type="button" class="btn sm" id="btnFitMap">Ver todos</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
+      <b style="font-size:15px" id="cliListTitle">Listado de clientes</b>
+      <button type="button" class="btn g sm" id="btnResetDay">Reiniciar visitas hoy</button>
+    </div>
+    <div class="cli-list" id="cliList"></div>
+  </main>
 </div>
+
+<nav>
+  <button id="navVenta" aria-selected="true" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+    Mi venta
+  </button>
+  <button id="navClientes" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.5-6-10a6 6 0 0112 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+    Clientes y Mapa
+  </button>
+</nav>
 
 <script>
 var FIREBASE_CONFIG = {
@@ -112,259 +253,623 @@ var FIREBASE_CONFIG = {
   appId: "1:768024116078:web:0a0948c0fd0bfb09699f7f",
   measurementId: "G-QCKWXRHJXK"
 };
+
 var KEY = 'ventas-app-v2';
-var CLIENTS_KEY = 'ventas-terminal-clients-v1';
+var TERM_KEY = 'terminal-estado-v1';
+var RUTAS_PERMITIDAS = ['1','4','5','6','7','10','11','13','14','15'];
+var RUTAS_META = ['1','4','5','6','7','10','11','13'];
 var AB = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 var DN = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-var SKU_LABELS = [
-  ['t355', 'Tonicol 355 ml'],
-  ['t600', 'Tonicol 600 ml'],
-  ['t2l', 'Tonicol 2 L'],
-  ['yau', 'Yauco 1/2 L'],
-  ['titan', 'Familia Titan']
+var DIAS_VISITA = [
+  {id:'ALL', lbl:'Todos los días'},
+  {id:'Lu', lbl:'Lunes'},
+  {id:'Ma', lbl:'Martes'},
+  {id:'Mi', lbl:'Miércoles'},
+  {id:'Ju', lbl:'Jueves'},
+  {id:'Vi', lbl:'Viernes'},
+  {id:'Sa', lbl:'Sábado'}
 ];
-// Solo rutas autorizadas: 1, 4, 5, 6, 7, 10, 11, 13, 14 y 15
-var RUTAS_PERMITIDAS = ['1','4','5','6','7','10','11','13','14','15'];
+var SKU = [
+  ['t355','Tonicol 355 ml'],
+  ['t600','Tonicol 600 ml'],
+  ['t2l','Tonicol 2 L'],
+  ['yau','Yauco 1/2 L'],
+  ['titan','Familia Titan']
+];
+var LOGO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#14213d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V11M10 19V6M16 19v-9M21 19H3"/></svg>';
 
-var S = { name: 'Control de ventas', user: 'equipo', logo: '', metas: {}, sales: {}, sku: {}, off: [], clients: [] };
-var curRuta = '1';
+var FB = null;
+var S = {name:'Terminal de Ruta', user:'equipo', logo:'', metas:{}, sales:{}, sku:{}, off:[], clients:[]};
+var T = {
+  ruta: '1',
+  tab: 'venta',
+  skuPeriod: 'm',
+  dayFilter: 'ALL',
+  stFilter: 'all',
+  search: '',
+  visits: {} // { 'YYYY-MM-DD': { clientKey: 'venta' | 'sin' } }
+};
 
+var map = null, markersLayer = null, userMarker = null;
 var $ = function(id){ return document.getElementById(id); };
-var cl = function(o){ try { return JSON.parse(JSON.stringify(o)); } catch (e) { return {}; } };
-var fm = function(n){ return Math.round(Number(n) || 0).toLocaleString('es-MX'); };
-var fd = function(n){ return (n >= 0 ? '+' : '−') + fm(Math.abs(n)); };
 var pad = function(n){ return ('0' + n).slice(-2); };
+var fm = function(n){ return Math.round(n).toLocaleString('es-MX'); };
+var fd = function(n){ return (n >= 0 ? '+' : '−') + fm(Math.abs(n)); };
 var kd = function(t){ return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
-var wd = function(t){ return t.getDay() !== 0 && (S.off || []).indexOf(kd(t)) < 0; };
-var lab = function(y, m){ var n = new Date(y, m + 1, 0).getDate(), c = 0; for (var i = 1; i <= n; i++) if (wd(new Date(y, m, i))) c++; return c; };
-var rLabel = function(r){ return 'Ruta ' + r; };
-var cls = function(p){ return p >= 100 ? 'ok' : 'bad'; };
-var esc = function(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-
-function filterAllowedClients(list) {
-  if (!Array.isArray(list)) return [];
-  return list.filter(function(item){
-    if (!item || typeof item !== 'object') return false;
-    var r = String(item.route !== undefined ? item.route : (item.ruta !== undefined ? item.ruta : '')).trim().replace(/^ruta\s*/i, '');
-    return RUTAS_PERMITIDAS.indexOf(r) >= 0;
-  }).map(function(item){
-    var r = String(item.route !== undefined ? item.route : item.ruta).trim().replace(/^ruta\s*/i, '');
-    return {
-      id: String(item.id || item.codigo || '').trim(),
-      route: r,
-      name: String(item.name || item.nombre || item.cliente || 'Cliente').trim(),
-      address: String(item.address || item.direccion || item.domicilio || '').trim(),
-      day: String(item.day || item.dia || '').trim(),
-      phone: String(item.phone || item.telefono || '').trim()
-    };
-  });
+var wd = function(t){ return t.getDay() !== 0 && S.off.indexOf(kd(t)) < 0; };
+var lab = function(y, m){
+  var n = new Date(y, m + 1, 0).getDate(), c = 0;
+  for(var i = 1; i <= n; i++) if(wd(new Date(y, m, i))) c++;
+  return c;
+};
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function cls(p){ return p >= 100 ? 'ok' : 'bad'; }
+function isAllowedRoute(r){ return RUTAS_PERMITIDAS.indexOf(String(r)) >= 0; }
+function normStr(v){ return v == null ? '' : String(v).trim(); }
+function normNum(v){ if(v == null || v === '') return null; var n = Number(String(v).replace(',', '.').trim()); return isFinite(n) ? n : null; }
+function clientKey(c){
+  return [normStr(c.ruta), normStr(c.nombre).toUpperCase(), normStr(c.calle).toUpperCase(), normStr(c.num).toUpperCase(), normStr(c.colonia).toUpperCase()].join('|');
 }
 
-function saveLocal() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({
-      name: S.name, user: S.user, logo: S.logo,
-      metas: S.metas, sales: S.sales, sku: S.sku, off: S.off
-    }));
-    localStorage.setItem(CLIENTS_KEY, JSON.stringify(S.clients));
-  } catch (e) {}
+function todayDayCode(){
+  var mapD = {1:'Lu', 2:'Ma', 3:'Mi', 4:'Ju', 5:'Vi', 6:'Sa'};
+  return mapD[new Date().getDay()] || 'ALL';
 }
 
-function applyCfg(d) {
-  if (!d) return;
-  S.name = d.name || S.name;
-  S.user = d.user || S.user;
-  S.logo = d.logo || '';
-  S.metas = cl(d.metas || {});
-  S.off = Array.isArray(d.off) ? cl(d.off) : [];
-  saveLocal();
-}
-
-function applySales(d) {
-  S.sales = d ? cl(d.sales || {}) : {};
-  saveLocal();
-}
-
-function applySku(d) {
-  S.sku = d ? cl(d.sku || {}) : {};
-  saveLocal();
-}
-
-function applyClients(d) {
-  var raw = d && Array.isArray(d.clients) ? d.clients : (Array.isArray(d) ? d : []);
-  S.clients = filterAllowedClients(raw);
-  saveLocal();
-}
-
-function loadLocal() {
-  try {
+function loadLocal(){
+  try{
     var raw = JSON.parse(localStorage.getItem(KEY));
-    if (raw) {
+    if(raw && typeof raw === 'object'){
       S.name = raw.name || S.name;
       S.user = raw.user || S.user;
       S.logo = raw.logo || '';
-      S.metas = cl(raw.metas || {});
-      S.sales = cl(raw.sales || {});
-      S.sku = cl(raw.sku || {});
-      S.off = Array.isArray(raw.off) ? cl(raw.off) : [];
+      S.metas = raw.metas || {};
+      S.sales = raw.sales || {};
+      S.sku = raw.sku || {};
+      S.off = Array.isArray(raw.off) ? raw.off : [];
+      S.clients = Array.isArray(raw.clients) ? raw.clients : [];
     }
-    var rawClients = JSON.parse(localStorage.getItem(CLIENTS_KEY));
-    if (Array.isArray(rawClients)) {
-      S.clients = filterAllowedClients(rawClients);
+  }catch(e){}
+  try{
+    var tr = JSON.parse(localStorage.getItem(TERM_KEY));
+    if(tr && typeof tr === 'object'){
+      if(tr.ruta && isAllowedRoute(tr.ruta)) T.ruta = String(tr.ruta);
+      if(tr.visits && typeof tr.visits === 'object') T.visits = tr.visits;
     }
-    var savedRuta = localStorage.getItem('ventas-terminal-ruta');
-    if (savedRuta && RUTAS_PERMITIDAS.indexOf(savedRuta) >= 0) {
-      curRuta = savedRuta;
-    }
-  } catch (e) {}
+  }catch(e){}
+  T.dayFilter = todayDayCode();
 }
 
-function renderSelector() {
-  $('selRuta').innerHTML = RUTAS_PERMITIDAS.map(function(r){
-    return '<option value="' + r + '"' + (r === curRuta ? ' selected' : '') + '>' + rLabel(r) + '</option>';
+function saveLocalData(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify({
+      name:S.name, user:S.user, logo:S.logo, metas:S.metas, sales:S.sales, sku:S.sku, off:S.off, clients:S.clients
+    }));
+  }catch(e){}
+}
+
+function saveTermState(){
+  try{
+    localStorage.setItem(TERM_KEY, JSON.stringify({
+      ruta: T.ruta,
+      visits: T.visits
+    }));
+  }catch(e){}
+}
+
+function sanitizeClients(raw){
+  if(!Array.isArray(raw)) return [];
+  var out = [];
+  raw.forEach(function(c){
+    if(!c || typeof c !== 'object') return;
+    var rawR = normStr(c.ruta || c.RUTA).replace(/^RUTA\s*/i, '');
+    var rk = /^\d+$/.test(rawR) ? String(parseInt(rawR, 10)) : rawR;
+    var nombre = normStr(c.nombre || c['NOMBRE COMERCIAL']);
+    if(!nombre || !isAllowedRoute(rk)) return;
+    out.push({
+      ruta: rk,
+      nombre: nombre,
+      calle: normStr(c.calle || c.CALLE),
+      num: normStr(c.num || c.NUM),
+      colonia: normStr(c.colonia || c.COLONIA),
+      cp: normStr(c.cp || c.COD_POSTAL),
+      contacto: normStr(c.contacto || c.CONTACTO),
+      telefono: normStr(c.telefono || c.TELEFONO),
+      lat: c.lat !== undefined ? normNum(c.lat) : normNum(c.COORD_LAT),
+      lon: c.lon !== undefined ? normNum(c.lon) : normNum(c.COORD_LON),
+      dias: Array.isArray(c.dias) ? c.dias.filter(function(d){ return ['Lu','Ma','Mi','Ju','Vi','Sa'].indexOf(d) >= 0; }) : [],
+      clienteNuevo: !!(c.clienteNuevo || normStr(c['CLIENTE NUEVO'])),
+      fechaAlta: normStr(c.fechaAlta || c.FECHA_ALTA)
+    });
+  });
+  return out;
+}
+
+function setSyncStatus(text, type){
+  var b = $('syncBadge');
+  b.textContent = text;
+  b.className = 'sync' + (type ? ' ' + type : '');
+}
+
+function renderHeaderAndRoutes(){
+  $('cname').textContent = S.name || 'Terminal de Ruta';
+  $('logo').innerHTML = S.logo ? '<img alt="Logo" src="' + S.logo + '">' : LOGO_SVG;
+  var keys = Object.keys(S.sales).sort(), cut = keys.length ? keys[keys.length - 1] : '';
+  $('date').textContent = cut ? 'Corte al ' + (+cut.slice(8)) + ' ' + AB[+cut.slice(5, 7) - 1] + ' · ' + S.clients.length + ' clientes' : 'Sin corte de ventas · ' + S.clients.length + ' clientes';
+
+  var sel = $('selRuta');
+  sel.innerHTML = RUTAS_PERMITIDAS.map(function(r){
+    var cnt = S.clients.filter(function(c){ return c.ruta === r; }).length;
+    return '<option value="' + r + '"' + (r === T.ruta ? ' selected' : '') + '>Ruta ' + r + ' (' + cnt + ' cli)</option>';
+  }).join('');
+
+
+}
+
+/* ==================== SECCIÓN 1: MI VENTA ==================== */
+function renderVenta(){
+  var r = T.ruta;
+  $('rtTitle').textContent = 'Ruta ' + r;
+  var hasMeta = RUTAS_META.indexOf(r) >= 0;
+
+  var now = new Date(), Y = now.getFullYear(), M = now.getMonth(), d = now.getDate(), dim = new Date(Y, M + 1, 0).getDate();
+  var mk = Y + '-' + pad(M + 1);
+  var mt = S.metas[mk] || {t:0, r:{}};
+  var keys = Object.keys(S.sales).sort(), cut = keys.length ? keys[keys.length - 1] : '';
+  var cd = cut.slice(0, 7) === mk ? +cut.slice(8) : 0;
+
+  var nd = function(a, b){ var c = 0; for(var i = a; i <= b; i++) if(wd(new Date(Y, M, i))) c++; return c; };
+  var we = nd(1, cd), wt = nd(1, dim), wr = nd(cd + 1, dim);
+
+  var mes = 0;
+  keys.forEach(function(k){ if(k.slice(0, 7) === mk && S.sales[k]) mes += +S.sales[k][r] || 0; });
+
+  var mg = hasMeta ? ((mt.r[r] || 0) * mt.t) : 0;
+  var pm = mg > 0 ? (mes / mg * 100) : 0;
+  var pro = we > 0 ? (mes / we * wt) : 0;
+  var pp = mg > 0 ? (pro / mg * 100) : 0;
+
+  // Semana actual (Vie - Jue, igual que index)
+  var dow = (now.getDay() + 2) % 7;
+  var mon = new Date(Y, M, d - dow), sun = new Date(Y, M, d - dow + 6);
+  var sem = 0, sg = 0, wk = 0, wkeys = [], daysList = [];
+
+  for(var i = 0; i < 7; i++){
+    var t = new Date(Y, M, d - dow + i);
+    if(t.getDay() === 0) continue;
+    var k = kd(t);
+    var m2 = S.metas[t.getFullYear() + '-' + pad(t.getMonth() + 1)];
+    var ld = lab(t.getFullYear(), t.getMonth()) || 1;
+    wkeys.push(k);
+    if(wd(t) && cut && k <= cut) wk++;
+    var sv = S.sales[k] ? (+S.sales[k][r] || 0) : 0;
+    var gv = (hasMeta && m2 && m2.r && m2.r[r]) ? (m2.t * m2.r[r] / ld) : 0;
+    sem += sv;
+    sg += gv;
+    daysList.push({t:t, k:k, off:!wd(t), has:!!S.sales[k], sv:sv, gv:gv});
+  }
+
+  var ps = sg > 0 ? (sem / sg * 100) : 0;
+
+  $('rtSub').textContent = mg > 0
+    ? 'Meta mes: ' + fm(mg) + ' cjs · Meta semanal: ' + fm(sg) + ' cjs'
+    : 'Ruta sin meta asignada este mes · cifras en cajas';
+
+  $('kMes').textContent = fm(mes);
+  $('kMesP').textContent = mg > 0 ? pm.toFixed(0) + '%' : '–';
+  $('kMesP').className = mg > 0 ? cls(pm) : '';
+  $('kMesD').textContent = fm(we > 0 ? mes / we : 0);
+
+  $('kSemL').textContent = 'Sem ' + mon.getDate() + (mon.getMonth() === sun.getMonth() ? '' : ' ' + AB[mon.getMonth()]) + ' - ' + sun.getDate() + ' ' + AB[sun.getMonth()];
+  $('kSem').textContent = fm(sem);
+  $('kSemP').textContent = sg > 0 ? ps.toFixed(0) + '%' : '–';
+  $('kSemP').className = sg > 0 ? cls(ps) : '';
+  $('kSemD').textContent = fm(wk > 0 ? sem / wk : 0);
+
+  $('kPro').textContent = fm(pro);
+  if(mg > 0){
+    $('kProPill').textContent = pp.toFixed(0) + '% de meta';
+    $('kProPill').className = 'pill ' + cls(pp);
+    $('kProBar').style.width = Math.min(pp, 100) + '%';
+    $('kProReq').textContent = wr > 0 ? fm(Math.max(mg - mes, 0) / wr) : '–';
+    $('kProNote').innerHTML = 'Día hábil ' + we + ' de ' + wt + ' · ' + (pro >= mg
+      ? 'superarías meta por <b class="ok">' + fm(pro - mg) + '</b>'
+      : 'faltarían <b class="bad">' + fm(mg - pro) + '</b>');
+  }else{
+    $('kProPill').textContent = 'Sin meta';
+    $('kProPill').className = 'pill';
+    $('kProBar').style.width = '0%';
+    $('kProReq').textContent = '–';
+    $('kProNote').textContent = 'Día hábil ' + we + ' de ' + wt;
+  }
+
+  // Gráfica SKU de la ruta
+  $('btnSkuM').className = T.skuPeriod === 'm' ? 'btn sm' : 'btn g sm';
+  $('btnSkuS').className = T.skuPeriod === 's' ? 'btn sm' : 'btn g sm';
+  $('skuPeriodLbl').textContent = T.skuPeriod === 'm' ? 'Mes actual' : 'Semana actual';
+
+  var agg = {t355:0, t600:0, t2l:0, yau:0, titan:0, tot:0}, skuDays = 0;
+  Object.keys(S.sku).forEach(function(k){
+    var inP = T.skuPeriod === 'm' ? k.slice(0, 7) === mk : wkeys.indexOf(k) >= 0;
+    if(!inP) return;
+    var rx = S.sku[k] && S.sku[k].r && S.sku[k].r[r];
+    if(!rx) return;
+    skuDays++;
+    for(var q in agg) agg[q] += +rx[q] || 0;
+  });
+
+  $('skuTotLbl').textContent = 'Total ' + (T.skuPeriod === 'm' ? 'del mes' : 'de la semana') + ': ' + fm(agg.tot) + ' cajas';
+  if(skuDays > 0 && agg.tot > 0){
+    var W = 400, H = 225, T0 = 42, B0 = 44, L0 = 10, ph = H - T0 - B0, n = SKU.length, cw = (W - 2 * L0) / n, bw = 44, mx = 1;
+    SKU.forEach(function(s){ if(agg[s[0]] > mx) mx = agg[s[0]]; });
+    mx *= 1.08;
+    var g = '<line x1="' + L0 + '" x2="' + (W - L0) + '" y1="' + (T0 + ph) + '" y2="' + (T0 + ph) + '" stroke="var(--line)"/>';
+    SKU.forEach(function(s, idx){
+      var v = agg[s[0]], cx = L0 + cw * (idx + 0.5), h = v / mx * ph, p = agg.tot ? (v / agg.tot * 100) : 0, w = s[1].split(' ');
+      g += '<rect x="' + (cx - bw / 2) + '" y="' + (T0 + ph - h) + '" width="' + bw + '" height="' + Math.max(h, 2) + '" rx="7" fill="var(--or)"/>';
+      g += '<text x="' + cx + '" y="' + (T0 + ph - h - 17) + '" font-size="13" font-weight="800" text-anchor="middle" fill="var(--ink)">' + p.toFixed(1) + '%</text>';
+      g += '<text x="' + cx + '" y="' + (T0 + ph - h - 4) + '" font-size="11" text-anchor="middle" fill="var(--mute)">' + fm(v) + ' cj</text>';
+      g += '<text x="' + cx + '" y="' + (H - 24) + '" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">' + esc(w[0]) + '</text>';
+      g += '<text x="' + cx + '" y="' + (H - 10) + '" font-size="11" text-anchor="middle" fill="var(--mute)">' + esc(w.slice(1).join(' ')) + '</text>';
+    });
+    $('skuSvgWrap').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block">' + g + '</svg>';
+    $('skuNote').textContent = 'Participación porcentual sobre las ' + fm(agg.tot) + ' cajas vendidas en ' + skuDays + ' día(s) reportados.';
+  }else{
+    $('skuSvgWrap').innerHTML = '';
+    $('skuNote').textContent = 'Sin desglose por producto cargado para esta ruta en el periodo.';
+  }
+
+  // Lista día por día de la semana
+  $('wkRangeLbl').textContent = mon.getDate() + ' ' + AB[mon.getMonth()] + ' – ' + sun.getDate() + ' ' + AB[sun.getMonth()];
+  $('wkDaysList').innerHTML = daysList.map(function(x){
+    var pd = x.gv > 0 ? (x.sv / x.gv * 100) : 0;
+    var nm = DN[x.t.getDay()];
+    return '<div class="dd' + (x.has ? ' on' : '') + '">'
+      + '<div class="bd">' + nm.toUpperCase() + '<b>' + x.t.getDate() + '</b></div>'
+      + '<div class="di"><b>' + nm + ' ' + x.t.getDate() + ' ' + AB[x.t.getMonth()] + '</b>'
+      + '<span class="' + (x.has ? 'ok' : '') + '">' + (x.has ? 'Venta reportada' : (x.off ? 'Día no laborable' : 'Pendiente de cierre')) + '</span></div>'
+      + (x.has
+        ? '<div class="dr"><b>' + fm(x.sv) + ' cjs</b>' + (x.gv > 0 ? '<span class="' + cls(pd) + '">' + pd.toFixed(0) + '% meta</span>' : '') + '</div>'
+        : '<div class="dr">–</div>')
+      + '</div>';
   }).join('');
 }
 
-function renderTerminal() {
-  if (RUTAS_PERMITIDAS.indexOf(curRuta) < 0) curRuta = RUTAS_PERMITIDAS[0];
-  renderSelector();
-
-  $('cname').textContent = S.name || 'Control de ventas';
-  if (S.logo) {
-    $('logo').innerHTML = '<img src="' + S.logo + '" alt="Logo">';
-  } else {
-    $('logo').innerHTML = '<b style="font-size:15px">CV</b>';
+/* ==================== SECCIÓN 2: CLIENTES Y MAPA ==================== */
+function getTodayKey(){ return kd(new Date()); }
+function getVisitStatus(ck){
+  var tk = getTodayKey();
+  return (T.visits[tk] && T.visits[tk][ck]) || '';
+}
+function toggleVisitStatus(ck, st){
+  var tk = getTodayKey();
+  if(!T.visits[tk]) T.visits[tk] = {};
+  if(T.visits[tk][ck] === st){
+    delete T.visits[tk][ck];
+  }else{
+    T.visits[tk][ck] = st;
   }
+  saveTermState();
+  renderClientes();
+}
 
-  var keys = Object.keys(S.sales || {}).sort();
-  var cut = keys.length ? keys[keys.length - 1] : '';
-  $('cdate').textContent = cut
-    ? 'Corte Excel: ' + (+cut.slice(8)) + ' ' + AB[+cut.slice(5, 7) - 1] + ' ' + cut.slice(0, 4)
-    : 'Sin ventas cargadas en Excel';
+function initMapIfNeeded(){
+  if(map || typeof L === 'undefined') return;
+  map = L.map('map', {zoomControl:true}).setView([23.2494, -106.4111], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+}
 
-  var refDate = cut ? new Date(+cut.slice(0, 4), +cut.slice(5, 7) - 1, +cut.slice(8)) : new Date();
-  var Y = refDate.getFullYear(), M = refDate.getMonth(), d = refDate.getDate();
-  var mk = Y + '-' + pad(M + 1);
-  var mt = (S.metas && S.metas[mk]) || { t: 0, r: {} };
-  var metaMesRuta = (mt.r && mt.r[curRuta] && mt.t) ? mt.t * mt.r[curRuta] : 0;
+function makePinIcon(status){
+  var color = status === 'venta' ? '#1a9a4f' : (status === 'sin' ? '#d62828' : '#f7b500');
+  var inner = status === 'venta' ? '✓' : (status === 'sin' ? '✕' : '•');
+  var txtColor = status === 'venta' || status === 'sin' ? '#ffffff' : '#14213d';
+  return L.divIcon({
+    className: '',
+    html: '<div style="position:relative;width:26px;height:26px;border-radius:50% 50% 50% 0;background:' + color + ';border:2.5px solid #14213d;transform:rotate(-45deg);box-shadow:0 3px 8px rgba(0,0,0,.35);display:grid;place-items:center"><span style="transform:rotate(45deg);color:' + txtColor + ';font-size:12px;font-weight:900;line-height:1">' + inner + '</span></div>',
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -24]
+  });
+}
 
-  var ventaMes = 0;
-  keys.forEach(function(k){
-    if (k.slice(0, 7) === mk) ventaMes += Number((S.sales[k] || {})[curRuta]) || 0;
+function renderClientes(fitBounds){
+  var r = T.ruta;
+  var allRouteClients = S.clients.filter(function(c){ return c.ruta === r; });
+  var todayCode = todayDayCode();
+
+  // Selector desplegable de día
+  $('selDay').innerHTML = DIAS_VISITA.map(function(d){
+    var cnt = d.id === 'ALL'
+      ? allRouteClients.length
+      : allRouteClients.filter(function(c){ return (c.dias || []).indexOf(d.id) >= 0; }).length;
+    var isToday = d.id === todayCode;
+    return '<option value="' + d.id + '"' + (T.dayFilter === d.id ? ' selected' : '') + '>'
+      + d.lbl + (isToday ? ' (Hoy)' : '') + ' · ' + cnt + ' cli</option>';
+  }).join('');
+
+  // Filtrar por día y búsqueda primero para calcular contadores de estatus
+  var q = T.search.toLowerCase().trim();
+  var baseFiltered = allRouteClients.filter(function(c){
+    if(T.dayFilter !== 'ALL' && (c.dias || []).indexOf(T.dayFilter) < 0) return false;
+    if(q){
+      var hay = [c.nombre, c.calle, c.num, c.colonia, c.contacto, c.telefono].join(' ').toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
   });
 
-  var dow = (refDate.getDay() + 2) % 7;
-  var mon = new Date(Y, M, d - dow);
-  var sun = new Date(Y, M, d - dow + 6);
-  var ventaSem = 0, metaSem = 0;
-  for (var i = 0; i < 7; i++) {
-    var t = new Date(Y, M, d - dow + i);
-    if (t.getDay() === 0) continue;
-    var k = kd(t);
-    var m2 = S.metas && S.metas[t.getFullYear() + '-' + pad(t.getMonth() + 1)];
-    var ld = lab(t.getFullYear(), t.getMonth()) || 1;
-    ventaSem += Number((S.sales[k] || {})[curRuta]) || 0;
-    if (m2 && m2.r && m2.r[curRuta]) metaSem += (m2.t * m2.r[curRuta]) / ld;
+  var cAll = baseFiltered.length, cPend = 0, cVenta = 0, cSin = 0;
+  baseFiltered.forEach(function(c){
+    var st = getVisitStatus(clientKey(c));
+    if(st === 'venta') cVenta++;
+    else if(st === 'sin') cSin++;
+    else cPend++;
+  });
+
+  var stBtns = $('stFilter').querySelectorAll('.stf');
+  var counts = {all:cAll, pend:cPend, venta:cVenta, sin:cSin};
+  var labels = {all:'Todos', pend:'Pend.', venta:'Venta', sin:'Sin vta'};
+  stBtns.forEach(function(b){
+    var k = b.dataset.st;
+    b.className = 'stf' + (T.stFilter === k ? ' on' : '');
+    var dot = k !== 'all' ? '<i class="dot"></i>' : '';
+    b.innerHTML = dot + labels[k] + ' (' + counts[k] + ')';
+  });
+
+  var finalClients = baseFiltered.filter(function(c){
+    var st = getVisitStatus(clientKey(c));
+    if(T.stFilter === 'pend') return !st;
+    if(T.stFilter === 'venta') return st === 'venta';
+    if(T.stFilter === 'sin') return st === 'sin';
+    return true;
+  });
+
+  $('cliSub').textContent = 'Ruta ' + r + ' · ' + allRouteClients.length + ' cliente(s) en cartera total';
+  $('cliListTitle').textContent = 'Mostrando ' + finalClients.length + ' cliente(s)';
+
+  // Actualizar mapa
+  if(T.tab === 'clientes'){
+    initMapIfNeeded();
+    if(map && markersLayer){
+      map.invalidateSize();
+      markersLayer.clearLayers();
+      var bounds = [];
+      finalClients.forEach(function(c){
+        if(c.lat != null && c.lon != null && isFinite(c.lat) && isFinite(c.lon)){
+          var ck = clientKey(c);
+          var st = getVisitStatus(ck);
+          var addr = [c.calle, c.num, c.colonia].filter(Boolean).join(' ');
+          var gmaps = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(c.lat + ',' + c.lon);
+          var stBadge = st === 'venta'
+            ? '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#e8f7ee;color:#1a9a4f;font-size:10px;font-weight:800;margin-bottom:4px">● Venta registrada</span>'
+            : (st === 'sin'
+              ? '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#fff1f1;color:#d62828;font-size:10px;font-weight:800;margin-bottom:4px">● Sin venta</span>'
+              : '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#fff8db;color:#8a6300;font-size:10px;font-weight:800;margin-bottom:4px">● Pendiente</span>');
+          var popupHtml = '<div style="font-family:Plus Jakarta Sans,sans-serif;min-width:175px">'
+            + stBadge + '<br>'
+            + '<b style="font-size:13px;color:#14213d">' + esc(c.nombre) + '</b>'
+            + (addr ? '<div style="font-size:11.5px;color:#5b6b8c;margin:3px 0">' + esc(addr) + '</div>' : '')
+            + (c.contacto ? '<div style="font-size:11px">👤 ' + esc(c.contacto) + '</div>' : '')
+            + '<div style="margin-top:7px"><a href="' + gmaps + '" target="_blank" rel="noopener" style="display:inline-block;padding:5px 9px;background:#f7b500;color:#14213d;font-weight:800;font-size:11px;border-radius:8px;text-decoration:none">Cómo llegar (GPS)</a></div>'
+            + '</div>';
+          var m = L.marker([c.lat, c.lon], {icon: makePinIcon(st)}).bindPopup(popupHtml);
+          m.addTo(markersLayer);
+          bounds.push([c.lat, c.lon]);
+        }
+      });
+      $('mapCount').textContent = bounds.length + ' de ' + finalClients.length + ' con GPS en mapa';
+      if(bounds.length > 0 && fitBounds !== false){
+        map.fitBounds(bounds, {padding:[28, 28], maxZoom:16});
+      }
+    }
   }
 
-  var ultVal = cut && S.sales[cut] ? (Number(S.sales[cut][curRuta]) || 0) : 0;
-  $('vUlt').textContent = fm(ultVal) + ' cjs';
-  $('vUltF').textContent = cut ? (+cut.slice(8)) + ' ' + AB[+cut.slice(5, 7) - 1] : '–';
-
-  $('lSem').textContent = 'Sem ' + mon.getDate() + ' - ' + sun.getDate() + ' ' + AB[sun.getMonth()];
-  $('vSem').textContent = fm(ventaSem) + ' cjs';
-  $('mSem').textContent = metaSem > 0 ? fm(metaSem) : '–';
-  if (metaSem > 0) {
-    var ps = ventaSem / metaSem * 100;
-    $('pSem').textContent = ps.toFixed(0) + '%';
-    $('pSem').className = cls(ps);
-  } else {
-    $('pSem').textContent = '–';
-    $('pSem').className = '';
+  // Renderizar tarjetas de clientes
+  if(!allRouteClients.length){
+    $('cliList').innerHTML = '<div class="card"><div class="big" style="font-size:16px">Sin clientes cargados en Ruta ' + r + '</div>'
+      + '<p class="small">Sube el archivo Excel ("Base Master") en la pestaña <b>Datos</b> de tu panel principal (index) para que aparezcan aquí automáticamente.</p></div>';
+    return;
+  }
+  if(!finalClients.length){
+    $('cliList').innerHTML = '<div class="card"><div class="lbl">No hay clientes con los filtros actuales</div>'
+      + '<p class="small">Prueba cambiando el día de visita, el estatus o limpiando el buscador.</p></div>';
+    return;
   }
 
-  $('vMes').textContent = fm(ventaMes) + ' cjs';
-  if (metaMesRuta > 0) {
-    var pm = ventaMes / metaMesRuta * 100;
-    var diff = ventaMes - metaMesRuta;
-    $('pMes').textContent = pm.toFixed(0) + '% de meta (' + fm(metaMesRuta) + ')';
-    $('pMes').className = 'pill ' + cls(pm);
-    $('difMes').textContent = fd(diff) + ' cjs';
-    $('difMes').className = diff < 0 ? 'bad' : 'ok';
-    $('dMes').textContent = 'Meta mensual ' + rLabel(curRuta) + ': ' + fm(metaMesRuta) + ' cajas';
-  } else {
-    $('pMes').textContent = 'Sin meta mensual';
-    $('pMes').className = 'pill';
-    $('difMes').textContent = '–';
-    $('difMes').className = '';
-    $('dMes').textContent = 'Sin meta asignada para este mes';
-  }
-
-  var rSku = cut && S.sku && S.sku[cut] && S.sku[cut].r ? S.sku[cut].r[curRuta] : null;
-  if (rSku) {
-    $('skuDia').innerHTML = SKU_LABELS.map(function(item){
-      var val = Number(rSku[item[0]]) || 0;
-      return '<div class="li"><span>' + item[1] + '</span><b>' + fm(val) + ' cjs</b></div>';
+  var diasOrd = ['Lu','Ma','Mi','Ju','Vi','Sa'];
+  $('cliList').innerHTML = finalClients.map(function(c){
+    var ck = clientKey(c);
+    var st = getVisitStatus(ck);
+    var addr = [c.calle, c.num, c.colonia, c.cp ? 'CP ' + c.cp : ''].filter(Boolean).join(', ');
+    var hasGps = c.lat != null && c.lon != null && isFinite(c.lat) && isFinite(c.lon);
+    var gmaps = hasGps ? 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(c.lat + ',' + c.lon) : '#';
+    var daysHtml = diasOrd.map(function(d){
+      var on = (c.dias || []).indexOf(d) >= 0;
+      return '<span class="' + (on ? 'act' : '') + '">' + d + '</span>';
     }).join('');
-  } else {
-    $('skuDia').innerHTML = '<p class="small" style="margin:0">Sin desglose SKU en la última fecha cargada.</p>';
+
+    return '<div class="cli-card' + (st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : '')) + '" data-ck="' + esc(ck) + '">'
+      + '<div class="cli-top">'
+      +   '<div class="cli-name">' + esc(c.nombre) + '</div>'
+      +   (c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>')
+      + '</div>'
+      + (addr ? '<div class="cli-addr">' + esc(addr) + '</div>' : '')
+      + '<div class="cli-meta">'
+      +   (c.contacto ? '<span>👤 ' + esc(c.contacto) + '</span>' : '')
+      +   (c.telefono ? '<span>📞 <a href="tel:' + esc(c.telefono.replace(/\s+/g, '')) + '">' + esc(c.telefono) + '</a></span>' : '')
+      + '</div>'
+      + '<div class="cli-days">' + daysHtml + '</div>'
+      + '<div class="cli-actions">'
+      +   '<button type="button" class="act-btn' + (st === 'venta' ? ' v-on' : '') + '" data-act="venta">✓ Venta</button>'
+      +   '<button type="button" class="act-btn' + (st === 'sin' ? ' s-on' : '') + '" data-act="sin">✕ Sin venta</button>'
+      +   '<a class="act-btn gps' + (hasGps ? '' : ' disabled') + '" href="' + gmaps + '" target="_blank" rel="noopener" title="Abrir ruta GPS">📍 Ir</a>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderAll(fitMap){
+  renderHeaderAndRoutes();
+  renderVenta();
+  if(T.tab === 'clientes') renderClientes(fitMap);
+}
+
+/* ==================== EVENTOS ==================== */
+$('selRuta').onchange = function(){
+  T.ruta = this.value;
+  saveTermState();
+  renderAll(true);
+};
+
+
+$('btnSkuM').onclick = function(){ T.skuPeriod = 'm'; renderVenta(); };
+$('btnSkuS').onclick = function(){ T.skuPeriod = 's'; renderVenta(); };
+
+$('navVenta').onclick = function(){
+  T.tab = 'venta';
+  $('v-venta').hidden = false;
+  $('v-clientes').hidden = true;
+  $('navVenta').setAttribute('aria-selected', 'true');
+  $('navClientes').setAttribute('aria-selected', 'false');
+  renderVenta();
+  window.scrollTo(0, 0);
+};
+$('navClientes').onclick = function(){
+  T.tab = 'clientes';
+  $('v-venta').hidden = true;
+  $('v-clientes').hidden = false;
+  $('navVenta').setAttribute('aria-selected', 'false');
+  $('navClientes').setAttribute('aria-selected', 'true');
+  renderClientes(true);
+  window.scrollTo(0, 0);
+};
+
+$('selDay').onchange = function(){
+  T.dayFilter = this.value;
+  renderClientes(true);
+};
+
+$('stFilter').onclick = function(e){
+  var b = e.target.closest('[data-st]');
+  if(!b) return;
+  T.stFilter = b.dataset.st;
+  renderClientes(true);
+};
+
+$('cliSearch').oninput = function(){
+  T.search = this.value;
+  $('cliSearchClr').style.display = T.search ? 'block' : 'none';
+  renderClientes(false);
+};
+$('cliSearchClr').onclick = function(){
+  T.search = '';
+  $('cliSearch').value = '';
+  this.style.display = 'none';
+  renderClientes(true);
+};
+
+$('cliList').onclick = function(e){
+  var btn = e.target.closest('[data-act]');
+  if(!btn) return;
+  var card = btn.closest('[data-ck]');
+  if(!card) return;
+  toggleVisitStatus(card.dataset.ck, btn.dataset.act);
+};
+
+$('btnResetDay').onclick = function(){
+  var tk = getTodayKey();
+  if(!T.visits[tk] || !Object.keys(T.visits[tk]).length) return;
+  if(confirm('¿Reiniciar los estatus de visita marcados hoy?')){
+    delete T.visits[tk];
+    saveTermState();
+    renderClientes(false);
   }
+};
 
-  var descKeys = keys.slice().reverse().slice(0, 12);
-  $('histRuta').innerHTML = descKeys.length
-    ? descKeys.map(function(k){
-        var dt = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8));
-        var val = Number((S.sales[k] || {})[curRuta]) || 0;
-        return '<div class="li"><span>' + DN[dt.getDay()] + ' ' + dt.getDate() + ' ' + AB[dt.getMonth()] + '</span><b>' + fm(val) + ' cjs</b></div>';
-      }).join('')
-    : '<p class="small" style="margin:0">Sin historial para esta ruta.</p>';
+$('btnFitMap').onclick = function(){ renderClientes(true); };
+$('btnMyLoc').onclick = function(){
+  if(!navigator.geolocation) return alert('Tu dispositivo no soporta geolocalización.');
+  initMapIfNeeded();
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = pos.coords.latitude, lon = pos.coords.longitude;
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker([lat, lon], {
+      radius: 9, fillColor: '#2563eb', color: '#ffffff', weight: 3, fillOpacity: 1
+    }).addTo(map).bindPopup('<b>Tu ubicación actual</b>').openPopup();
+    map.setView([lat, lon], 15);
+  }, function(){
+    alert('No se pudo obtener tu ubicación. Verifica permisos de GPS.');
+  }, {enableHighAccuracy: true, timeout: 8000});
+};
 
-  var rutaClientes = (S.clients || []).filter(function(c){ return c.route === curRuta; });
-  $('cliRuta').innerHTML = rutaClientes.length
-    ? rutaClientes.map(function(c){
-        var sub = [c.id ? 'ID ' + c.id : '', c.day ? 'Día ' + c.day : '', c.address].filter(Boolean).join(' · ');
-        return '<div class="li"><div style="padding-right:10px"><b>' + esc(c.name) + '</b>' +
-          (sub ? '<div class="small" style="margin:2px 0 0">' + esc(sub) + '</div>' : '') +
-          '</div><span class="pill">' + rLabel(curRuta) + '</span></div>';
-      }).join('')
-    : '<p class="small" style="margin:0">Sin clientes cargados para ' + rLabel(curRuta) + '.</p>';
-}
-
-$('selRuta').addEventListener('change', function(){
-  if (RUTAS_PERMITIDAS.indexOf(this.value) < 0) return;
-  curRuta = this.value;
-  try { localStorage.setItem('ventas-terminal-ruta', curRuta); } catch (e) {}
-  renderTerminal();
-});
-
-async function init() {
+/* ==================== SINCRONIZACIÓN FIREBASE ==================== */
+async function boot(){
   loadLocal();
-  renderTerminal();
+  renderAll(true);
 
-  if (!window.firebase || !FIREBASE_CONFIG.projectId) return;
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-  var FB = firebase.firestore();
-
-  try {
+  if(!window.firebase || typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.projectId){
+    setSyncStatus('Solo Local', '');
+    return;
+  }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    FB = firebase.firestore();
     var refs = ['config', 'sales', 'sku', 'clients'].map(function(k){ return FB.doc('app/' + k); });
-    var snaps = await Promise.all(refs.map(function(r){ return r.get(); }));
-    if (snaps[0].exists) applyCfg(snaps[0].data());
-    if (snaps[1].exists) applySales(snaps[1].data());
-    if (snaps[2].exists) applySku(snaps[2].data());
-    if (snaps[3].exists) applyClients(snaps[3].data());
-    renderTerminal();
 
-    refs[0].onSnapshot(function(x){ if (x.exists) { applyCfg(x.data()); renderTerminal(); } });
-    refs[1].onSnapshot(function(x){ if (x.exists) { applySales(x.data()); renderTerminal(); } });
-    refs[2].onSnapshot(function(x){ if (x.exists) { applySku(x.data()); renderTerminal(); } });
-    refs[3].onSnapshot(function(x){
-      applyClients(x.exists ? x.data() : { clients: [] });
-      renderTerminal();
+    var sn = await Promise.all(refs.map(function(r){ return r.get(); }));
+    if(sn[0].exists){
+      var cfg = sn[0].data() || {};
+      S.name = cfg.name || S.name;
+      S.user = cfg.user || S.user;
+      S.logo = cfg.logo || '';
+      S.metas = cfg.metas || {};
+      S.off = Array.isArray(cfg.off) ? cfg.off : [];
+    }
+    if(sn[1].exists) S.sales = (sn[1].data() || {}).sales || {};
+    if(sn[2].exists) S.sku = (sn[2].data() || {}).sku || {};
+    if(sn[3].exists) S.clients = sanitizeClients((sn[3].data() || {}).clients || []);
+    saveLocalData();
+    setSyncStatus('En línea', 'ok');
+    renderAll(true);
+
+    // Escucha en tiempo real lo que subas en index
+    refs[0].onSnapshot(function(x){
+      if(!x.exists) return;
+      var cfg = x.data() || {};
+      S.name = cfg.name || S.name;
+      S.user = cfg.user || S.user;
+      S.logo = cfg.logo || '';
+      S.metas = cfg.metas || {};
+      S.off = Array.isArray(cfg.off) ? cfg.off : [];
+      saveLocalData();
+      renderAll(false);
     });
-  } catch (e) {}
+    refs[1].onSnapshot(function(x){
+      S.sales = x.exists ? ((x.data() || {}).sales || {}) : {};
+      saveLocalData();
+      renderAll(false);
+    });
+    refs[2].onSnapshot(function(x){
+      S.sku = x.exists ? ((x.data() || {}).sku || {}) : {};
+      saveLocalData();
+      renderAll(false);
+    });
+    refs[3].onSnapshot(function(x){
+      S.clients = x.exists ? sanitizeClients((x.data() || {}).clients || []) : [];
+      saveLocalData();
+      setSyncStatus('En línea', 'ok');
+      renderAll(true);
+    });
+  }catch(e){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
 }
 
-init();
+boot();
 </script>
 </body>
 </html>
