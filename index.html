@@ -21,7 +21,7 @@ header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .logo svg{width:26px;height:26px}
 header h1{font-size:18px;margin:0;font-weight:800;line-height:1.1}
 header p{margin:2px 0 0;color:var(--mute);font-size:13px}
-.navlink{margin-left:auto;text-decoration:none;font-size:12px;font-weight:800;padding:7px 12px;border-radius:12px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.navlink{margin-left:auto;text-decoration:none;font-size:12px;font-weight:800;padding:7px 12px;border-radius:12px;background:var(--soft);color:var(--ink);border:1px solid var(--line);display:none}
 .hi{font-size:26px;font-weight:800;margin:0 0 2px}
 .sub{color:var(--mute);margin:0 0 16px;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -180,9 +180,29 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:
     </div>
     <div id="msg" role="status" aria-live="polite"></div>
   </div>
+
+  <h2>Clientes para Terminal</h2>
+  <div class="card">
+    <div class="lbl" style="margin-top:0">Base de clientes con ubicaciones (hoja "Base Master")</div>
+    <label for="modoCli">Modo de carga</label>
+    <select id="modoCli">
+      <option value="merge">Actualizar / fusionar (conserva existentes y agrega/actualiza nuevos)</option>
+      <option value="replace">Sustituir base (reemplaza por completo la base de clientes)</option>
+    </select>
+    <label for="fCli">Archivo de clientes (.xls / .xlsx)</label>
+    <input id="fCli" type="file" accept=".xls,.xlsx">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+      <button class="btn del" id="clrCli" type="button">Eliminar base de clientes</button>
+    </div>
+    <div id="msgCli" class="small" role="status" aria-live="polite" style="min-height:18px;margin-top:8px;font-weight:600"></div>
+  </div>
+
   <h2>Cargado</h2>
-  <div class="card"><div class="lbl">Metas por mes</div><div id="lMet" class="small"></div>
-    <div class="lbl" style="margin-top:12px">Ventas diarias (últimos días)</div><div id="lVen"></div></div>
+  <div class="card">
+    <div class="lbl">Clientes en Terminal</div><div id="lCli" class="small"></div>
+    <div class="lbl" style="margin-top:12px">Metas por mes</div><div id="lMet" class="small"></div>
+    <div class="lbl" style="margin-top:12px">Ventas diarias (últimos días)</div><div id="lVen"></div>
+  </div>
   <h2>Días no laborables o festivos</h2>
   <div class="card"><label for="iOff">Agregar fecha (los domingos ya son descanso)</label>
     <div style="display:flex;gap:8px"><input id="iOff" type="date"><button class="btn" id="addOff" type="button">Agregar</button></div>
@@ -224,11 +244,17 @@ var R9={'1':.109,'4':.15,'5':.109,'6':.154,'7':.142,'10':.15,'11':.11,'13':.076}
 var DEF={name:'Mi Empresa',user:'equipo',logo:'',
  metas:{'2026-10':{t:18362,r:{'1':.095088,'4':.138275,'5':.104945,'6':.141978,'7':.141978,'10':.166649,'11':.103692,'13':.107396}},'2026-11':{t:17232,r:R9},'2026-12':{t:19404,r:R9}},
  sales:{'2026-11-17':{'1':70,'4':108,'5':91,'6':88,'7':71,'10':142,'11':61,'13':0,'14':13,'15':0}},
- sku:{'2026-11-17':{t355:80,t600:321,t2l:173,yau:47,titan:23,tot:644,r:{"1":{"t355":15,"t600":43,"t2l":5,"yau":3,"titan":4,"tot":70},"4":{"t355":9,"t600":32,"t2l":49,"yau":18,"titan":0,"tot":108},"5":{"t355":5,"t600":52,"t2l":12,"yau":20,"titan":2,"tot":91},"6":{"t355":20,"t600":47,"t2l":20,"yau":0,"titan":1,"tot":88},"7":{"t355":5,"t600":45,"t2l":19,"yau":0,"titan":2,"tot":71},"10":{"t355":9,"t600":65,"t2l":56,"yau":5,"titan":7,"tot":142},"11":{"t355":13,"t600":32,"t2l":11,"yau":0,"titan":5,"tot":61},"13":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"14":{"t355":4,"t600":5,"t2l":1,"yau":1,"titan":2,"tot":13},"15":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0}}}}};
+ sku:{'2026-11-17':{t355:80,t600:321,t2l:173,yau:47,titan:23,tot:644,r:{"1":{"t355":15,"t600":43,"t2l":5,"yau":3,"titan":4,"tot":70},"4":{"t355":9,"t600":32,"t2l":49,"yau":18,"titan":0,"tot":108},"5":{"t355":5,"t600":52,"t2l":12,"yau":20,"titan":2,"tot":91},"6":{"t355":20,"t600":47,"t2l":20,"yau":0,"titan":1,"tot":88},"7":{"t355":5,"t600":45,"t2l":19,"yau":0,"titan":2,"tot":71},"10":{"t355":9,"t600":65,"t2l":56,"yau":5,"titan":7,"tot":142},"11":{"t355":13,"t600":32,"t2l":11,"yau":0,"titan":5,"tot":61},"13":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0},"14":{"t355":4,"t600":5,"t2l":1,"yau":1,"titan":2,"tot":13},"15":{"t355":0,"t600":0,"t2l":0,"yau":0,"titan":0,"tot":0}}}},
+ clients:[]};
 var FB=null,wt=null;
-var S={name:'Mi Empresa',user:'equipo',logo:'',metas:{},sales:{},sku:{},off:[]};
+var S={name:'Mi Empresa',user:'equipo',logo:'',metas:{},sales:{},sku:{},off:[],clients:[]};
 var cl=function(o){try{return JSON.parse(JSON.stringify(o))}catch(e){return {}}};
 function isAllowedRoute(r){return RUTAS_PERMITIDAS.indexOf(String(r))>=0}
+function normStr(v){return v==null?'':String(v).trim()}
+function normNum(v){if(v==null||v==='')return null;var n=Number(String(v).replace(',','.').trim());return isFinite(n)?n:null}
+function hasMark(v){var s=normStr(v).toUpperCase();return s==='X'||s==='1'||s==='SI'||s==='SÍ'||s==='TRUE'}
+function clientKey(c){return[normStr(c.ruta),normStr(c.nombre).toUpperCase(),normStr(c.calle).toUpperCase(),normStr(c.num).toUpperCase(),normStr(c.colonia).toUpperCase()].join('|')}
+
 function sanitizeSales(raw){
   var out={};
   if(!raw||typeof raw!=='object')return out;
@@ -281,8 +307,36 @@ function sanitizeSku(raw){
   });
   return out;
 }
+function sanitizeClients(raw){
+  if(!Array.isArray(raw))return[];
+  var out=[];
+  raw.forEach(function(c){
+    if(!c||typeof c!=='object')return;
+    var rawR=normStr(c.ruta||c.RUTA).replace(/^RUTA\s*/i,'');
+    var rk=/^\d+$/.test(rawR)?String(parseInt(rawR,10)):rawR;
+    var nombre=normStr(c.nombre||c['NOMBRE COMERCIAL']);
+    if(!nombre||!isAllowedRoute(rk))return;
+    out.push({
+      ruta:rk,
+      nombre:nombre,
+      calle:normStr(c.calle||c.CALLE),
+      num:normStr(c.num||c.NUM),
+      colonia:normStr(c.colonia||c.COLONIA),
+      cp:normStr(c.cp||c.COD_POSTAL),
+      contacto:normStr(c.contacto||c.CONTACTO),
+      telefono:normStr(c.telefono||c.TELEFONO),
+      lat:c.lat!==undefined?normNum(c.lat):normNum(c.COORD_LAT),
+      lon:c.lon!==undefined?normNum(c.lon):normNum(c.COORD_LON),
+      dias:Array.isArray(c.dias)?c.dias.filter(function(d){return['Lu','Ma','Mi','Ju','Vi','Sa'].indexOf(d)>=0}):[],
+      clienteNuevo:!!(c.clienteNuevo||normStr(c['CLIENTE NUEVO'])),
+      fechaAlta:normStr(c.fechaAlta||c.FECHA_ALTA)
+    });
+  });
+  return out;
+}
+
 function saveLocal(){
-  try{localStorage.setItem(KEY,JSON.stringify({name:S.name,user:S.user,logo:S.logo,metas:S.metas,sales:S.sales,sku:S.sku,off:S.off}))}catch(e){}
+  try{localStorage.setItem(KEY,JSON.stringify({name:S.name,user:S.user,logo:S.logo,metas:S.metas,sales:S.sales,sku:S.sku,off:S.off,clients:S.clients}))}catch(e){}
 }
 function flush(){
   saveLocal();
@@ -290,16 +344,25 @@ function flush(){
   Promise.all([
     FB.doc('app/config').set({name:S.name,user:S.user,logo:S.logo,metas:S.metas,off:S.off}),
     FB.doc('app/sales').set({sales:S.sales}),
-    FB.doc('app/sku').set({sku:S.sku})
+    FB.doc('app/sku').set({sku:S.sku}),
+    FB.doc('app/clients').set({clients:S.clients,updatedAt:Date.now()})
   ]).catch(function(e){
     var m=document.getElementById('msg');
     if(m){m.textContent='Guardado local OK; aviso Firestore: '+(e&&e.message||'sin permisos o conexión');m.className='bad'}
   });
 }
 function save(){saveLocal();clearTimeout(wt);wt=setTimeout(flush,400)}
-function applyCfg(d){if(!d)return;S.name=d.name||S.name;S.user=d.user||S.user;S.logo=d.logo||'';S.metas=sanitizeMetas(d.metas||{});S.off=cl(d.off||[]);saveLocal()}
+function syncClientsCloud(){
+  saveLocal();
+  if(!FB)return;
+  FB.doc('app/clients').set({clients:S.clients,updatedAt:Date.now()}).catch(function(e){
+    setMsgCli('Guardado local OK; aviso Firestore: '+(e&&e.message||'sin conexión'),true);
+  });
+}
+function applyCfg(d){if(!d)return;S.name=d.name||S.name;S.user=d.user||S.user;S.logo=d.logo||'';S.metas=sanitizeMetas(d.metas||{});S.off=Array.isArray(d.off)?cl(d.off):[];saveLocal()}
 function applySales(d){S.sales=d?sanitizeSales(d.sales||{}):{};saveLocal()}
 function applySku(d){S.sku=d?sanitizeSku(d.sku||{}):{};saveLocal()}
+function applyClients(d){S.clients=d?sanitizeClients(d.clients||[]):[];saveLocal()}
 
 var $=function(i){return document.getElementById(i)};
 var pad=function(n){return('0'+n).slice(-2)};
@@ -378,8 +441,17 @@ function lists(){
   $('lMet').textContent=ms.length?ms.join(' · '):'Sin metas cargadas';
   var ks=Object.keys(S.sales).sort().reverse().slice(0,10);
   $('lVen').innerHTML=ks.length?ks.map(function(k){var t=0,o=S.sales[k]||{};RUTAS_PERMITIDAS.forEach(function(r){t+=+o[r]||0});return '<div class="li"><span>'+(+k.slice(8))+' '+AB[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</span><b>'+fm(t)+' cajas</b></div>'}).join(''):'<div class="small">Sin ventas cargadas</div>';
+  var cs=S.clients||[];
+  if(!cs.length){
+    $('lCli').textContent='Sin clientes cargados';
+  }else{
+    var byR={};cs.forEach(function(c){byR[c.ruta]=(byR[c.ruta]||0)+1});
+    var det=Object.keys(byR).sort(function(a,b){return(+a||0)-(+b||0)}).map(function(r){return'R'+r+': '+byR[r]}).join(' · ');
+    $('lCli').textContent=fm(cs.length)+' cliente(s) ('+det+')';
+  }
 }
 function msg(t,bad){var m=$('msg');m.textContent=t;m.className=bad?'bad':'ok'}
+function setMsgCli(t,bad){var el=$('msgCli');if(!el)return;el.textContent=t;el.className='small '+(bad?'bad':'ok')}
 function readWb(f,cb){var r=new FileReader();r.onload=function(e){var wb;try{wb=XLSX.read(e.target.result,{type:'array'})}catch(x){return msg('No pude leer '+f.name,1)}cb(wb)};r.onerror=function(){msg('No pude abrir '+f.name,1)};r.readAsArrayBuffer(f)}
 function sheet(wb,re){for(var i=0;i<wb.SheetNames.length;i++)if(re.test(wb.SheetNames[i].trim()))return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[i]],{header:1});return null}
 function parseMetas(wb){
@@ -412,6 +484,49 @@ function parseVentas(wb,f){
   if(!dt){var n=/(\d{2})[-_](\d{2})[-_](\d{4})/.exec(f.name);if(n)dt=n[3]+'-'+n[2]+'-'+n[1]}
   if(!dt||!c)return 'No pude leer fecha o rutas permitidas en '+f.name;
   S.sales[dt]=sl;var sk=parseSku(wb);if(sk)S.sku[dt]=sk;return dt}
+
+function parseClientesWb(wb){
+  var rows=sheet(wb,/^base\s*master$/i);
+  if(!rows||!rows.length)return{error:'No encontré la hoja "Base Master".'};
+  var h=rows[0].map(function(x){return normStr(x).toUpperCase()});
+  var idx=function(names){for(var i=0;i<names.length;i++){var p=h.indexOf(names[i]);if(p>=0)return p}return-1};
+  var iRuta=idx(['RUTA']),iNom=idx(['NOMBRE COMERCIAL','NOMBRE']);
+  if(iRuta<0||iNom<0)return{error:'Faltan columnas RUTA o NOMBRE COMERCIAL en "Base Master".'};
+  var iCalle=idx(['CALLE']),iNum=idx(['NUM','NUMERO','NÚM']);
+  var iCol=idx(['COLONIA']),iCp=idx(['COD_POSTAL','CP','CODIGO POSTAL']);
+  var iCon=idx(['CONTACTO']),iTel=idx(['TELEFONO','TELÉFONO','TEL']);
+  var iLat=idx(['COORD_LAT','LAT','LATITUD']),iLon=idx(['COORD_LON','LON','LONGITUD']);
+  var iNuevo=idx(['CLIENTE NUEVO','NUEVO']),iFecha=idx(['FECHA_ALTA','FECHA ALTA']);
+  var diasIdx={Lu:idx(['LU','LUNES']),Ma:idx(['MA','MARTES']),Mi:idx(['MI','MIERCOLES','MIÉRCOLES']),Ju:idx(['JU','JUEVES']),Vi:idx(['VI','VIERNES']),Sa:idx(['SA','SABADO','SÁBADO'])};
+  var list=[],omitidos=0;
+  rows.slice(1).forEach(function(w){
+    if(!w)return;
+    var rawR=normStr(w[iRuta]).replace(/^RUTA\s*/i,'');
+    var rk=/^\d+$/.test(rawR)?String(parseInt(rawR,10)):rawR;
+    var nombre=normStr(w[iNom]);
+    if(!nombre)return;
+    if(!isAllowedRoute(rk)){omitidos++;return}
+    var dias=[];
+    ['Lu','Ma','Mi','Ju','Vi','Sa'].forEach(function(d){if(diasIdx[d]>=0&&hasMark(w[diasIdx[d]]))dias.push(d)});
+    list.push({
+      ruta:rk,
+      nombre:nombre,
+      calle:iCalle>=0?normStr(w[iCalle]):'',
+      num:iNum>=0?normStr(w[iNum]):'',
+      colonia:iCol>=0?normStr(w[iCol]):'',
+      cp:iCp>=0?normStr(w[iCp]):'',
+      contacto:iCon>=0?normStr(w[iCon]):'',
+      telefono:iTel>=0?normStr(w[iTel]):'',
+      lat:iLat>=0?normNum(w[iLat]):null,
+      lon:iLon>=0?normNum(w[iLon]):null,
+      dias:dias,
+      clienteNuevo:iNuevo>=0&&normStr(w[iNuevo])!=='',
+      fechaAlta:iFecha>=0?normStr(w[iFecha]):''
+    });
+  });
+  return{list:list,omitidos:omitidos};
+}
+
 $('fVen').onchange=function(e){var fs=Array.prototype.slice.call(e.target.files),ok=0,er=[],left=fs.length;e.target.value='';
   if(!left)return;
   fs.forEach(function(f){readWb(f,function(wb){var r=parseVentas(wb,f);if(/^\d{4}-/.test(r))ok++;else er.push(r);
@@ -420,6 +535,36 @@ $('fMet').onchange=function(e){var f=e.target.files[0];e.target.value='';if(!f)r
   readWb(f,function(wb){var n=parseMetas(wb);if(n<1)return msg('No encontré metas en la hoja "Metas".',1);save();render();lists();msg(n+' mes(es) de metas cargado(s).')})};
 $('clr').onclick=function(){if(confirm('¿Eliminar toda la base de ventas y SKU cargada?')){S.sales={};S.sku={};save();render();lists();msg('Base de ventas y SKU eliminada.',1)}};
 $('clrMet').onclick=function(){if(confirm('¿Eliminar las metas cargadas?')){S.metas={};save();render();lists();msg('Metas eliminadas.',1)}};
+
+$('fCli').onchange=function(e){
+  var f=e.target.files[0];e.target.value='';if(!f)return;
+  var modo=$('modoCli')?$('modoCli').value:'merge';
+  readWb(f,function(wb){
+    var res=parseClientesWb(wb);
+    if(res.error)return setMsgCli(res.error,true);
+    var finalList=[];
+    if(modo==='replace'){
+      finalList=res.list;
+    }else{
+      var map={};
+      (S.clients||[]).forEach(function(c){if(isAllowedRoute(c.ruta))map[clientKey(c)]=c});
+      res.list.forEach(function(c){map[clientKey(c)]=c});
+      finalList=Object.keys(map).map(function(k){return map[k]});
+    }
+    S.clients=finalList;
+    syncClientsCloud();
+    lists();
+    setMsgCli((modo==='replace'?'Base sustituida: ':'Base actualizada: ')+finalList.length+' cliente(s) en rutas permitidas'+(res.omitidos?' ('+res.omitidos+' omitido(s) de rutas no permitidas).':'.'),false);
+  });
+};
+$('clrCli').onclick=function(){
+  if(!confirm('¿Eliminar por completo la base de clientes para Terminal?'))return;
+  S.clients=[];
+  syncClientsCloud();
+  lists();
+  setMsgCli('Base de clientes eliminada.',true);
+};
+
 $('iName').oninput=function(e){S.name=e.target.value;save();render()};
 $('iUser').oninput=function(e){S.user=e.target.value;save();render()};
 $('iLogo').onchange=function(e){var f=e.target.files[0];if(!f)return;var im=new Image(),u=URL.createObjectURL(f);
@@ -634,14 +779,15 @@ $('lOff').onclick=function(e){var b=e.target.closest('button');if(!b)return;S.of
 function seed(){
   var L=null;
   try{L=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  var B=(L&&(L.sales||L.metas))?L:cl(DEF);
+  var B=(L&&(L.sales||L.metas||L.clients))?L:cl(DEF);
   S.name=B.name||S.name;
   S.user=B.user||S.user;
   S.logo=B.logo||'';
   S.metas=sanitizeMetas(B.metas||DEF.metas);
   S.sales=sanitizeSales(B.sales||DEF.sales);
   S.sku=sanitizeSku(B.sku||DEF.sku);
-  S.off=cl(B.off||[]);
+  S.off=Array.isArray(B.off)?cl(B.off):[];
+  S.clients=sanitizeClients(B.clients||[]);
   saveLocal();
 }
 
@@ -652,15 +798,16 @@ async function boot(){
   if(!window.firebase||typeof FIREBASE_CONFIG==='undefined'||!FIREBASE_CONFIG.projectId||FIREBASE_CONFIG.projectId.indexOf('TU-')===0)return;
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   FB=firebase.firestore();
-  var refs=['config','sales','sku'].map(function(k){return FB.doc('app/'+k)});
+  var refs=['config','sales','sku','clients'].map(function(k){return FB.doc('app/'+k)});
   try{
     var sn=await Promise.all(refs.map(function(r){return r.get()}));
-    if(!sn[0].exists&&!sn[1].exists&&!sn[2].exists){
+    if(!sn[0].exists&&!sn[1].exists&&!sn[2].exists&&!sn[3].exists){
       flush();
     }else{
       if(sn[0].exists)applyCfg(sn[0].data());
       if(sn[1].exists)applySales(sn[1].data());
       if(sn[2].exists)applySku(sn[2].data());
+      if(sn[3].exists)applyClients(sn[3].data());
       lists();
       render();
     }
@@ -669,8 +816,9 @@ async function boot(){
     if(m){m.textContent='Datos locales listos; aviso Firestore: '+(e&&e.message||'sin conexión o reglas');m.className='bad'}
   }
   refs[0].onSnapshot(function(x){if(x.exists){applyCfg(x.data());lists();render()}});
-  refs[1].onSnapshot(function(x){if(x.exists){applySales(x.data());lists();render()}});
-  refs[2].onSnapshot(function(x){if(x.exists){applySku(x.data());lists();render()}});
+  refs[1].onSnapshot(function(x){applySales(x.exists?x.data():{});lists();render()});
+  refs[2].onSnapshot(function(x){applySku(x.exists?x.data():{});lists();render()});
+  refs[3].onSnapshot(function(x){applyClients(x.exists?x.data():{});lists()});
 }
 boot();
 </script>
