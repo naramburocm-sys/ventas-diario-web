@@ -63,10 +63,13 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .day-bar label{margin:0;font-size:12px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
 .day-bar select{flex:1;max-width:225px;font:inherit;font-size:14px;font-weight:800;padding:7px 10px;border-radius:10px;border:1.5px solid var(--or);background:var(--soft);color:var(--ink)}
 
-.search-box{position:relative;margin-bottom:10px}
-.search-box input{width:100%;font:inherit;font-size:14px;padding:10px 36px 10px 12px;border-radius:14px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.search-row{display:flex;align-items:stretch;gap:8px;margin-bottom:10px}
+.search-box{position:relative;flex:1;min-width:0}
+.search-box input{width:100%;height:100%;font:inherit;font-size:13.5px;padding:10px 34px 10px 14px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
 .search-box input:focus{outline:2px solid var(--or);border-color:var(--or)}
-.search-clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:var(--soft);color:var(--ink);width:26px;height:26px;border-radius:50%;font-weight:800;cursor:pointer;display:none}
+.search-clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:var(--soft);color:var(--ink);width:24px;height:24px;border-radius:50%;font-weight:800;cursor:pointer;display:none}
+.gen-pill{flex:none;font:inherit;font-size:12.5px;font-weight:800;padding:10px 14px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:background .15s,border-color .15s}
+.gen-pill:hover,.gen-pill:active{background:var(--soft);border-color:var(--or)}
 
 .st-filter{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
 .st-filter::-webkit-scrollbar{display:none}
@@ -102,6 +105,10 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .dist-tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:#eef2ff;color:#1e3a8a}
 .dist-tag.near{background:#dcfce7;color:#166534}
 .btn.active-rad{background:var(--ink);color:#fff}
+
+/* Tarjeta estática de Cliente Genérico */
+.cli-card.generic-card{border:1.5px solid var(--or);background:linear-gradient(180deg,#fffdf5 0%,#fff8dc 100%);box-shadow:0 4px 12px rgba(247,181,0,.18)}
+.cli-badge.gen{background:var(--or);color:var(--ink)}
 
 /* Tarjetas de cliente */
 .cli-list{display:flex;flex-direction:column;gap:10px}
@@ -249,9 +256,12 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     </div>
     <p class="sub" id="cliSub">Cartera asignada a la ruta seleccionada</p>
 
-    <div class="search-box">
-      <input type="text" id="cliSearch" placeholder="Buscar cliente, calle, colonia o contacto..." autocomplete="off">
-      <button type="button" class="search-clr" id="cliSearchClr" aria-label="Limpiar búsqueda">×</button>
+    <div class="search-row">
+      <div class="search-box">
+        <input type="text" id="cliSearch" placeholder="Buscar cliente, calle..." autocomplete="off">
+        <button type="button" class="search-clr" id="cliSearchClr" aria-label="Limpiar búsqueda">×</button>
+      </div>
+      <button type="button" class="gen-pill" id="btnGenClientPill" title="Abrir venta a bordo con Cliente Genérico">🛒 Cliente genérico</button>
     </div>
 
     <div class="st-filter" id="stFilter">
@@ -459,6 +469,39 @@ function normStr(v){ return v == null ? '' : String(v).trim(); }
 function normNum(v){ if(v == null || v === '') return null; var n = Number(String(v).replace(',', '.').trim()); return isFinite(n) ? n : null; }
 function clientKey(c){
   return [normStr(c.ruta), normStr(c.nombre).toUpperCase(), normStr(c.calle).toUpperCase(), normStr(c.num).toUpperCase(), normStr(c.colonia).toUpperCase()].join('|');
+}
+
+var CLIENTE_GENERICO = Object.freeze({
+  id: 'GENERIC_CLIENT',
+  codigo: 'GEN-000',
+  nombre: 'Cliente Genérico',
+  calle: 'Venta fuera de padrón',
+  num: '',
+  colonia: 'No listado',
+  cp: '',
+  contacto: 'Mostrador / Eventual',
+  telefono: '',
+  lat: null,
+  lon: null,
+  dias: ['Lu','Ma','Mi','Ju','Vi','Sa'],
+  clienteNuevo: false,
+  fechaAlta: '',
+  esGenerico: true,
+  esEstatico: true
+});
+
+function isGenericClient(c){
+  return !!(c && (c.esGenerico || c.esEstatico || c.id === CLIENTE_GENERICO.id));
+}
+
+function getGenericClientForRoute(ruta){
+  return Object.assign({}, CLIENTE_GENERICO, {
+    ruta: String(ruta || T.ruta || '1')
+  });
+}
+
+function getGenericClientKey(ruta){
+  return clientKey(getGenericClientForRoute(ruta));
 }
 
 function todayDayCode(){
@@ -811,11 +854,12 @@ function startLocationTracking(centerMap){
 
 function renderClientes(fitBounds){
   var r = T.ruta;
-  var allRouteClients = S.clients.filter(function(c){ return c.ruta === r; });
+  var rawRouteClients = S.clients.filter(function(c){ return c.ruta === r && !isGenericClient(c); });
+  var allRouteClients = rawRouteClients.slice();
   var todayCode = todayDayCode();
 
   // Selector desplegable de día (en recuadro Ruta activa)
-  var allRouteClientsForDay = S.clients.filter(function(c){ return c.ruta === T.ruta; });
+  var allRouteClientsForDay = S.clients.filter(function(c){ return c.ruta === T.ruta && !isGenericClient(c); });
   $('selDay').innerHTML = DIAS_VISITA.map(function(d){
     var cnt = d.id === 'ALL'
       ? allRouteClientsForDay.length
@@ -828,9 +872,10 @@ function renderClientes(fitBounds){
   // Filtrar por día y búsqueda primero para calcular contadores de estatus
   var q = T.search.toLowerCase().trim();
   var baseFiltered = allRouteClients.filter(function(c){
+    if(isGenericClient(c)) return true;
     if(T.dayFilter !== 'ALL' && (c.dias || []).indexOf(T.dayFilter) < 0) return false;
     if(q){
-      var hay = [c.nombre, c.calle, c.num, c.colonia, c.contacto, c.telefono].join(' ').toLowerCase();
+      var hay = [c.nombre, c.codigo, c.calle, c.num, c.colonia, c.contacto, c.telefono].join(' ').toLowerCase();
       if(hay.indexOf(q) < 0) return false;
     }
     return true;
@@ -856,6 +901,7 @@ function renderClientes(fitBounds){
   });
 
   var finalClients = baseFiltered.filter(function(c){
+    if(isGenericClient(c)) return true;
     var st = getVisitStatus(clientKey(c));
     if(T.stFilter === 'pend') return !st;
     if(T.stFilter === 'venta') return st === 'venta';
@@ -870,6 +916,8 @@ function renderClientes(fitBounds){
 
   if(myPos){
     finalClients.sort(function(a, b){
+      if(isGenericClient(a.c) && !isGenericClient(b.c)) return -1;
+      if(!isGenericClient(a.c) && isGenericClient(b.c)) return 1;
       if(a.dist == null && b.dist == null) return 0;
       if(a.dist == null) return 1;
       if(b.dist == null) return -1;
@@ -877,13 +925,13 @@ function renderClientes(fitBounds){
     });
     if(T.only200m){
       finalClients = finalClients.filter(function(item){
-        return item.dist != null && item.dist <= 200;
+        return isGenericClient(item.c) || (item.dist != null && item.dist <= 200);
       });
     }
   }
 
   $('btnRad200').className = 'mbtn' + (T.only200m ? ' on' : '');
-  $('cliSub').textContent = 'Ruta ' + r + ' · ' + allRouteClients.length + ' cliente(s) en cartera total'
+  $('cliSub').textContent = 'Ruta ' + r + ' · ' + rawRouteClients.length + ' cliente(s) en padrón'
     + (myPos ? (T.only200m ? ' · Filtrado a ≤200m' : ' · Ordenado por cercanía') : ' · Activa GPS para ordenar por distancia');
   $('cliListTitle').textContent = 'Mostrando ' + finalClients.length + ' cliente(s)' + (myPos ? ' (cercanos primero)' : '');
 
@@ -931,17 +979,6 @@ function renderClientes(fitBounds){
   }
 
   // Renderizar tarjetas de clientes
-  if(!allRouteClients.length){
-    $('cliList').innerHTML = '<div class="card"><div class="big" style="font-size:16px">Sin clientes cargados en Ruta ' + r + '</div>'
-      + '<p class="small">Sube el archivo Excel ("Base Master") en la pestaña <b>Datos</b> de tu panel principal (index) para que aparezcan aquí automáticamente.</p></div>';
-    return;
-  }
-  if(!finalClients.length){
-    $('cliList').innerHTML = '<div class="card"><div class="lbl">No hay clientes con los filtros actuales</div>'
-      + '<p class="small">Prueba cambiando el día de visita, el estatus o limpiando el buscador.</p></div>';
-    return;
-  }
-
   var diasOrd = ['Lu','Ma','Mi','Ju','Vi','Sa'];
   $('cliList').innerHTML = finalClients.map(function(item){
     var c = item.c;
@@ -958,11 +995,14 @@ function renderClientes(fitBounds){
     var distBadge = item.dist != null
       ? '<span class="dist-tag' + (item.dist <= 200 ? ' near' : '') + '">📏 ' + fmtDist(item.dist) + '</span>'
       : '';
-    var rightBadge = c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>';
-    var cardStCls = st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : ''));
+    var isGen = isGenericClient(c);
+    var rightBadge = isGen
+      ? '<span class="cli-badge gen">Genérico · Estático</span>'
+      : (c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>');
+    var cardStCls = (isGen ? ' generic-card' : '') + (st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : '')));
     return '<div class="cli-card' + cardStCls + '" data-ck="' + esc(ck) + '">'
       + '<div class="cli-top">'
-      +   '<div class="cli-name" data-open-bordo="1" title="Abrir venta a bordo para este cliente">' + esc(c.nombre) + ' <span style="font-size:11px;color:var(--blue);text-decoration:none">🛒</span></div>'
+      +   '<div class="cli-name" data-open-bordo="1" title="Abrir venta a bordo para este cliente">' + esc(c.nombre) + (isGen ? ' <span style="font-size:11px;font-weight:800;color:var(--mute);text-decoration:none">(' + esc(c.codigo) + ')</span>' : '') + ' <span style="font-size:11px;color:var(--blue);text-decoration:none">🛒</span></div>'
       +   '<div style="display:flex;align-items:center;gap:5px;flex:none">' + distBadge + rightBadge + '</div>'
       + '</div>'
       + (addr ? '<div class="cli-addr">' + esc(addr) + '</div>' : '')
@@ -1649,31 +1689,43 @@ $('cliSearchClr').onclick = function(){
   renderClientes(true);
 };
 
+function openBordoForClient(found, ck0){
+  if(!found) return;
+  var handoff = {
+    key: ck0,
+    nombre: found.nombre || '',
+    calle: found.calle || '',
+    num: found.num || '',
+    colonia: found.colonia || '',
+    ruta: String(found.ruta || T.ruta || '1'),
+    esGenerico: !!found.esGenerico,
+    returnUrl: window.location.href.split('#')[0] + '#clientes',
+    ts: Date.now()
+  };
+  try{
+    localStorage.setItem('venta-bordo-handoff', JSON.stringify(handoff));
+    var ps = JSON.parse(localStorage.getItem('venta-bordo-v1')) || {};
+    ps.ruta = handoff.ruta;
+    localStorage.setItem('venta-bordo-v1', JSON.stringify(ps));
+  }catch(err){}
+  window.location.href = 'venta-bordo.html';
+}
+
+$('btnGenClientPill').onclick = function(){
+  var gen = getGenericClientForRoute(T.ruta);
+  openBordoForClient(gen, getGenericClientKey(T.ruta));
+};
+
 $('cliList').onclick = function(e){
   var nameEl = e.target.closest('[data-open-bordo]');
   if(nameEl){
     var card0 = nameEl.closest('[data-ck]');
     if(!card0) return;
     var ck0 = card0.dataset.ck;
-    var found = S.clients.find(function(c){ return clientKey(c) === ck0; });
-    if(!found) return;
-    var handoff = {
-      key: ck0,
-      nombre: found.nombre || '',
-      calle: found.calle || '',
-      num: found.num || '',
-      colonia: found.colonia || '',
-      ruta: String(found.ruta || T.ruta || '1'),
-      returnUrl: window.location.href.split('#')[0] + '#clientes',
-      ts: Date.now()
-    };
-    try{
-      localStorage.setItem('venta-bordo-handoff', JSON.stringify(handoff));
-      var ps = JSON.parse(localStorage.getItem('venta-bordo-v1')) || {};
-      ps.ruta = handoff.ruta;
-      localStorage.setItem('venta-bordo-v1', JSON.stringify(ps));
-    }catch(err){}
-    window.location.href = 'venta-bordo.html';
+    var found = ck0 === getGenericClientKey(T.ruta)
+      ? getGenericClientForRoute(T.ruta)
+      : S.clients.find(function(c){ return clientKey(c) === ck0; });
+    openBordoForClient(found, ck0);
     return;
   }
   var btn = e.target.closest('[data-act]');
