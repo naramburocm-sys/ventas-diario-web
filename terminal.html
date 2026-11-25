@@ -83,7 +83,12 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 #mapWrap.fs{position:fixed;inset:0;z-index:90;margin:0;border-radius:0;border:0;box-shadow:none;display:flex;flex-direction:column;width:100vw;height:100dvh;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 #mapWrap.fs #map{flex:1;height:auto;min-height:0;width:100%}
 #mapWrap.fs .map-legend,#mapWrap.fs .map-bar{padding-left:12px;padding-right:12px}
-.map-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#fff;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--mute);flex-wrap:wrap;gap:6px}
+.map-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fff;border-top:1px solid var(--line);font-size:11px;font-weight:700;color:var(--mute);gap:6px}
+.map-ctrls{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.mbtn{font:inherit;font-size:10.5px;font-weight:800;padding:5px 7px;border-radius:9px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:3px;line-height:1;white-space:nowrap}
+.mbtn svg{width:13px;height:13px;flex:none}
+.mbtn.pri{background:var(--or);border-color:var(--or);color:#14213d}
+.mbtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .pin-wrap{display:inline-flex;flex-direction:column;align-items:center;transform:translate(-50%,-7px);pointer-events:auto}
 .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 0 1.5px #14213d,0 2px 5px rgba(0,0,0,.35);flex:none}
 .pin-lbl{margin-top:2px;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.94);color:#14213d;border:1px solid rgba(20,33,61,.25);font-size:10px;font-weight:800;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.18)}
@@ -232,12 +237,24 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
         <span><i style="background:#64748b"></i> Cerrado</span>
       </div>
       <div class="map-bar">
-        <span id="mapCount">0 ubicaciones en mapa</span>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button type="button" class="btn g sm" id="btnMyLoc">Mi ubicación</button>
-          <button type="button" class="btn g sm" id="btnRad200">Radio 200m</button>
-          <button type="button" class="btn g sm" id="btnFsMap" aria-pressed="false" title="Pantalla completa">⛶ Pantalla</button>
-          <button type="button" class="btn sm" id="btnFitMap">Ver todos</button>
+        <span id="mapCount">0 en mapa</span>
+        <div class="map-ctrls">
+          <button type="button" class="mbtn" id="btnMyLoc" title="Centrar en mi ubicación">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2"/></svg>
+            <span>GPS</span>
+          </button>
+          <button type="button" class="mbtn" id="btnRad200" title="Filtrar radio de 200 m">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>200m</span>
+          </button>
+          <button type="button" class="mbtn" id="btnFsMap" aria-pressed="false" title="Pantalla completa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg>
+            <span>Full</span>
+          </button>
+          <button type="button" class="mbtn pri" id="btnFitMap" title="Ver todos los clientes en mapa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="2"/></svg>
+            <span>Todos</span>
+          </button>
         </div>
       </div>
     </div>
@@ -727,7 +744,7 @@ function renderClientes(fitBounds){
     }
   }
 
-  $('btnRad200').className = 'btn ' + (T.only200m ? 'active-rad' : 'g') + ' sm';
+  $('btnRad200').className = 'mbtn' + (T.only200m ? ' on' : '');
   $('cliSub').textContent = 'Ruta ' + r + ' · ' + allRouteClients.length + ' cliente(s) en cartera total'
     + (myPos ? (T.only200m ? ' · Filtrado a ≤200m' : ' · Ordenado por cercanía') : ' · Activa GPS para ordenar por distancia');
   $('cliListTitle').textContent = 'Mostrando ' + finalClients.length + ' cliente(s)' + (myPos ? ' (cercanos primero)' : '');
@@ -929,9 +946,10 @@ function setMapFullscreen(on){
   var btn = $('btnFsMap');
   if(wrap) wrap.classList.toggle('fs', T.mapFs);
   if(btn){
-    btn.textContent = T.mapFs ? '✕ Salir' : '⛶ Pantalla';
+    var lbl = btn.querySelector('span');
+    if(lbl) lbl.textContent = T.mapFs ? 'Salir' : 'Full';
     btn.setAttribute('aria-pressed', T.mapFs ? 'true' : 'false');
-    btn.className = 'btn ' + (T.mapFs ? 'active-rad' : 'g') + ' sm';
+    btn.className = 'mbtn' + (T.mapFs ? ' on' : '');
   }
   if(map){
     setTimeout(function(){
