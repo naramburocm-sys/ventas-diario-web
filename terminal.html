@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--gray:#64748b;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -26,13 +27,19 @@ header p{margin:2px 0 0;color:var(--mute);font-size:13px}
 .sync.ok{background:#e8f7ee;color:var(--ok);border-color:#bce6cc}
 .sync.bad{background:#fff1f1;color:var(--bad);border-color:#f2b8b8}
 
-/* Selector superior de ruta */
-.rbar{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px;box-shadow:var(--sh);margin-bottom:14px}
-.rbar-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.rbar label{margin:0;font-size:12px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.rbar select{width:auto;min-width:165px;padding:8px 12px;font-size:15px;font-weight:800;border-radius:12px;border:1.5px solid var(--or);background:var(--soft);color:var(--ink)}
+/* Selector superior de ruta y día de visita */
+.rbar{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:9px 11px;box-shadow:var(--sh);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rbar select{flex:1;min-width:0;width:auto;padding:6px 9px;font-size:12.5px;font-weight:800;border-radius:10px;border:1.5px solid var(--or);background:var(--soft);color:var(--ink)}
 
 .hi{font-size:24px;font-weight:800;margin:0 0 2px}
+#rtTitle{font-size:clamp(12px,3.35vw,17.5px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;flex-wrap:wrap}
+.vr-head .hi{margin:0;font-size:21px;white-space:nowrap}
+.vr-kpis{display:flex;align-items:center;gap:6px;margin-left:auto}
+.vr-kpi{display:inline-flex;align-items:baseline;gap:4px;padding:4px 9px;border-radius:11px;background:#fff;border:1.5px solid var(--line);box-shadow:0 2px 7px rgba(20,33,61,.06);font-size:11px;font-weight:700;color:var(--mute);white-space:nowrap}
+.vr-kpi b{font-size:13.5px;font-weight:800;color:var(--ink)}
+.vr-kpi.money{background:#e8f7ee;border-color:#bce6cc}
+.vr-kpi.money b{color:var(--ok)}
 .sub{color:var(--mute);margin:0 0 14px;font-size:13.5px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .card{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);border:1px solid var(--line)}
@@ -103,7 +110,8 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .cli-card.st-sin{border-color:#f2b8b8;background:#fffafa}
 .cli-card.st-cerrado{border-color:#cbd5e1;background:#f8fafc}
 .cli-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.cli-name{font-size:15px;font-weight:800;color:var(--ink);line-height:1.25}
+.cli-name{font-size:15px;font-weight:800;color:var(--ink);line-height:1.25;cursor:pointer;text-decoration:underline;text-decoration-color:var(--or);text-underline-offset:3px;display:inline-flex;align-items:center;gap:4px}
+.cli-name:hover,.cli-name:active{color:var(--blue)}
 .cli-badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap;flex:none}
 .cli-badge.new{background:#e0f2fe;color:#0369a1}
 .cli-addr{font-size:12.5px;color:var(--mute);margin-top:4px;line-height:1.35}
@@ -128,9 +136,34 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .di{flex:1;display:flex;flex-direction:column;gap:2px;font-size:12.5px}.di b{font-size:15px;color:var(--ink)}
 .dr{text-align:right;display:flex;flex-direction:column;font-size:11.5px;font-weight:700}.dr b{font-size:16px;color:var(--ink)}
 
+
+/* Inventario a Bordo y Corte de Caja en Terminal */
+.inv-row{display:grid;grid-template-columns:1fr 74px 54px 58px;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.inv-row:last-child{border-bottom:0}
+.inv-hdr{font-size:10.5px;font-weight:800;color:var(--mute);text-transform:uppercase;padding-bottom:6px;border-bottom:1.5px solid var(--line)}
+.inv-inp{width:100%;font:inherit;font-size:14px;font-weight:800;padding:7px 4px;border-radius:10px;border:1.5px solid var(--or);background:var(--soft);text-align:center;color:var(--ink)}
+.inv-stat{text-align:center;font-size:13.5px;font-weight:800}
+
+.cut-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.cut-row:last-child{border-bottom:0}
+.cut-row b{font-size:15px}
+
+.tx-item{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:11px 13px;margin-bottom:8px;box-shadow:0 2px 8px rgba(20,33,61,.04)}
+.tx-item.nocompra{border-color:#f2b8b8;background:#fffafa}
+.tx-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tx-cli{font-size:14px;font-weight:800;color:var(--ink)}
+.tx-amt{font-size:15px;font-weight:800;color:var(--ok);white-space:nowrap}
+.tx-item.nocompra .tx-amt{color:var(--bad);font-size:12.5px}
+.tx-meta{font-size:11.5px;color:var(--mute);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px 10px}
+.tx-det{font-size:11.5px;color:var(--ink);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-weight:600}
+.tx-del{border:0;background:#fff1f1;color:var(--bad);font:inherit;font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;cursor:pointer}
+
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 10px 25px rgba(20,33,61,.28);z-index:120;transition:transform .25s ease;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
 /* Navegación inferior */
 nav{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:10px}
-nav button{flex:1;max-width:210px;font:inherit;font-size:12.5px;font-weight:800;background:none;border:0;color:var(--mute);padding:7px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button{flex:1;max-width:130px;padding:7px 3px;font-size:11.5px;font:inherit;font-size:12.5px;font-weight:800;background:none;border:0;color:var(--mute);padding:7px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:22px;height:22px}
 nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
 button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--or);outline-offset:2px}
@@ -138,6 +171,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
 </style>
 </head>
 <body>
+<div class="toast" id="toast">Guardado</div>
 <div class="app">
   <header>
     <div class="logo" id="logo"></div>
@@ -148,12 +182,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     <span class="sync" id="syncBadge">Local</span>
   </header>
 
-  <div class="rbar">
-    <div class="rbar-top">
-      <label for="selRuta">Ruta activa</label>
-      <select id="selRuta" aria-label="Seleccionar ruta"></select>
-    </div>
-  </div>
+
 
   <!-- VISTA 1: MI VENTA -->
   <main id="v-venta">
@@ -207,13 +236,18 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
 
   <!-- VISTA 2: CLIENTES Y MAPA -->
   <main id="v-clientes" hidden>
-    <p class="hi">Clientes y Mapa</p>
-    <p class="sub" id="cliSub">Cartera asignada a la ruta seleccionada</p>
-
-    <div class="day-bar">
-      <label for="selDay">Día de visita</label>
+    <div class="rbar">
+      <select id="selRuta" aria-label="Seleccionar ruta"></select>
       <select id="selDay" aria-label="Filtrar por día de visita"></select>
     </div>
+    <div class="vr-head">
+      <p class="hi">Venta en ruta</p>
+      <div class="vr-kpis">
+        <span class="vr-kpi" title="Cajas vendidas hoy en esta ruta"><b id="vrCajasHoy">0</b> cjs</span>
+        <span class="vr-kpi money" title="Total en pesos vendido hoy en esta ruta"><b id="vrPesosHoy">$0</b></span>
+      </div>
+    </div>
+    <p class="sub" id="cliSub">Cartera asignada a la ruta seleccionada</p>
 
     <div class="search-box">
       <input type="text" id="cliSearch" placeholder="Buscar cliente, calle, colonia o contacto..." autocomplete="off">
@@ -221,8 +255,8 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     </div>
 
     <div class="st-filter" id="stFilter">
-      <button type="button" class="stf on" data-st="all">Todos (0)</button>
-      <button type="button" class="stf" data-st="pend">Pend. (0)</button>
+      <button type="button" class="stf" data-st="all">Todos (0)</button>
+      <button type="button" class="stf on" data-st="pend">Pend. (0)</button>
       <button type="button" class="stf" data-st="venta">Venta (0)</button>
       <button type="button" class="stf" data-st="sin">Sin vta (0)</button>
       <button type="button" class="stf" data-st="cerrado">Cerrado (0)</button>
@@ -265,6 +299,76 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     </div>
     <div class="cli-list" id="cliList"></div>
   </main>
+
+  <!-- VISTA 3: INVENTARIO A BORDO -->
+  <main id="v-inv" hidden>
+    <p class="hi">Carga a Bordo</p>
+    <p class="sub">Configura las cajas cargadas al camión hoy para la ruta activa</p>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:14.5px">Inventario a bordo hoy</b>
+        <span class="pill">Ruta <span id="invRutaLbl">1</span></span>
+      </div>
+
+      <div class="inv-row inv-hdr">
+        <div>Producto</div>
+        <div style="text-align:center">Carga</div>
+        <div style="text-align:center">Vend.</div>
+        <div style="text-align:center">Queda</div>
+      </div>
+      <div id="invList"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1.5px solid var(--line)">
+        <div>
+          <div class="lbl">Balance de mercancía</div>
+          <div class="small" id="invSummaryTxt" style="margin:0">0 cargadas · 0 vendidas</div>
+        </div>
+        <button type="button" class="btn sm" id="btnSaveInv">Guardar carga</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- VISTA 4: CORTE DE CAJA Y EXCEL -->
+  <main id="v-corte" hidden>
+    <p class="hi">Corte de Caja</p>
+    <p class="sub" id="corteSub">Resumen financiero, liquidación y descarga en Excel</p>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:15px">Liquidación del día</b>
+        <span class="pill ok" id="corteStatusPill">Abierto</span>
+      </div>
+
+      <div class="cut-row"><span>💵 Efectivo cobrado</span><b class="ok" id="cutEfectivo">$0.00</b></div>
+      <div class="cut-row"><span>📲 Transferencias</span><b id="cutTransf">$0.00</b></div>
+      <div class="cut-row"><span>📝 Ventas a Crédito</span><b id="cutCredito">$0.00</b></div>
+      <div class="cut-row"><span>⏳ Pendiente de pago</span><b class="bad" id="cutPendiente">$0.00</b></div>
+      <div class="cut-row" style="background:var(--soft);margin:6px -8px;padding:10px 8px;border-radius:12px;border:0">
+        <span style="font-weight:800">VENTA TOTAL DEL DÍA</span>
+        <b style="font-size:18px" id="cutTotal">$0.00</b>
+      </div>
+
+      <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)">
+        <div class="lbl" style="margin-bottom:6px">Arqueo físico de efectivo</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="arqueoInput" inputmode="decimal" placeholder="Efectivo contado en mano ($)" style="flex:1;font:inherit;font-size:14px;font-weight:800;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line)">
+          <span class="pill" id="arqueoDiffPill">Dif: $0</span>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <button type="button" class="btn ink full" id="btnCorteYSync" style="width:100%;padding:14px 16px;font-size:14.5px">🔒 Realizar corte y Sincronizar informacion del día</button>
+      </div>
+    </div>
+
+    <h2>Bitácora de operaciones <span class="small" id="txCountLbl" style="margin:0;font-weight:700">0 reg.</span></h2>
+    <div id="txList"></div>
+
+    <div style="margin-top:14px;text-align:center">
+      <button type="button" class="btn g sm" id="btnResetTodayData">Reiniciar operaciones de hoy</button>
+    </div>
+  </main>
 </div>
 
 <nav>
@@ -274,7 +378,15 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
   </button>
   <button id="navClientes" aria-selected="false" type="button">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.5-6-10a6 6 0 0112 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
-    Clientes y Mapa
+    Venta en Ruta
+  </button>
+  <button id="navInv" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16Z"/><path d="M3.3 7l8.7 5 8.7-5M12 22V12"/></svg>
+    Inventario
+  </button>
+  <button id="navCorte" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h6M7 17h4"/></svg>
+    Corte y Excel
   </button>
 </nav>
 
@@ -320,7 +432,7 @@ var T = {
   tab: 'venta',
   skuPeriod: 'm',
   dayFilter: 'ALL',
-  stFilter: 'all',
+  stFilter: 'pend',
   search: '',
   only200m: false,
   mapFs: false,
@@ -328,6 +440,7 @@ var T = {
 };
 
 var map = null, markersLayer = null, userMarker = null, radiusCircle = null, myPos = null, gpsWatchId = null;
+var bordoDayDoc = null, unsubBordoDay = null;
 var $ = function(id){ return document.getElementById(id); };
 var pad = function(n){ return ('0' + n).slice(-2); };
 var fm = function(n){ return Math.round(n).toLocaleString('es-MX'); };
@@ -432,7 +545,8 @@ function renderHeaderAndRoutes(){
   $('cname').textContent = S.name || 'Terminal de Ruta';
   $('logo').innerHTML = S.logo ? '<img alt="Logo" src="' + S.logo + '">' : LOGO_SVG;
   var keys = Object.keys(S.sales).sort(), cut = keys.length ? keys[keys.length - 1] : '';
-  $('date').textContent = cut ? 'Corte al ' + (+cut.slice(8)) + ' ' + AB[+cut.slice(5, 7) - 1] + ' · ' + S.clients.length + ' clientes' : 'Sin corte de ventas · ' + S.clients.length + ' clientes';
+  var routeTotalCli = S.clients.filter(function(c){ return c.ruta === T.ruta; }).length;
+  $('date').textContent = cut ? 'Corte al ' + (+cut.slice(8)) + ' ' + AB[+cut.slice(5, 7) - 1] + ' · ' + routeTotalCli + ' clientes' : 'Sin corte de ventas · ' + routeTotalCli + ' clientes';
 
   var sel = $('selRuta');
   sel.innerHTML = RUTAS_PERMITIDAS.map(function(r){
@@ -440,13 +554,36 @@ function renderHeaderAndRoutes(){
     return '<option value="' + r + '"' + (r === T.ruta ? ' selected' : '') + '>Ruta ' + r + ' (' + cnt + ' cli)</option>';
   }).join('');
 
-
+  var routeCli = S.clients.filter(function(c){ return c.ruta === T.ruta; });
+  var tCode = todayDayCode();
+  $('selDay').innerHTML = DIAS_VISITA.map(function(d){
+    var cnt = d.id === 'ALL'
+      ? routeCli.length
+      : routeCli.filter(function(c){ return (c.dias || []).indexOf(d.id) >= 0; }).length;
+    var isToday = d.id === tCode;
+    return '<option value="' + d.id + '"' + (T.dayFilter === d.id ? ' selected' : '') + '>'
+      + d.lbl + (isToday ? ' (Hoy)' : '') + ' · ' + cnt + ' cli</option>';
+  }).join('');
 }
 
 /* ==================== SECCIÓN 1: MI VENTA ==================== */
 function renderVenta(){
   var r = T.ruta;
-  $('rtTitle').textContent = 'Ruta ' + r;
+  var VENDEDORES_RUTA = {
+    '1': 'Alan',
+    '4': 'Manuel',
+    '5': 'Neyzer',
+    '6': 'Jorge',
+    '7': 'Fernando',
+    '10': 'Manuel',
+    '11': 'Josué',
+    '13': 'Luis Manuel'
+  };
+  var vendName = VENDEDORES_RUTA[String(r)];
+  var naran = function(txt){ return '<span style="color:var(--or)">' + esc(txt) + '</span>'; };
+  $('rtTitle').innerHTML = vendName
+    ? 'Ruta ' + esc(r) + ', Hola ' + naran(vendName) + ' bienvenido a ' + naran('tu espacio') + ' Tonicol'
+    : 'Ruta ' + esc(r) + ', bienvenido a ' + naran('tu espacio') + ' Tonicol';
   var hasMeta = RUTAS_META.indexOf(r) >= 0;
 
   var now = new Date(), Y = now.getFullYear(), M = now.getMonth(), d = now.getDate(), dim = new Date(Y, M + 1, 0).getDate();
@@ -677,11 +814,12 @@ function renderClientes(fitBounds){
   var allRouteClients = S.clients.filter(function(c){ return c.ruta === r; });
   var todayCode = todayDayCode();
 
-  // Selector desplegable de día
+  // Selector desplegable de día (en recuadro Ruta activa)
+  var allRouteClientsForDay = S.clients.filter(function(c){ return c.ruta === T.ruta; });
   $('selDay').innerHTML = DIAS_VISITA.map(function(d){
     var cnt = d.id === 'ALL'
-      ? allRouteClients.length
-      : allRouteClients.filter(function(c){ return (c.dias || []).indexOf(d.id) >= 0; }).length;
+      ? allRouteClientsForDay.length
+      : allRouteClientsForDay.filter(function(c){ return (c.dias || []).indexOf(d.id) >= 0; }).length;
     var isToday = d.id === todayCode;
     return '<option value="' + d.id + '"' + (T.dayFilter === d.id ? ' selected' : '') + '>'
       + d.lbl + (isToday ? ' (Hoy)' : '') + ' · ' + cnt + ' cli</option>';
@@ -824,7 +962,7 @@ function renderClientes(fitBounds){
     var cardStCls = st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : ''));
     return '<div class="cli-card' + cardStCls + '" data-ck="' + esc(ck) + '">'
       + '<div class="cli-top">'
-      +   '<div class="cli-name">' + esc(c.nombre) + '</div>'
+      +   '<div class="cli-name" data-open-bordo="1" title="Abrir venta a bordo para este cliente">' + esc(c.nombre) + ' <span style="font-size:11px;color:var(--blue);text-decoration:none">🛒</span></div>'
       +   '<div style="display:flex;align-items:center;gap:5px;flex:none">' + distBadge + rightBadge + '</div>'
       + '</div>'
       + (addr ? '<div class="cli-addr">' + esc(addr) + '</div>' : '')
@@ -843,9 +981,424 @@ function renderClientes(fitBounds){
   }).join('');
 }
 
+function renderRutaDaySaleKPIs(){
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+  var cajas = 0, pesos = 0;
+
+  // 1. Revisa datos sincronizados de bordo_days (Firebase o localStorage venta-bordo-v1)
+  var doc = bordoDayDoc;
+  if(!doc){
+    try{
+      var ps = JSON.parse(localStorage.getItem('venta-bordo-v1'));
+      if(ps && ps.days && ps.days[dk] && ps.days[dk][r]){
+        doc = ps.days[dk][r];
+      }
+    }catch(e){}
+  }
+  if(doc && Array.isArray(doc.sales)){
+    doc.sales.forEach(function(tx){
+      if(tx && tx.type === 'venta'){
+        pesos += Number(tx.total) || 0;
+        if(tx.items && typeof tx.items === 'object'){
+          Object.keys(tx.items).forEach(function(pid){
+            cajas += Number(tx.items[pid]) || 0;
+          });
+        }
+      }
+    });
+  }
+
+  // 2. Respaldo si el corte diario de ventas ya fue reportado para hoy y la ruta
+  if(cajas === 0 && pesos === 0 && S.sales && S.sales[dk] && S.sales[dk][r] != null){
+    cajas = Number(S.sales[dk][r]) || 0;
+  }
+
+  if($('vrCajasHoy')) $('vrCajasHoy').textContent = fm(cajas);
+  if($('vrPesosHoy')) $('vrPesosHoy').textContent = '$' + fm(pesos);
+}
+
+function subscribeBordoDay(){
+  if(typeof unsubBordoDay === 'function'){
+    unsubBordoDay();
+    unsubBordoDay = null;
+  }
+  bordoDayDoc = null;
+  renderRutaDaySaleKPIs();
+  if(!FB) return;
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+  try{
+    unsubBordoDay = FB.doc('bordo_days/' + dk + '_R' + r).onSnapshot(function(sn){
+      bordoDayDoc = sn.exists ? (sn.data() || null) : null;
+      if(bordoDayDoc){
+        if(!P_BORDO.days[dk]) P_BORDO.days[dk] = {};
+        P_BORDO.days[dk][r] = {
+          load: bordoDayDoc.load || {},
+          sales: Array.isArray(bordoDayDoc.sales) ? bordoDayDoc.sales : [],
+          closed: !!bordoDayDoc.closed,
+          arqueo: bordoDayDoc.arqueo != null ? String(bordoDayDoc.arqueo) : ''
+        };
+        saveBordoLocalState();
+      }
+      renderRutaDaySaleKPIs();
+      renderInventarioTab();
+      renderCorteTab();
+    }, function(){
+      renderRutaDaySaleKPIs();
+    });
+  }catch(e){}
+}
+
+
+/* ==================== INVENTARIO A BORDO Y CORTE DE CAJA ==================== */
+var POS_STORAGE_KEY = 'venta-bordo-v1';
+var DEFAULT_BORDO_CATALOG = [
+  {id:'t355',  nombre:'Tonicol 355 ml',  precioDefault:240},
+  {id:'t600',  nombre:'Tonicol 600 ml',  precioDefault:285},
+  {id:'t2l',   nombre:'Tonicol 2 L',     precioDefault:230},
+  {id:'yau',   nombre:'Yauco 1/2 L',     precioDefault:215},
+  {id:'titan', nombre:'Familia Titan',   precioDefault:260}
+];
+var P_BORDO = {
+  catalog: DEFAULT_BORDO_CATALOG.map(function(x){ return Object.assign({}, x); }),
+  prices: {t355:240, t600:285, t2l:230, yau:215, titan:260},
+  images: {},
+  days: {}
+};
+var unsubBordoCatalog = null;
+
+function showToast(msg){
+  var t = $('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+function moneyFmt(n){
+  return '$' + (Number(n) || 0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function loadBordoLocalState(){
+  try{
+    var ps = JSON.parse(localStorage.getItem(POS_STORAGE_KEY));
+    if(ps && typeof ps === 'object'){
+      if(Array.isArray(ps.catalog) && ps.catalog.length){
+        P_BORDO.catalog = ps.catalog;
+      }
+      if(ps.prices && typeof ps.prices === 'object'){
+        P_BORDO.prices = Object.assign({}, P_BORDO.prices, ps.prices);
+      }
+      if(ps.images && typeof ps.images === 'object'){
+        P_BORDO.images = ps.images;
+      }
+      if(ps.days && typeof ps.days === 'object'){
+        P_BORDO.days = ps.days;
+      }
+    }
+  }catch(e){}
+}
+
+function saveBordoLocalState(){
+  try{
+    var prev = JSON.parse(localStorage.getItem(POS_STORAGE_KEY)) || {};
+    localStorage.setItem(POS_STORAGE_KEY, JSON.stringify({
+      ruta: prev.ruta || T.ruta,
+      catalog: P_BORDO.catalog,
+      prices: P_BORDO.prices,
+      images: P_BORDO.images,
+      days: P_BORDO.days
+    }));
+  }catch(e){}
+}
+
+function getBordoDayRouteData(){
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+  if(!P_BORDO.days[dk]) P_BORDO.days[dk] = {};
+  if(!P_BORDO.days[dk][r]){
+    var initLoad = {};
+    P_BORDO.catalog.forEach(function(p){ initLoad[p.id] = 0; });
+    P_BORDO.days[dk][r] = {
+      load: initLoad,
+      sales: [],
+      closed: false,
+      arqueo: ''
+    };
+  }
+  var dr = P_BORDO.days[dk][r];
+  if(!dr.load || typeof dr.load !== 'object') dr.load = {};
+  if(!Array.isArray(dr.sales)) dr.sales = [];
+  if(dr.arqueo == null) dr.arqueo = '';
+  return dr;
+}
+
+function getBordoInventoryStats(){
+  var dr = getBordoDayRouteData();
+  var sold = {};
+  P_BORDO.catalog.forEach(function(p){ sold[p.id] = 0; });
+  dr.sales.forEach(function(tx){
+    if(tx && tx.type === 'venta' && tx.items){
+      P_BORDO.catalog.forEach(function(p){
+        sold[p.id] = (sold[p.id] || 0) + (Number(tx.items[p.id]) || 0);
+      });
+    }
+  });
+  var avail = {};
+  P_BORDO.catalog.forEach(function(p){
+    var ld = Number(dr.load[p.id]) || 0;
+    avail[p.id] = Math.max(0, ld - (sold[p.id] || 0));
+  });
+  return {load: dr.load, sold: sold, avail: avail};
+}
+
+async function syncBordoDayToCloud(){
+  if(!FB) return;
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+  var dr = getBordoDayRouteData();
+  try{
+    await FB.doc('bordo_days/' + dk + '_R' + r).set({
+      date: dk,
+      ruta: r,
+      load: dr.load,
+      sales: dr.sales,
+      closed: !!dr.closed,
+      arqueo: dr.arqueo || '',
+      updatedAt: Date.now()
+    }, {merge: true});
+    setSyncStatus('En línea', 'ok');
+  }catch(e){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
+}
+
+function renderInventarioTab(){
+  if(!$('invList')) return;
+  var inv = getBordoInventoryStats();
+  var totLoad = 0, totSold = 0;
+  if($('invRutaLbl')) $('invRutaLbl').textContent = T.ruta;
+
+  $('invList').innerHTML = P_BORDO.catalog.map(function(p){
+    var ld = Number(inv.load[p.id]) || 0;
+    var sd = Number(inv.sold[p.id]) || 0;
+    var rem = Math.max(0, ld - sd);
+    var pr = Number(P_BORDO.prices[p.id] != null ? P_BORDO.prices[p.id] : p.precioDefault) || 0;
+    totLoad += ld;
+    totSold += sd;
+    return '<div class="inv-row">'
+      + '<div><b style="font-size:13.5px">' + esc(p.nombre) + '</b><div style="font-size:11px;color:var(--ok);font-weight:800">' + moneyFmt(pr) + '</div></div>'
+      + '<div><input type="number" class="inv-inp" data-invid="' + esc(p.id) + '" value="' + ld + '" min="0" inputmode="numeric"></div>'
+      + '<div class="inv-stat bad">' + sd + '</div>'
+      + '<div class="inv-stat ok">' + rem + '</div>'
+      + '</div>';
+  }).join('');
+
+  $('invSummaryTxt').textContent = totLoad + ' cargadas · ' + totSold + ' vendidas · ' + Math.max(0, totLoad - totSold) + ' a bordo';
+}
+
+function renderCorteTab(){
+  if(!$('cutEfectivo')) return;
+  var dr = getBordoDayRouteData();
+  var sumEf = 0, sumTr = 0, sumCr = 0, sumPe = 0;
+
+  dr.sales.forEach(function(tx){
+    if(!tx || tx.type !== 'venta') return;
+    var amt = Number(tx.total) || 0;
+    if(tx.payMethod === 'Efectivo') sumEf += amt;
+    else if(tx.payMethod === 'Transferencia') sumTr += amt;
+    else if(tx.payMethod === 'Credito') sumCr += amt;
+    else if(tx.payMethod === 'Pendiente') sumPe += amt;
+  });
+
+  var grandTotal = sumEf + sumTr + sumCr + sumPe;
+  $('cutEfectivo').textContent = moneyFmt(sumEf);
+  $('cutTransf').textContent = moneyFmt(sumTr);
+  $('cutCredito').textContent = moneyFmt(sumCr);
+  $('cutPendiente').textContent = moneyFmt(sumPe);
+  $('cutTotal').textContent = moneyFmt(grandTotal);
+
+  var stPill = $('corteStatusPill');
+  stPill.textContent = dr.closed ? 'Corte Cerrado' : 'Turno Abierto';
+  stPill.className = 'pill ' + (dr.closed ? 'bad' : 'ok');
+
+  $('arqueoInput').value = dr.arqueo || '';
+  var arq = Number(dr.arqueo);
+  if(dr.arqueo !== '' && isFinite(arq)){
+    var diff = arq - sumEf;
+    $('arqueoDiffPill').textContent = 'Dif: ' + (diff >= 0 ? '+' : '−') + moneyFmt(Math.abs(diff));
+    $('arqueoDiffPill').className = 'pill ' + (Math.abs(diff) < 0.01 ? 'ok' : 'bad');
+  }else{
+    $('arqueoDiffPill').textContent = 'Dif: $0';
+    $('arqueoDiffPill').className = 'pill';
+  }
+
+  $('txCountLbl').textContent = dr.sales.length + ' registro(s)';
+  if(!dr.sales.length){
+    $('txList').innerHTML = '<div class="card"><div class="lbl">Sin movimientos registrados hoy</div><p class="small">Registra ventas o visitas sin compra desde <b>Venta en Ruta</b>.</p></div>';
+    return;
+  }
+
+  $('txList').innerHTML = dr.sales.slice().reverse().map(function(tx){
+    if(tx.type === 'venta'){
+      var det = P_BORDO.catalog.filter(function(p){ return (tx.items && tx.items[p.id] || 0) > 0; })
+        .map(function(p){ return tx.items[p.id] + 'x ' + p.nombre; }).join(' · ');
+      return '<div class="tx-item">'
+        + '<div class="tx-top">'
+        +   '<div class="tx-cli">' + esc(tx.clientName) + '</div>'
+        +   '<div class="tx-amt">' + moneyFmt(tx.total) + '</div>'
+        + '</div>'
+        + '<div class="tx-meta">'
+        +   '<span>🕒 ' + esc(tx.time) + '</span>'
+        +   '<span>💳 <b>' + esc(tx.payMethod) + '</b></span>'
+        +   '<span>📦 ' + (tx.cajas || 0) + ' cjs</span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        +   '<div class="tx-det" style="flex:1">' + esc(det) + '</div>'
+        +   '<button type="button" class="tx-del" data-delid="' + esc(tx.id) + '">Borrar</button>'
+        + '</div>'
+        + '</div>';
+    }else{
+      return '<div class="tx-item nocompra">'
+        + '<div class="tx-top">'
+        +   '<div class="tx-cli">' + esc(tx.clientName) + '</div>'
+        +   '<div class="tx-amt">Sin Compra</div>'
+        + '</div>'
+        + '<div class="tx-meta">'
+        +   '<span>🕒 ' + esc(tx.time) + '</span>'
+        +   '<span>⚠️ Motivo: <b>' + esc(tx.reason) + '</b></span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        +   '<div class="tx-det" style="flex:1">' + esc(tx.note || 'Sin observaciones adicionales') + '</div>'
+        +   '<button type="button" class="tx-del" data-delid="' + esc(tx.id) + '">Borrar</button>'
+        + '</div>'
+        + '</div>';
+    }
+  }).join('');
+}
+
+function exportDailyExcelFromTerminal(){
+  var dr = getBordoDayRouteData();
+  var inv = getBordoInventoryStats();
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+
+  if(typeof XLSX === 'undefined'){
+    alert('Librería Excel no disponible. Verifica tu conexión.');
+    return;
+  }
+
+  var rowsDetalle = dr.sales.map(function(tx, idx){
+    var isV = tx.type === 'venta';
+    var row = {
+      'No.': idx + 1,
+      'Fecha': dk,
+      'Hora': tx.time,
+      'Ruta': 'Ruta ' + r,
+      'Cliente': tx.clientName,
+      'Direccion': tx.clientAddr || '',
+      'Tipo Operacion': isV ? 'VENTA' : 'NO COMPRA',
+      'Forma de Pago': isV ? tx.payMethod : 'N/A',
+      'Motivo No Compra': isV ? '' : (tx.reason || ''),
+      'Observaciones': tx.note || ''
+    };
+    P_BORDO.catalog.forEach(function(p){
+      row[p.nombre + ' (cjs)'] = isV ? (Number(tx.items && tx.items[p.id]) || 0) : 0;
+    });
+    row['Total Cajas'] = isV ? (tx.cajas || 0) : 0;
+    row['Importe Total ($)'] = isV ? Number(tx.total || 0) : 0;
+    return row;
+  });
+
+  if(!rowsDetalle.length){
+    rowsDetalle.push({'Mensaje': 'Sin operaciones registradas el ' + dk + ' en Ruta ' + r});
+  }
+
+  var sumEf = 0, sumTr = 0, sumCr = 0, sumPe = 0, totCajas = 0;
+  dr.sales.forEach(function(tx){
+    if(tx.type !== 'venta') return;
+    totCajas += Number(tx.cajas) || 0;
+    if(tx.payMethod === 'Efectivo') sumEf += Number(tx.total) || 0;
+    else if(tx.payMethod === 'Transferencia') sumTr += Number(tx.total) || 0;
+    else if(tx.payMethod === 'Credito') sumCr += Number(tx.total) || 0;
+    else if(tx.payMethod === 'Pendiente') sumPe += Number(tx.total) || 0;
+  });
+
+  var rowsCorte = [
+    {'Concepto': 'Fecha de Jornada', 'Valor': dk},
+    {'Concepto': 'Ruta', 'Valor': 'Ruta ' + r},
+    {'Concepto': 'Estatus de Corte', 'Valor': dr.closed ? 'CERRADO' : 'ABIERTO'},
+    {'Concepto': 'Total Cajas Vendidas', 'Valor': totCajas},
+    {'Concepto': 'Cobrado en Efectivo ($)', 'Valor': sumEf},
+    {'Concepto': 'Cobrado por Transferencia ($)', 'Valor': sumTr},
+    {'Concepto': 'Ventas a Crédito ($)', 'Valor': sumCr},
+    {'Concepto': 'Pendiente de Pago ($)', 'Valor': sumPe},
+    {'Concepto': 'VENTA TOTAL DEL DÍA ($)', 'Valor': sumEf + sumTr + sumCr + sumPe},
+    {'Concepto': 'Arqueo Físico Efectivo ($)', 'Valor': dr.arqueo !== '' ? Number(dr.arqueo) : 0},
+    {'Concepto': 'Diferencia Efectivo ($)', 'Valor': dr.arqueo !== '' ? (Number(dr.arqueo) - sumEf) : 0}
+  ];
+
+  var rowsInv = P_BORDO.catalog.map(function(p){
+    var ld = Number(inv.load[p.id]) || 0;
+    var sd = Number(inv.sold[p.id]) || 0;
+    var pr = Number(P_BORDO.prices[p.id] != null ? P_BORDO.prices[p.id] : p.precioDefault) || 0;
+    return {
+      'SKU': p.id.toUpperCase(),
+      'Producto': p.nombre,
+      'Precio Unitario ($)': pr,
+      'Carga Inicial (cjs)': ld,
+      'Vendido (cjs)': sd,
+      'Inventario Final a Bordo (cjs)': Math.max(0, ld - sd),
+      'Importe Vendido ($)': sd * pr
+    };
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws1 = XLSX.utils.json_to_sheet(rowsDetalle);
+  var ws2 = XLSX.utils.json_to_sheet(rowsCorte);
+  var ws3 = XLSX.utils.json_to_sheet(rowsInv);
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'Detalle Ventas');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Corte de Caja');
+  XLSX.utils.book_append_sheet(wb, ws3, 'Inventario a Bordo');
+
+  XLSX.writeFile(wb, 'Venta_Ruta_' + r + '_' + dk + '.xlsx');
+  showToast('Excel descargado');
+}
+
+function switchTerminalTab(tabName){
+  T.tab = tabName;
+  $('v-venta').hidden = tabName !== 'venta';
+  $('v-clientes').hidden = tabName !== 'clientes';
+  $('v-inv').hidden = tabName !== 'inv';
+  $('v-corte').hidden = tabName !== 'corte';
+
+  $('navVenta').setAttribute('aria-selected', tabName === 'venta' ? 'true' : 'false');
+  $('navClientes').setAttribute('aria-selected', tabName === 'clientes' ? 'true' : 'false');
+  $('navInv').setAttribute('aria-selected', tabName === 'inv' ? 'true' : 'false');
+  $('navCorte').setAttribute('aria-selected', tabName === 'corte' ? 'true' : 'false');
+
+  if(tabName === 'venta'){
+    renderVenta();
+  }else if(tabName === 'clientes'){
+    startLocationTracking(false);
+    renderClientes(true);
+  }else if(tabName === 'inv'){
+    renderInventarioTab();
+  }else if(tabName === 'corte'){
+    renderCorteTab();
+  }
+  window.scrollTo(0, 0);
+}
+
 function renderAll(fitMap){
   renderHeaderAndRoutes();
   renderVenta();
+  renderRutaDaySaleKPIs();
+  renderInventarioTab();
+  renderCorteTab();
   if(T.tab === 'clientes') renderClientes(fitMap);
 }
 
@@ -853,6 +1406,7 @@ function renderAll(fitMap){
 $('selRuta').onchange = function(){
   T.ruta = this.value;
   saveTermState();
+  subscribeBordoDay();
   renderAll(true);
 };
 
@@ -860,24 +1414,215 @@ $('selRuta').onchange = function(){
 $('btnSkuM').onclick = function(){ T.skuPeriod = 'm'; renderVenta(); };
 $('btnSkuS').onclick = function(){ T.skuPeriod = 's'; renderVenta(); };
 
-$('navVenta').onclick = function(){
-  T.tab = 'venta';
-  $('v-venta').hidden = false;
-  $('v-clientes').hidden = true;
-  $('navVenta').setAttribute('aria-selected', 'true');
-  $('navClientes').setAttribute('aria-selected', 'false');
-  renderVenta();
-  window.scrollTo(0, 0);
+$('navVenta').onclick = function(){ switchTerminalTab('venta'); };
+$('navClientes').onclick = function(){ switchTerminalTab('clientes'); };
+$('navInv').onclick = function(){ switchTerminalTab('inv'); };
+$('navCorte').onclick = function(){ switchTerminalTab('corte'); };
+
+$('btnSaveInv').onclick = function(){
+  var dr = getBordoDayRouteData();
+  $('invList').querySelectorAll('[data-invid]').forEach(function(inp){
+    dr.load[inp.dataset.invid] = Math.max(0, Math.floor(Number(inp.value) || 0));
+  });
+  saveBordoLocalState();
+  syncBordoDayToCloud();
+  renderInventarioTab();
+  showToast('Carga a bordo actualizada');
 };
-$('navClientes').onclick = function(){
-  T.tab = 'clientes';
-  $('v-venta').hidden = true;
-  $('v-clientes').hidden = false;
-  $('navVenta').setAttribute('aria-selected', 'false');
-  $('navClientes').setAttribute('aria-selected', 'true');
-  startLocationTracking(false);
-  renderClientes(true);
-  window.scrollTo(0, 0);
+
+$('arqueoInput').oninput = function(){
+  var dr = getBordoDayRouteData();
+  dr.arqueo = this.value;
+  saveBordoLocalState();
+  renderCorteTab();
+};
+$('arqueoInput').onchange = function(){
+  syncBordoDayToCloud();
+};
+
+function getNextWorkdayInfo(){
+  var d = new Date();
+  d.setDate(d.getDate() + 1);
+  if(d.getDay() === 0){ // Si mañana es domingo, brinca a lunes
+    d.setDate(d.getDate() + 1);
+  }
+  var mapD = {1:'Lu', 2:'Ma', 3:'Mi', 4:'Ju', 5:'Vi', 6:'Sa'};
+  var lblD = {Lu:'Lunes', Ma:'Martes', Mi:'Miércoles', Ju:'Jueves', Vi:'Viernes', Sa:'Sábado'};
+  var code = mapD[d.getDay()] || 'Lu';
+  return {
+    dateKey: kd(d),
+    dayCode: code,
+    dayLabel: lblD[code] || 'Lunes'
+  };
+}
+
+$('btnCorteYSync').onclick = async function(){
+  var btn = this;
+  var dk = getTodayKey();
+  var r = String(T.ruta || '1');
+  var dr = getBordoDayRouteData();
+  var inv = getBordoInventoryStats();
+  var nextInfo = getNextWorkdayInfo();
+
+  if(!confirm('¿Realizar el corte de caja, sincronizar toda la información del día de hoy (' + dk + ') y preparar la Ruta ' + r + ' para ' + nextInfo.dayLabel + '?')){
+    return;
+  }
+
+  btn.disabled = true;
+  var origTxt = btn.textContent;
+  btn.textContent = '⏳ Procesando corte y sincronizando...';
+
+  try{
+    // 1. Calcular totales financieros y de cajas del día
+    var sumEf = 0, sumTr = 0, sumCr = 0, sumPe = 0, totCajas = 0;
+    var skuSold = {};
+    P_BORDO.catalog.forEach(function(p){ skuSold[p.id] = 0; });
+
+    dr.sales.forEach(function(tx){
+      if(!tx || tx.type !== 'venta') return;
+      var amt = Number(tx.total) || 0;
+      totCajas += Number(tx.cajas) || 0;
+      if(tx.payMethod === 'Efectivo') sumEf += amt;
+      else if(tx.payMethod === 'Transferencia') sumTr += amt;
+      else if(tx.payMethod === 'Credito') sumCr += amt;
+      else if(tx.payMethod === 'Pendiente') sumPe += amt;
+      if(tx.items && typeof tx.items === 'object'){
+        P_BORDO.catalog.forEach(function(p){
+          skuSold[p.id] = (skuSold[p.id] || 0) + (Number(tx.items[p.id]) || 0);
+        });
+      }
+    });
+
+    var grandTotal = sumEf + sumTr + sumCr + sumPe;
+    var arqVal = dr.arqueo !== '' && isFinite(Number(dr.arqueo)) ? Number(dr.arqueo) : null;
+    var diffEf = arqVal != null ? (arqVal - sumEf) : 0;
+    var todayVisits = (T.visits && T.visits[dk]) ? Object.assign({}, T.visits[dk]) : {};
+
+    // 2. Guardar respaldo histórico definitivo del corte (en nube y local)
+    var corteRecord = {
+      id: dk + '_R' + r + '_' + Date.now(),
+      date: dk,
+      ruta: r,
+      closed: true,
+      closedAt: Date.now(),
+      totCajas: totCajas,
+      efectivo: sumEf,
+      transferencia: sumTr,
+      credito: sumCr,
+      pendiente: sumPe,
+      totalVenta: grandTotal,
+      arqueo: arqVal,
+      diferencia: diffEf,
+      load: Object.assign({}, dr.load),
+      sold: skuSold,
+      remaining: Object.assign({}, inv.avail),
+      sales: dr.sales.slice(),
+      visits: todayVisits
+    };
+
+    try{
+      var hist = JSON.parse(localStorage.getItem('bordo-cortes-historial-v1') || '[]');
+      hist.push(corteRecord);
+      localStorage.setItem('bordo-cortes-historial-v1', JSON.stringify(hist));
+    }catch(e){}
+
+    // Actualizar también venta diaria en S.sales y desglose S.sku local
+    if(totCajas > 0){
+      if(!S.sales[dk]) S.sales[dk] = {};
+      S.sales[dk][r] = totCajas;
+      if(!S.sku[dk]) S.sku[dk] = {r:{}};
+      if(!S.sku[dk].r) S.sku[dk].r = {};
+      S.sku[dk].r[r] = Object.assign({}, skuSold, {tot: totCajas});
+      saveLocalData();
+    }
+
+    // Sincronizar corte cerrado y respaldo histórico en Firebase
+    if(FB){
+      await Promise.all([
+        FB.doc('bordo_cortes/' + corteRecord.id).set(corteRecord),
+        FB.doc('bordo_days/' + dk + '_R' + r).set({
+          date: dk,
+          ruta: r,
+          load: dr.load,
+          sales: dr.sales,
+          closed: true,
+          arqueo: dr.arqueo || '',
+          lastCorteId: corteRecord.id,
+          updatedAt: Date.now()
+        }, {merge: true})
+      ]);
+      setSyncStatus('En línea', 'ok');
+    }
+
+    // 3. Reiniciar la venta e inventario del turno para quedar listo para el nuevo día
+    var freshLoad = {};
+    P_BORDO.catalog.forEach(function(p){ freshLoad[p.id] = 0; });
+    if(!P_BORDO.days[dk]) P_BORDO.days[dk] = {};
+    P_BORDO.days[dk][r] = {
+      load: freshLoad,
+      sales: [],
+      closed: false,
+      arqueo: ''
+    };
+    bordoDayDoc = P_BORDO.days[dk][r];
+    saveBordoLocalState();
+
+    if(FB){
+      await FB.doc('bordo_days/' + dk + '_R' + r).set({
+        date: dk,
+        ruta: r,
+        load: freshLoad,
+        sales: [],
+        closed: false,
+        arqueo: '',
+        updatedAt: Date.now()
+      }, {merge: true});
+    }
+
+    // 4. Reiniciar visitas marcadas y preparar la lista de clientes del siguiente día hábil
+    if(T.visits[dk]) delete T.visits[dk];
+    if(T.visits[nextInfo.dateKey]) delete T.visits[nextInfo.dateKey];
+    saveTermState();
+
+    T.dayFilter = nextInfo.dayCode;
+    T.stFilter = 'pend';
+    T.search = '';
+    T.only200m = false;
+    if($('cliSearch')) $('cliSearch').value = '';
+    if($('cliSearchClr')) $('cliSearchClr').style.display = 'none';
+
+    renderAll(true);
+    switchTerminalTab('clientes');
+    showToast('✓ Corte guardado · Lista preparada para ' + nextInfo.dayLabel);
+  }catch(err){
+    setSyncStatus('Offline (Local)', 'bad');
+    alert('El corte se guardó localmente, pero hubo un problema al sincronizar con la nube: ' + (err && err.message ? err.message : err));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = origTxt;
+  }
+};
+
+$('txList').onclick = function(e){
+  var b = e.target.closest('[data-delid]');
+  if(!b) return;
+  if(!confirm('¿Eliminar este registro de la bitácora del día?')) return;
+  var dr = getBordoDayRouteData();
+  dr.sales = dr.sales.filter(function(tx){ return tx.id !== b.dataset.delid; });
+  saveBordoLocalState();
+  syncBordoDayToCloud();
+  renderAll(false);
+  showToast('Registro eliminado');
+};
+
+$('btnResetTodayData').onclick = function(){
+  if(!confirm('¿Reiniciar todas las ventas y carga de hoy en Ruta ' + T.ruta + '?')) return;
+  var dk = getTodayKey();
+  if(P_BORDO.days[dk]) delete P_BORDO.days[dk][T.ruta];
+  saveBordoLocalState();
+  syncBordoDayToCloud();
+  renderAll(false);
+  showToast('Jornada reiniciada');
 };
 
 $('selDay').onchange = function(){
@@ -905,6 +1650,32 @@ $('cliSearchClr').onclick = function(){
 };
 
 $('cliList').onclick = function(e){
+  var nameEl = e.target.closest('[data-open-bordo]');
+  if(nameEl){
+    var card0 = nameEl.closest('[data-ck]');
+    if(!card0) return;
+    var ck0 = card0.dataset.ck;
+    var found = S.clients.find(function(c){ return clientKey(c) === ck0; });
+    if(!found) return;
+    var handoff = {
+      key: ck0,
+      nombre: found.nombre || '',
+      calle: found.calle || '',
+      num: found.num || '',
+      colonia: found.colonia || '',
+      ruta: String(found.ruta || T.ruta || '1'),
+      returnUrl: window.location.href.split('#')[0] + '#clientes',
+      ts: Date.now()
+    };
+    try{
+      localStorage.setItem('venta-bordo-handoff', JSON.stringify(handoff));
+      var ps = JSON.parse(localStorage.getItem('venta-bordo-v1')) || {};
+      ps.ruta = handoff.ruta;
+      localStorage.setItem('venta-bordo-v1', JSON.stringify(ps));
+    }catch(err){}
+    window.location.href = 'venta-bordo.html';
+    return;
+  }
   var btn = e.target.closest('[data-act]');
   if(!btn) return;
   var card = btn.closest('[data-ck]');
@@ -966,6 +1737,15 @@ $('btnFsMap').onclick = function(){
 /* ==================== SINCRONIZACIÓN FIREBASE ==================== */
 async function boot(){
   loadLocal();
+  loadBordoLocalState();
+  if(window.location.hash === '#clientes'){
+    T.tab = 'clientes';
+    $('v-venta').hidden = true;
+    $('v-clientes').hidden = false;
+    $('navVenta').setAttribute('aria-selected', 'false');
+    $('navClientes').setAttribute('aria-selected', 'true');
+    startLocationTracking(false);
+  }
   renderAll(true);
 
   if(!window.firebase || typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.projectId){
@@ -991,6 +1771,7 @@ async function boot(){
     if(sn[3].exists) S.clients = sanitizeClients((sn[3].data() || {}).clients || []);
     saveLocalData();
     setSyncStatus('En línea', 'ok');
+    subscribeBordoDay();
     renderAll(true);
 
     // Escucha en tiempo real lo que subas en index
@@ -1021,6 +1802,24 @@ async function boot(){
       setSyncStatus('En línea', 'ok');
       renderAll(true);
     });
+
+    if(typeof unsubBordoCatalog === 'function'){ unsubBordoCatalog(); unsubBordoCatalog = null; }
+    unsubBordoCatalog = FB.doc('bordo/catalog').onSnapshot(function(sn){
+      if(!sn.exists) return;
+      var d = sn.data() || {};
+      if(Array.isArray(d.catalog) && d.catalog.length){
+        P_BORDO.catalog = d.catalog;
+      }
+      if(d.prices && typeof d.prices === 'object'){
+        P_BORDO.prices = Object.assign({}, P_BORDO.prices, d.prices);
+      }
+      if(d.images && typeof d.images === 'object'){
+        P_BORDO.images = d.images;
+      }
+      saveBordoLocalState();
+      renderInventarioTab();
+      renderCorteTab();
+    }, function(){});
   }catch(e){
     setSyncStatus('Offline (Local)', 'bad');
   }
