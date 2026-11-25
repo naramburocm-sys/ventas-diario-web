@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
-:root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
+:root{--bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;--or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;--ok:#1a9a4f;--bad:#d62828;--gray:#64748b;--sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
@@ -61,29 +61,39 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .search-box input:focus{outline:2px solid var(--or);border-color:var(--or)}
 .search-clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:var(--soft);color:var(--ink);width:26px;height:26px;border-radius:50%;font-weight:800;cursor:pointer;display:none}
 
-.st-filter{display:flex;gap:6px;margin-bottom:12px}
-.stf{flex:1;font:inherit;font-size:11.5px;font-weight:800;padding:7px 6px;border-radius:11px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.st-filter{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.st-filter::-webkit-scrollbar{display:none}
+.stf{flex:1;font:inherit;font-size:11px;font-weight:800;padding:7px 6px;border-radius:11px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
 .stf .dot{width:8px;height:8px;border-radius:50%;flex:none;border:1px solid rgba(20,33,61,.35)}
 .stf[data-st="pend"] .dot{background:#f7b500}
 .stf[data-st="venta"] .dot{background:#1a9a4f}
 .stf[data-st="sin"] .dot{background:#d62828}
+.stf[data-st="cerrado"] .dot{background:#64748b}
 .stf.on{background:var(--soft);color:var(--ink);border-color:var(--or)}
 .stf[data-st="pend"].on{background:#fff8db;border-color:#f7b500;color:#7a5600}
 .stf[data-st="venta"].on{background:#e8f7ee;border-color:#1a9a4f;color:#116b36}
 .stf[data-st="sin"].on{background:#fff1f1;border-color:#d62828;color:#9e1c1c}
+.stf[data-st="cerrado"].on{background:#f1f5f9;border-color:#64748b;color:#334155}
 .map-legend{display:flex;align-items:center;gap:12px;padding:6px 12px;background:#fafbfe;border-top:1px solid var(--line);font-size:11px;font-weight:700;color:var(--ink)}
 .map-legend span{display:inline-flex;align-items:center;gap:4px}
 .map-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink)}
 
 #mapWrap{border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:12px;position:relative}
 #map{height:255px;width:100%;z-index:1}
-.map-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#fff;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--mute)}
+.map-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#fff;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--mute);flex-wrap:wrap;gap:6px}
+.pin-wrap{display:inline-flex;flex-direction:column;align-items:center;transform:translate(-50%,-7px);pointer-events:auto}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 0 1.5px #14213d,0 2px 5px rgba(0,0,0,.35);flex:none}
+.pin-lbl{margin-top:2px;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.94);color:#14213d;border:1px solid rgba(20,33,61,.25);font-size:10px;font-weight:800;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.dist-tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:#eef2ff;color:#1e3a8a}
+.dist-tag.near{background:#dcfce7;color:#166534}
+.btn.active-rad{background:var(--ink);color:#fff}
 
 /* Tarjetas de cliente */
 .cli-list{display:flex;flex-direction:column;gap:10px}
 .cli-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:13px 14px;box-shadow:0 3px 10px rgba(20,33,61,.05);transition:border-color .2s}
 .cli-card.st-venta{border-color:#8ed8ad;background:#f8fdf9}
 .cli-card.st-sin{border-color:#f2b8b8;background:#fffafa}
+.cli-card.st-cerrado{border-color:#cbd5e1;background:#f8fafc}
 .cli-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .cli-name{font-size:15px;font-weight:800;color:var(--ink);line-height:1.25}
 .cli-badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap;flex:none}
@@ -94,10 +104,11 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .cli-days{display:flex;gap:4px;margin-top:8px}
 .cli-days span{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f1f3f8;color:var(--mute)}
 .cli-days span.act{background:var(--soft);color:var(--ink)}
-.cli-actions{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
-.act-btn{font:inherit;font-size:12px;font-weight:800;padding:8px 8px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.cli-actions{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:5px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+.act-btn{font:inherit;font-size:11.5px;font-weight:800;padding:8px 6px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
 .act-btn.v-on{background:var(--ok);color:#fff;border-color:var(--ok)}
 .act-btn.s-on{background:var(--bad);color:#fff;border-color:var(--bad)}
+.act-btn.c-on{background:var(--gray);color:#fff;border-color:var(--gray)}
 .act-btn.gps{background:var(--soft);border-color:var(--or);padding:8px 11px}
 .act-btn.gps.disabled{opacity:.4;pointer-events:none}
 
@@ -206,6 +217,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       <button type="button" class="stf" data-st="pend">Pend. (0)</button>
       <button type="button" class="stf" data-st="venta">Venta (0)</button>
       <button type="button" class="stf" data-st="sin">Sin vta (0)</button>
+      <button type="button" class="stf" data-st="cerrado">Cerrado (0)</button>
     </div>
 
     <div id="mapWrap">
@@ -214,11 +226,13 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
         <span><i style="background:#f7b500"></i> Pendiente</span>
         <span><i style="background:#1a9a4f"></i> Venta</span>
         <span><i style="background:#d62828"></i> Sin venta</span>
+        <span><i style="background:#64748b"></i> Cerrado</span>
       </div>
       <div class="map-bar">
         <span id="mapCount">0 ubicaciones en mapa</span>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button type="button" class="btn g sm" id="btnMyLoc">Mi ubicación</button>
+          <button type="button" class="btn g sm" id="btnRad200">Radio 200m</button>
           <button type="button" class="btn sm" id="btnFitMap">Ver todos</button>
         </div>
       </div>
@@ -287,10 +301,11 @@ var T = {
   dayFilter: 'ALL',
   stFilter: 'all',
   search: '',
-  visits: {} // { 'YYYY-MM-DD': { clientKey: 'venta' | 'sin' } }
+  only200m: false,
+  visits: {} // { 'YYYY-MM-DD': { clientKey: 'venta' | 'sin' | 'cerrado' } }
 };
 
-var map = null, markersLayer = null, userMarker = null;
+var map = null, markersLayer = null, userMarker = null, radiusCircle = null, myPos = null, gpsWatchId = null;
 var $ = function(id){ return document.getElementById(id); };
 var pad = function(n){ return ('0' + n).slice(-2); };
 var fm = function(n){ return Math.round(n).toLocaleString('es-MX'); };
@@ -563,17 +578,76 @@ function initMapIfNeeded(){
   markersLayer = L.layerGroup().addTo(map);
 }
 
-function makePinIcon(status){
-  var color = status === 'venta' ? '#1a9a4f' : (status === 'sin' ? '#d62828' : '#f7b500');
-  var inner = status === 'venta' ? '✓' : (status === 'sin' ? '✕' : '•');
-  var txtColor = status === 'venta' || status === 'sin' ? '#ffffff' : '#14213d';
+function haversineMeters(lat1, lon1, lat2, lon2){
+  var R = 6371000;
+  var toRad = function(deg){ return deg * Math.PI / 180; };
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fmtDist(m){
+  if(m == null || !isFinite(m)) return '';
+  if(m < 1000) return Math.round(m) + ' m';
+  return (m / 1000).toFixed(2) + ' km';
+}
+
+function makePinIcon(status, label){
+  var color = status === 'venta' ? '#1a9a4f' : (status === 'sin' ? '#d62828' : (status === 'cerrado' ? '#64748b' : '#f7b500'));
   return L.divIcon({
     className: '',
-    html: '<div style="position:relative;width:26px;height:26px;border-radius:50% 50% 50% 0;background:' + color + ';border:2.5px solid #14213d;transform:rotate(-45deg);box-shadow:0 3px 8px rgba(0,0,0,.35);display:grid;place-items:center"><span style="transform:rotate(45deg);color:' + txtColor + ';font-size:12px;font-weight:900;line-height:1">' + inner + '</span></div>',
-    iconSize: [26, 26],
-    iconAnchor: [13, 26],
-    popupAnchor: [0, -24]
+    html: '<div class="pin-wrap">'
+      + '<div class="pin-dot" style="background:' + color + '"></div>'
+      + '<div class="pin-lbl">' + esc(label || '') + '</div>'
+      + '</div>',
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+    popupAnchor: [0, -14]
   });
+}
+
+function updateUserLocationLayer(lat, lon, centerMap, zoomLevel){
+  myPos = {lat: lat, lon: lon};
+  if(!map) return;
+  if(userMarker) map.removeLayer(userMarker);
+  if(radiusCircle) map.removeLayer(radiusCircle);
+  userMarker = L.circleMarker([lat, lon], {
+    radius: 8, fillColor: '#2563eb', color: '#ffffff', weight: 2.5, fillOpacity: 1
+  }).addTo(map).bindPopup('<b>Tu ubicación actual</b>');
+  radiusCircle = L.circle([lat, lon], {
+    radius: 200, color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.10, dashArray: '5,5'
+  }).addTo(map);
+  if(centerMap){
+    map.setView([lat, lon], zoomLevel || 16);
+  }
+}
+
+function startLocationTracking(centerMap){
+  if(!navigator.geolocation){
+    if(centerMap) alert('Tu dispositivo no soporta geolocalización.');
+    return;
+  }
+  initMapIfNeeded();
+  navigator.geolocation.getCurrentPosition(function(pos){
+    updateUserLocationLayer(pos.coords.latitude, pos.coords.longitude, centerMap, 16);
+    renderClientes(false);
+  }, function(){
+    if(centerMap) alert('No se pudo obtener tu ubicación. Verifica permisos de GPS.');
+  }, {enableHighAccuracy: true, timeout: 9000});
+
+  if(gpsWatchId == null && navigator.geolocation.watchPosition){
+    gpsWatchId = navigator.geolocation.watchPosition(function(pos){
+      var prev = myPos;
+      var lat = pos.coords.latitude, lon = pos.coords.longitude;
+      updateUserLocationLayer(lat, lon, false);
+      if(!prev || haversineMeters(prev.lat, prev.lon, lat, lon) >= 5){
+        renderClientes(false);
+      }
+    }, function(){}, {enableHighAccuracy: true, maximumAge: 5000, timeout: 12000});
+  }
 }
 
 function renderClientes(fitBounds){
@@ -602,17 +676,18 @@ function renderClientes(fitBounds){
     return true;
   });
 
-  var cAll = baseFiltered.length, cPend = 0, cVenta = 0, cSin = 0;
+  var cAll = baseFiltered.length, cPend = 0, cVenta = 0, cSin = 0, cCerrado = 0;
   baseFiltered.forEach(function(c){
     var st = getVisitStatus(clientKey(c));
     if(st === 'venta') cVenta++;
     else if(st === 'sin') cSin++;
+    else if(st === 'cerrado') cCerrado++;
     else cPend++;
   });
 
   var stBtns = $('stFilter').querySelectorAll('.stf');
-  var counts = {all:cAll, pend:cPend, venta:cVenta, sin:cSin};
-  var labels = {all:'Todos', pend:'Pend.', venta:'Venta', sin:'Sin vta'};
+  var counts = {all:cAll, pend:cPend, venta:cVenta, sin:cSin, cerrado:cCerrado};
+  var labels = {all:'Todos', pend:'Pend.', venta:'Venta', sin:'Sin vta', cerrado:'Cerrado'};
   stBtns.forEach(function(b){
     var k = b.dataset.st;
     b.className = 'stf' + (T.stFilter === k ? ' on' : '');
@@ -625,11 +700,32 @@ function renderClientes(fitBounds){
     if(T.stFilter === 'pend') return !st;
     if(T.stFilter === 'venta') return st === 'venta';
     if(T.stFilter === 'sin') return st === 'sin';
+    if(T.stFilter === 'cerrado') return st === 'cerrado';
     return true;
+  }).map(function(c){
+    var hasGps = c.lat != null && c.lon != null && isFinite(c.lat) && isFinite(c.lon);
+    var dist = (myPos && hasGps) ? haversineMeters(myPos.lat, myPos.lon, c.lat, c.lon) : null;
+    return {c: c, dist: dist};
   });
 
-  $('cliSub').textContent = 'Ruta ' + r + ' · ' + allRouteClients.length + ' cliente(s) en cartera total';
-  $('cliListTitle').textContent = 'Mostrando ' + finalClients.length + ' cliente(s)';
+  if(myPos){
+    finalClients.sort(function(a, b){
+      if(a.dist == null && b.dist == null) return 0;
+      if(a.dist == null) return 1;
+      if(b.dist == null) return -1;
+      return a.dist - b.dist;
+    });
+    if(T.only200m){
+      finalClients = finalClients.filter(function(item){
+        return item.dist != null && item.dist <= 200;
+      });
+    }
+  }
+
+  $('btnRad200').className = 'btn ' + (T.only200m ? 'active-rad' : 'g') + ' sm';
+  $('cliSub').textContent = 'Ruta ' + r + ' · ' + allRouteClients.length + ' cliente(s) en cartera total'
+    + (myPos ? (T.only200m ? ' · Filtrado a ≤200m' : ' · Ordenado por cercanía') : ' · Activa GPS para ordenar por distancia');
+  $('cliListTitle').textContent = 'Mostrando ' + finalClients.length + ' cliente(s)' + (myPos ? ' (cercanos primero)' : '');
 
   // Actualizar mapa
   if(T.tab === 'clientes'){
@@ -637,8 +733,10 @@ function renderClientes(fitBounds){
     if(map && markersLayer){
       map.invalidateSize();
       markersLayer.clearLayers();
+      if(myPos) updateUserLocationLayer(myPos.lat, myPos.lon, false);
       var bounds = [];
-      finalClients.forEach(function(c){
+      finalClients.forEach(function(item){
+        var c = item.c;
         if(c.lat != null && c.lon != null && isFinite(c.lat) && isFinite(c.lon)){
           var ck = clientKey(c);
           var st = getVisitStatus(ck);
@@ -648,22 +746,26 @@ function renderClientes(fitBounds){
             ? '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#e8f7ee;color:#1a9a4f;font-size:10px;font-weight:800;margin-bottom:4px">● Venta registrada</span>'
             : (st === 'sin'
               ? '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#fff1f1;color:#d62828;font-size:10px;font-weight:800;margin-bottom:4px">● Sin venta</span>'
-              : '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#fff8db;color:#8a6300;font-size:10px;font-weight:800;margin-bottom:4px">● Pendiente</span>');
+              : (st === 'cerrado'
+                ? '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#f1f5f9;color:#475569;font-size:10px;font-weight:800;margin-bottom:4px">● Cerrado</span>'
+                : '<span style="display:inline-block;padding:2px 7px;border-radius:99px;background:#fff8db;color:#8a6300;font-size:10px;font-weight:800;margin-bottom:4px">● Pendiente</span>'));
+          var distTxt = item.dist != null ? '<div style="font-size:11px;font-weight:800;color:#1e3a8a;margin-top:2px">📏 ' + fmtDist(item.dist) + '</div>' : '';
           var popupHtml = '<div style="font-family:Plus Jakarta Sans,sans-serif;min-width:175px">'
             + stBadge + '<br>'
             + '<b style="font-size:13px;color:#14213d">' + esc(c.nombre) + '</b>'
+            + distTxt
             + (addr ? '<div style="font-size:11.5px;color:#5b6b8c;margin:3px 0">' + esc(addr) + '</div>' : '')
             + (c.contacto ? '<div style="font-size:11px">👤 ' + esc(c.contacto) + '</div>' : '')
             + '<div style="margin-top:7px"><a href="' + gmaps + '" target="_blank" rel="noopener" style="display:inline-block;padding:5px 9px;background:#f7b500;color:#14213d;font-weight:800;font-size:11px;border-radius:8px;text-decoration:none">Cómo llegar (GPS)</a></div>'
             + '</div>';
-          var m = L.marker([c.lat, c.lon], {icon: makePinIcon(st)}).bindPopup(popupHtml);
+          var m = L.marker([c.lat, c.lon], {icon: makePinIcon(st, c.nombre)}).bindPopup(popupHtml);
           m.addTo(markersLayer);
           bounds.push([c.lat, c.lon]);
         }
       });
       $('mapCount').textContent = bounds.length + ' de ' + finalClients.length + ' con GPS en mapa';
       if(bounds.length > 0 && fitBounds !== false){
-        map.fitBounds(bounds, {padding:[28, 28], maxZoom:16});
+        map.fitBounds(bounds, {padding:[32, 32], maxZoom:16});
       }
     }
   }
@@ -681,7 +783,8 @@ function renderClientes(fitBounds){
   }
 
   var diasOrd = ['Lu','Ma','Mi','Ju','Vi','Sa'];
-  $('cliList').innerHTML = finalClients.map(function(c){
+  $('cliList').innerHTML = finalClients.map(function(item){
+    var c = item.c;
     var ck = clientKey(c);
     var st = getVisitStatus(ck);
     var addr = [c.calle, c.num, c.colonia, c.cp ? 'CP ' + c.cp : ''].filter(Boolean).join(', ');
@@ -692,10 +795,15 @@ function renderClientes(fitBounds){
       return '<span class="' + (on ? 'act' : '') + '">' + d + '</span>';
     }).join('');
 
-    return '<div class="cli-card' + (st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : '')) + '" data-ck="' + esc(ck) + '">'
+    var distBadge = item.dist != null
+      ? '<span class="dist-tag' + (item.dist <= 200 ? ' near' : '') + '">📏 ' + fmtDist(item.dist) + '</span>'
+      : '';
+    var rightBadge = c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>';
+    var cardStCls = st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : ''));
+    return '<div class="cli-card' + cardStCls + '" data-ck="' + esc(ck) + '">'
       + '<div class="cli-top">'
       +   '<div class="cli-name">' + esc(c.nombre) + '</div>'
-      +   (c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>')
+      +   '<div style="display:flex;align-items:center;gap:5px;flex:none">' + distBadge + rightBadge + '</div>'
       + '</div>'
       + (addr ? '<div class="cli-addr">' + esc(addr) + '</div>' : '')
       + '<div class="cli-meta">'
@@ -705,7 +813,8 @@ function renderClientes(fitBounds){
       + '<div class="cli-days">' + daysHtml + '</div>'
       + '<div class="cli-actions">'
       +   '<button type="button" class="act-btn' + (st === 'venta' ? ' v-on' : '') + '" data-act="venta">✓ Venta</button>'
-      +   '<button type="button" class="act-btn' + (st === 'sin' ? ' s-on' : '') + '" data-act="sin">✕ Sin venta</button>'
+      +   '<button type="button" class="act-btn' + (st === 'sin' ? ' s-on' : '') + '" data-act="sin">✕ Sin vta</button>'
+      +   '<button type="button" class="act-btn' + (st === 'cerrado' ? ' c-on' : '') + '" data-act="cerrado">− Cerrado</button>'
       +   '<a class="act-btn gps' + (hasGps ? '' : ' disabled') + '" href="' + gmaps + '" target="_blank" rel="noopener" title="Abrir ruta GPS">📍 Ir</a>'
       + '</div>'
       + '</div>';
@@ -744,6 +853,7 @@ $('navClientes').onclick = function(){
   $('v-clientes').hidden = false;
   $('navVenta').setAttribute('aria-selected', 'false');
   $('navClientes').setAttribute('aria-selected', 'true');
+  startLocationTracking(false);
   renderClientes(true);
   window.scrollTo(0, 0);
 };
@@ -792,18 +902,20 @@ $('btnResetDay').onclick = function(){
 
 $('btnFitMap').onclick = function(){ renderClientes(true); };
 $('btnMyLoc').onclick = function(){
-  if(!navigator.geolocation) return alert('Tu dispositivo no soporta geolocalización.');
-  initMapIfNeeded();
-  navigator.geolocation.getCurrentPosition(function(pos){
-    var lat = pos.coords.latitude, lon = pos.coords.longitude;
-    if(userMarker) map.removeLayer(userMarker);
-    userMarker = L.circleMarker([lat, lon], {
-      radius: 9, fillColor: '#2563eb', color: '#ffffff', weight: 3, fillOpacity: 1
-    }).addTo(map).bindPopup('<b>Tu ubicación actual</b>').openPopup();
-    map.setView([lat, lon], 15);
-  }, function(){
-    alert('No se pudo obtener tu ubicación. Verifica permisos de GPS.');
-  }, {enableHighAccuracy: true, timeout: 8000});
+  startLocationTracking(true);
+};
+
+$('btnRad200').onclick = function(){
+  if(!myPos){
+    T.only200m = true;
+    startLocationTracking(true);
+    return;
+  }
+  T.only200m = !T.only200m;
+  renderClientes(T.only200m);
+  if(T.only200m && map){
+    map.setView([myPos.lat, myPos.lon], 16);
+  }
 };
 
 /* ==================== SINCRONIZACIÓN FIREBASE ==================== */
