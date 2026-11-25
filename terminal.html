@@ -110,30 +110,50 @@ h2{font-size:16.5px;margin:20px 0 10px;font-weight:800;display:flex;align-items:
 .cli-card.generic-card{border:1.5px solid var(--or);background:linear-gradient(180deg,#fffdf5 0%,#fff8dc 100%);box-shadow:0 4px 12px rgba(247,181,0,.18)}
 .cli-badge.gen{background:var(--or);color:var(--ink)}
 
-/* Tarjetas de cliente */
-.cli-list{display:flex;flex-direction:column;gap:10px}
-.cli-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:13px 14px;box-shadow:0 3px 10px rgba(20,33,61,.05);transition:border-color .2s}
+/* Tarjetas de cliente compactas */
+.cli-list{display:flex;flex-direction:column;gap:8px}
+.cli-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 3px 10px rgba(20,33,61,.05);transition:border-color .2s}
 .cli-card.st-venta{border-color:#8ed8ad;background:#f8fdf9}
 .cli-card.st-sin{border-color:#f2b8b8;background:#fffafa}
 .cli-card.st-cerrado{border-color:#cbd5e1;background:#f8fafc}
-.cli-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.cli-name{font-size:15px;font-weight:800;color:var(--ink);line-height:1.25;cursor:pointer;text-decoration:underline;text-decoration-color:var(--or);text-underline-offset:3px;display:inline-flex;align-items:center;gap:4px}
-.cli-name:hover,.cli-name:active{color:var(--blue)}
-.cli-badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap;flex:none}
+.cli-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.cli-name{font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.2;cursor:pointer;text-decoration:underline;text-decoration-color:var(--or);text-underline-offset:3px;display:inline-flex;align-items:center;gap:4px;min-width:0}
+.cli-name span.nm-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cli-name:hover,.cli-name:active{color:var(--or)}
+.cli-badge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap;flex:none}
 .cli-badge.new{background:#e0f2fe;color:#0369a1}
-.cli-addr{font-size:12.5px;color:var(--mute);margin-top:4px;line-height:1.35}
-.cli-meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--ink);margin-top:7px;font-weight:600}
+.cli-addr{font-size:12px;color:var(--mute);margin-top:3px;line-height:1.3}
+.cli-meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11.5px;color:var(--ink);margin-top:4px;font-weight:600}
 .cli-meta a{color:var(--ink);text-decoration:none;border-bottom:1px dashed var(--or)}
-.cli-days{display:flex;gap:4px;margin-top:8px}
-.cli-days span{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f1f3f8;color:var(--mute)}
+.cli-bot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:7px;border-top:1px solid var(--line)}
+.cli-days{display:flex;gap:3px;flex-wrap:wrap}
+.cli-days span{font-size:10px;font-weight:800;padding:2px 5.5px;border-radius:6px;background:#f1f3f8;color:var(--mute)}
 .cli-days span.act{background:var(--soft);color:var(--ink)}
-.cli-actions{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:5px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
-.act-btn{font:inherit;font-size:11.5px;font-weight:800;padding:8px 6px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
-.act-btn.v-on{background:var(--ok);color:#fff;border-color:var(--ok)}
-.act-btn.s-on{background:var(--bad);color:#fff;border-color:var(--bad)}
-.act-btn.c-on{background:var(--gray);color:#fff;border-color:var(--gray)}
-.act-btn.gps{background:var(--soft);border-color:var(--or);padding:8px 11px}
-.act-btn.gps.disabled{opacity:.4;pointer-events:none}
+.cli-icons{display:flex;align-items:center;gap:5px;flex:none}
+.ic-btn{width:32px;height:30px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:0;transition:background .15s,border-color .15s}
+.ic-btn svg{width:15px;height:15px}
+.ic-btn.edit:hover,.ic-btn.edit:active{background:var(--soft);border-color:var(--or)}
+.ic-btn.del{color:var(--bad);border-color:#f2b8b8;background:#fff8f8}
+.ic-btn.del:hover,.ic-btn.del:active{background:#ffe5e5;border-color:var(--bad)}
+.ic-btn.gps{background:var(--soft);border-color:var(--or);width:auto;padding:0 9px;gap:3px;font-size:11px;font-weight:800}
+.ic-btn.gps.disabled{opacity:.4;pointer-events:none}
+
+/* Modal Alta / Edición de Cliente */
+.modal-bg{position:fixed;inset:0;background:rgba(20,33,61,.55);z-index:110;display:flex;align-items:flex-end;justify-content:center;padding:12px}
+.modal-card{background:#fff;width:100%;max-width:500px;max-height:92dvh;overflow-y:auto;border-radius:22px;padding:16px;box-shadow:0 16px 40px rgba(20,33,61,.3);border:1.5px solid var(--line)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.modal-hdr h3{margin:0;font-size:17px;font-weight:800}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f-grp{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.f-grp label{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase}
+.f-grp input{font:inherit;font-size:13.5px;font-weight:600;padding:8px 10px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);width:100%}
+.f-grp input:focus{outline:2px solid var(--or);border-color:var(--or)}
+.day-checks{display:flex;gap:5px;flex-wrap:wrap}
+.dchk{font:inherit;font-size:12px;font-weight:800;padding:6px 10px;border-radius:9px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer}
+.dchk.on{background:var(--soft);border-color:var(--or);color:var(--ink)}
+.geo-box{background:#f8fafc;border:1.5px solid var(--line);border-radius:13px;padding:9px 10px;margin-bottom:10px}
+.geo-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px}
+.geo-st{font-size:11.5px;font-weight:700;color:var(--mute)}
 
 /* Detalle días semana en Mi venta */
 .dd{display:flex;align-items:center;gap:12px;padding:11px;border:1.5px dashed var(--line);border-radius:16px;margin-bottom:8px;color:var(--mute);background:#fff}
@@ -303,9 +323,12 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       </div>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
-      <b style="font-size:15px" id="cliListTitle">Listado de clientes</b>
-      <button type="button" class="btn g sm" id="btnResetDay">Reiniciar visitas hoy</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin:14px 0 8px;flex-wrap:wrap">
+      <b style="font-size:14.5px" id="cliListTitle">Listado de clientes</b>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button type="button" class="btn sm" id="btnNewClient">+ Cliente nuevo</button>
+        <button type="button" class="btn g sm" id="btnResetDay">Reiniciar visitas hoy</button>
+      </div>
     </div>
     <div class="cli-list" id="cliList"></div>
   </main>
@@ -379,6 +402,89 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       <button type="button" class="btn g sm" id="btnResetTodayData">Reiniciar operaciones de hoy</button>
     </div>
   </main>
+</div>
+
+
+<!-- MODAL CLIENTE NUEVO / EDITAR -->
+<div class="modal-bg" id="cliModal" hidden>
+  <div class="modal-card">
+    <div class="modal-hdr">
+      <h3 id="cliModalTitle">Registrar cliente nuevo</h3>
+      <button type="button" class="btn g sm" id="btnCloseCliModal">✕</button>
+    </div>
+
+    <div class="geo-box">
+      <div class="geo-top">
+        <span class="geo-st" id="geoCaptureStatus">📍 Listo para capturar ubicación GPS</span>
+        <button type="button" class="btn sm" id="btnAutoGeo">Actualizar GPS</button>
+      </div>
+      <div class="f-grid">
+        <div class="f-grp" style="margin:0">
+          <label>Latitud</label>
+          <input type="text" id="fLat" placeholder="Ej. 23.249400" inputmode="decimal">
+        </div>
+        <div class="f-grp" style="margin:0">
+          <label>Longitud</label>
+          <input type="text" id="fLon" placeholder="Ej. -106.411100" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="f-grp">
+      <label>Nombre comercial *</label>
+      <input type="text" id="fNombre" placeholder="Ej. Abarrotes La Esquina" required>
+    </div>
+
+    <div class="f-grid">
+      <div class="f-grp">
+        <label>Calle exacta</label>
+        <input type="text" id="fCalle" placeholder="Ej. Av. Emilio Barragán">
+      </div>
+      <div class="f-grp">
+        <label>Número exacto</label>
+        <input type="text" id="fNum" placeholder="Ej. 1245">
+      </div>
+    </div>
+
+    <div class="f-grid">
+      <div class="f-grp">
+        <label>Colonia</label>
+        <input type="text" id="fColonia" placeholder="Ej. Gabriel Leyva">
+      </div>
+      <div class="f-grp">
+        <label>Código Postal</label>
+        <input type="text" id="fCp" placeholder="Ej. 82040" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="f-grid">
+      <div class="f-grp">
+        <label>Contacto / Encargado</label>
+        <input type="text" id="fContacto" placeholder="Nombre del encargado">
+      </div>
+      <div class="f-grp">
+        <label>Teléfono</label>
+        <input type="tel" id="fTelefono" placeholder="Ej. 6691234567" inputmode="tel">
+      </div>
+    </div>
+
+    <div class="f-grp">
+      <label>Días de visita en Ruta <span id="fRutaLbl">1</span></label>
+      <div class="day-checks" id="fDaysWrap">
+        <button type="button" class="dchk" data-d="Lu">Lu</button>
+        <button type="button" class="dchk" data-d="Ma">Ma</button>
+        <button type="button" class="dchk" data-d="Mi">Mi</button>
+        <button type="button" class="dchk" data-d="Ju">Ju</button>
+        <button type="button" class="dchk" data-d="Vi">Vi</button>
+        <button type="button" class="dchk" data-d="Sa">Sa</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" class="btn g" id="btnCancelCliModal" style="flex:1">Cancelar</button>
+      <button type="button" class="btn" id="btnSaveCliModal" style="flex:2">Guardar cliente</button>
+    </div>
+  </div>
 </div>
 
 <nav>
@@ -978,8 +1084,11 @@ function renderClientes(fitBounds){
     }
   }
 
-  // Renderizar tarjetas de clientes
+  // Renderizar tarjetas de clientes compactas
   var diasOrd = ['Lu','Ma','Mi','Ju','Vi','Sa'];
+  var svgEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  var svgDel = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
   $('cliList').innerHTML = finalClients.map(function(item){
     var c = item.c;
     var ck = clientKey(c);
@@ -995,27 +1104,26 @@ function renderClientes(fitBounds){
     var distBadge = item.dist != null
       ? '<span class="dist-tag' + (item.dist <= 200 ? ' near' : '') + '">📏 ' + fmtDist(item.dist) + '</span>'
       : '';
-    var isGen = isGenericClient(c);
-    var rightBadge = isGen
-      ? '<span class="cli-badge gen">Genérico · Estático</span>'
-      : (c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '<span class="cli-badge">R' + esc(c.ruta) + '</span>');
-    var cardStCls = (isGen ? ' generic-card' : '') + (st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : '')));
+    var newTag = c.clienteNuevo ? '<span class="cli-badge new">Nuevo</span>' : '';
+    var cardStCls = (st === 'venta' ? ' st-venta' : (st === 'sin' ? ' st-sin' : (st === 'cerrado' ? ' st-cerrado' : '')));
+
     return '<div class="cli-card' + cardStCls + '" data-ck="' + esc(ck) + '">'
       + '<div class="cli-top">'
-      +   '<div class="cli-name" data-open-bordo="1" title="Abrir venta a bordo para este cliente">' + esc(c.nombre) + (isGen ? ' <span style="font-size:11px;font-weight:800;color:var(--mute);text-decoration:none">(' + esc(c.codigo) + ')</span>' : '') + ' <span style="font-size:11px;color:var(--blue);text-decoration:none">🛒</span></div>'
-      +   '<div style="display:flex;align-items:center;gap:5px;flex:none">' + distBadge + rightBadge + '</div>'
+      +   '<div class="cli-name" data-open-bordo="1" title="Abrir venta a bordo"><span class="nm-txt">' + esc(c.nombre) + '</span> <span style="font-size:12px;text-decoration:none;flex:none">🛒</span></div>'
+      +   '<div style="display:flex;align-items:center;gap:4px;flex:none">' + newTag + distBadge + '</div>'
       + '</div>'
       + (addr ? '<div class="cli-addr">' + esc(addr) + '</div>' : '')
-      + '<div class="cli-meta">'
-      +   (c.contacto ? '<span>👤 ' + esc(c.contacto) + '</span>' : '')
-      +   (c.telefono ? '<span>📞 <a href="tel:' + esc(c.telefono.replace(/\s+/g, '')) + '">' + esc(c.telefono) + '</a></span>' : '')
-      + '</div>'
-      + '<div class="cli-days">' + daysHtml + '</div>'
-      + '<div class="cli-actions">'
-      +   '<button type="button" class="act-btn' + (st === 'venta' ? ' v-on' : '') + '" data-act="venta">✓ Venta</button>'
-      +   '<button type="button" class="act-btn' + (st === 'sin' ? ' s-on' : '') + '" data-act="sin">✕ Sin vta</button>'
-      +   '<button type="button" class="act-btn' + (st === 'cerrado' ? ' c-on' : '') + '" data-act="cerrado">− Cerrado</button>'
-      +   '<a class="act-btn gps' + (hasGps ? '' : ' disabled') + '" href="' + gmaps + '" target="_blank" rel="noopener" title="Abrir ruta GPS">📍 Ir</a>'
+      + ((c.contacto || c.telefono) ? '<div class="cli-meta">'
+          + (c.contacto ? '<span>👤 ' + esc(c.contacto) + '</span>' : '')
+          + (c.telefono ? '<span>📞 <a href="tel:' + esc(c.telefono.replace(/\s+/g, '')) + '">' + esc(c.telefono) + '</a></span>' : '')
+          + '</div>' : '')
+      + '<div class="cli-bot">'
+      +   '<div class="cli-days">' + daysHtml + '</div>'
+      +   '<div class="cli-icons">'
+      +     '<button type="button" class="ic-btn edit" data-edit-cli="1" title="Editar cliente" aria-label="Editar cliente">' + svgEdit + '</button>'
+      +     '<button type="button" class="ic-btn del" data-del-cli="1" title="Eliminar cliente" aria-label="Eliminar cliente">' + svgDel + '</button>'
+      +     '<a class="ic-btn gps' + (hasGps ? '' : ' disabled') + '" href="' + gmaps + '" target="_blank" rel="noopener" title="Cómo llegar (GPS)">📍 Ir</a>'
+      +   '</div>'
       + '</div>'
       + '</div>';
   }).join('');
@@ -1716,7 +1824,206 @@ $('btnGenClientPill').onclick = function(){
   openBordoForClient(gen, getGenericClientKey(T.ruta));
 };
 
-$('cliList').onclick = function(e){
+var editingClientKey = null;
+
+async function syncClientsToCloud(){
+  saveLocalData();
+  if(!FB) return;
+  try{
+    await FB.doc('app/clients').set({
+      clients: S.clients,
+      updatedAt: Date.now()
+    }, {merge: true});
+    setSyncStatus('En línea', 'ok');
+  }catch(err){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
+}
+
+function setModalDays(daysArr){
+  var arr = Array.isArray(daysArr) ? daysArr : [];
+  $('fDaysWrap').querySelectorAll('.dchk').forEach(function(btn){
+    btn.classList.toggle('on', arr.indexOf(btn.dataset.d) >= 0);
+  });
+}
+
+function getModalDays(){
+  var out = [];
+  $('fDaysWrap').querySelectorAll('.dchk.on').forEach(function(btn){
+    out.push(btn.dataset.d);
+  });
+  return out;
+}
+
+$('fDaysWrap').onclick = function(e){
+  var b = e.target.closest('.dchk');
+  if(b) b.classList.toggle('on');
+};
+
+async function reverseGeocodeFill(lat, lon){
+  var stEl = $('geoCaptureStatus');
+  stEl.textContent = '⏳ Obteniendo calle, número y CP...';
+  try{
+    var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon) + '&addressdetails=1';
+    var res = await fetch(url, {headers: {'Accept-Language': 'es'}});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var a = data && data.address ? data.address : {};
+    var road = a.road || a.pedestrian || a.footway || a.street || a.avenue || '';
+    var house = a.house_number || '';
+    var suburb = a.neighbourhood || a.suburb || a.residential || a.quarter || a.city_district || '';
+    var postcode = a.postcode || '';
+
+    if(road) $('fCalle').value = road;
+    if(house) $('fNum').value = house;
+    if(suburb && !$('fColonia').value) $('fColonia').value = suburb;
+    if(postcode) $('fCp').value = postcode;
+
+    stEl.textContent = '✅ Ubicación y domicilio capturados';
+  }catch(err){
+    stEl.textContent = '✅ Coordenadas GPS capturadas (completa calle/CP si falta)';
+  }
+}
+
+function captureAutoGeoForForm(){
+  var stEl = $('geoCaptureStatus');
+  if(!navigator.geolocation){
+    stEl.textContent = '⚠️ GPS no disponible en este navegador';
+    return;
+  }
+  stEl.textContent = '⏳ Obteniendo coordenadas GPS exactas...';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = Number(pos.coords.latitude.toFixed(6));
+    var lon = Number(pos.coords.longitude.toFixed(6));
+    $('fLat').value = lat;
+    $('fLon').value = lon;
+    updateUserLocationLayer(lat, lon, false);
+    reverseGeocodeFill(lat, lon);
+  }, function(){
+    if(myPos){
+      var lat = Number(myPos.lat.toFixed(6));
+      var lon = Number(myPos.lon.toFixed(6));
+      $('fLat').value = lat;
+      $('fLon').value = lon;
+      reverseGeocodeFill(lat, lon);
+    }else{
+      stEl.textContent = '⚠️ No se pudo obtener el GPS. Revisa los permisos.';
+    }
+  }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
+}
+
+function openClientModal(clientObj){
+  $('fRutaLbl').textContent = T.ruta;
+  if(clientObj){
+    editingClientKey = clientKey(clientObj);
+    $('cliModalTitle').textContent = 'Editar cliente';
+    $('fNombre').value = clientObj.nombre || '';
+    $('fCalle').value = clientObj.calle || '';
+    $('fNum').value = clientObj.num || '';
+    $('fColonia').value = clientObj.colonia || '';
+    $('fCp').value = clientObj.cp || '';
+    $('fContacto').value = clientObj.contacto || '';
+    $('fTelefono').value = clientObj.telefono || '';
+    $('fLat').value = clientObj.lat != null ? clientObj.lat : '';
+    $('fLon').value = clientObj.lon != null ? clientObj.lon : '';
+    setModalDays(clientObj.dias || []);
+    $('geoCaptureStatus').textContent = (clientObj.lat != null && clientObj.lon != null)
+      ? '📍 Coordenadas registradas'
+      : '📍 Sin coordenadas GPS';
+  }else{
+    editingClientKey = null;
+    $('cliModalTitle').textContent = 'Registrar cliente nuevo';
+    $('fNombre').value = '';
+    $('fCalle').value = '';
+    $('fNum').value = '';
+    $('fColonia').value = '';
+    $('fCp').value = '';
+    $('fContacto').value = '';
+    $('fTelefono').value = '';
+    $('fLat').value = '';
+    $('fLon').value = '';
+    var defDay = (T.dayFilter && T.dayFilter !== 'ALL') ? [T.dayFilter] : (todayDayCode() !== 'ALL' ? [todayDayCode()] : ['Lu']);
+    setModalDays(defDay);
+    captureAutoGeoForForm();
+  }
+  $('cliModal').hidden = false;
+  setTimeout(function(){ $('fNombre').focus(); }, 60);
+}
+
+function closeClientModal(){
+  $('cliModal').hidden = true;
+  editingClientKey = null;
+}
+
+$('btnNewClient').onclick = function(){ openClientModal(null); };
+$('btnAutoGeo').onclick = function(){ captureAutoGeoForForm(); };
+$('btnCloseCliModal').onclick = closeClientModal;
+$('btnCancelCliModal').onclick = closeClientModal;
+
+$('btnSaveCliModal').onclick = async function(){
+  var nombre = normStr($('fNombre').value);
+  if(!nombre){
+    alert('Por favor ingresa el nombre comercial del cliente.');
+    $('fNombre').focus();
+    return;
+  }
+  var lat = normNum($('fLat').value);
+  var lon = normNum($('fLon').value);
+  var dias = getModalDays();
+  var nowStr = getTodayKey();
+
+  if(editingClientKey){
+    var idx = S.clients.findIndex(function(c){ return clientKey(c) === editingClientKey; });
+    if(idx >= 0){
+      var prev = S.clients[idx];
+      var updated = Object.assign({}, prev, {
+        nombre: nombre,
+        calle: normStr($('fCalle').value),
+        num: normStr($('fNum').value),
+        colonia: normStr($('fColonia').value),
+        cp: normStr($('fCp').value),
+        contacto: normStr($('fContacto').value),
+        telefono: normStr($('fTelefono').value),
+        lat: lat,
+        lon: lon,
+        dias: dias
+      });
+      var newCk = clientKey(updated);
+      var tk = getTodayKey();
+      if(T.visits[tk] && T.visits[tk][editingClientKey] && newCk !== editingClientKey){
+        T.visits[tk][newCk] = T.visits[tk][editingClientKey];
+        delete T.visits[tk][editingClientKey];
+        saveTermState();
+      }
+      S.clients[idx] = updated;
+    }
+    showToast('Cliente actualizado');
+  }else{
+    var newCli = {
+      ruta: String(T.ruta || '1'),
+      nombre: nombre,
+      calle: normStr($('fCalle').value),
+      num: normStr($('fNum').value),
+      colonia: normStr($('fColonia').value),
+      cp: normStr($('fCp').value),
+      contacto: normStr($('fContacto').value),
+      telefono: normStr($('fTelefono').value),
+      lat: lat,
+      lon: lon,
+      dias: dias,
+      clienteNuevo: true,
+      fechaAlta: nowStr
+    };
+    S.clients.unshift(newCli);
+    showToast('Cliente nuevo registrado');
+  }
+
+  closeClientModal();
+  renderAll(true);
+  await syncClientsToCloud();
+};
+
+$('cliList').onclick = async function(e){
   var nameEl = e.target.closest('[data-open-bordo]');
   if(nameEl){
     var card0 = nameEl.closest('[data-ck]');
@@ -1728,11 +2035,33 @@ $('cliList').onclick = function(e){
     openBordoForClient(found, ck0);
     return;
   }
-  var btn = e.target.closest('[data-act]');
-  if(!btn) return;
-  var card = btn.closest('[data-ck]');
-  if(!card) return;
-  toggleVisitStatus(card.dataset.ck, btn.dataset.act);
+  var editBtn = e.target.closest('[data-edit-cli]');
+  if(editBtn){
+    var cardE = editBtn.closest('[data-ck]');
+    if(!cardE) return;
+    var foundE = S.clients.find(function(c){ return clientKey(c) === cardE.dataset.ck; });
+    if(foundE) openClientModal(foundE);
+    return;
+  }
+  var delBtn = e.target.closest('[data-del-cli]');
+  if(delBtn){
+    var cardD = delBtn.closest('[data-ck]');
+    if(!cardD) return;
+    var ckD = cardD.dataset.ck;
+    var foundD = S.clients.find(function(c){ return clientKey(c) === ckD; });
+    if(!foundD) return;
+    if(!confirm('¿Eliminar a "' + foundD.nombre + '" del padrón de Ruta ' + foundD.ruta + '?')) return;
+    S.clients = S.clients.filter(function(c){ return clientKey(c) !== ckD; });
+    var tk = getTodayKey();
+    if(T.visits[tk] && T.visits[tk][ckD]){
+      delete T.visits[tk][ckD];
+      saveTermState();
+    }
+    renderAll(true);
+    showToast('Cliente eliminado');
+    await syncClientsToCloud();
+    return;
+  }
 };
 
 $('btnResetDay').onclick = function(){
