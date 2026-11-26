@@ -195,6 +195,22 @@ nav button svg{width:22px;height:22px}
 nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
 button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 [hidden]{display:none!important}
+
+.seg-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.seg-btn{font:inherit;font-size:12.5px;font-weight:800;padding:9px 8px;border-radius:12px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center}
+.seg-btn.on.prosp{background:#fff8db;border-color:var(--or);color:var(--ink)}
+.seg-btn.on.nuevo{background:#e8f7ee;border-color:var(--ok);color:#116b36}
+.f-grp select,.f-grp textarea{font:inherit;font-size:13.5px;font-weight:700;padding:8px 10px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);width:100%}
+.f-grp select:focus,.f-grp textarea:focus{outline:2px solid var(--or);border-color:var(--or)}
+.f-grp input.auto-filled{background:#f8fdf9;border-color:#bce6cc}
+.photo-box{background:#f8f9fc;border:1.5px dashed var(--line);border-radius:14px;padding:9px 11px;margin-bottom:10px}
+.photo-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.photo-lbl{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.2px}
+.photo-acts{display:flex;gap:6px;align-items:center}
+.photo-prev-wrap{margin-top:8px;position:relative;display:none}
+.photo-prev-wrap.show{display:block}
+.photo-prev{width:100%;max-height:175px;object-fit:cover;border-radius:12px;border:1.5px solid var(--line);display:block;background:#eef2f7;cursor:zoom-in}
+.photo-rm{position:absolute;top:7px;right:7px;background:rgba(20,33,61,.82);color:#fff;border:0;border-radius:99px;padding:4px 9px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
@@ -405,66 +421,86 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
 </div>
 
 
-<!-- MODAL CLIENTE NUEVO / EDITAR -->
+<!-- MODAL PROSPECTO / CLIENTE NUEVO / EDITAR -->
 <div class="modal-bg" id="cliModal" hidden>
   <div class="modal-card">
     <div class="modal-hdr">
-      <h3 id="cliModalTitle">Registrar cliente nuevo</h3>
+      <h3 id="cliModalTitle">Nuevo Prospecto / Cliente</h3>
       <button type="button" class="btn g sm" id="btnCloseCliModal">✕</button>
     </div>
+    <p class="small" style="margin:0 0 10px">Captura automática por GPS de domicilio y alta directa al padrón de ruta</p>
 
     <div class="geo-box">
       <div class="geo-top">
         <span class="geo-st" id="geoCaptureStatus">📍 Listo para capturar ubicación GPS</span>
-        <button type="button" class="btn sm" id="btnAutoGeo">Actualizar GPS</button>
+        <button type="button" class="btn sm" id="btnAutoGeo">📍 Capturar GPS</button>
       </div>
       <div class="f-grid">
         <div class="f-grp" style="margin:0">
-          <label>Latitud</label>
-          <input type="text" id="fLat" placeholder="Ej. 23.249400" inputmode="decimal">
+          <label>Latitud (Auto)</label>
+          <input type="text" id="mLat" placeholder="23.249400" inputmode="decimal">
         </div>
         <div class="f-grp" style="margin:0">
-          <label>Longitud</label>
-          <input type="text" id="fLon" placeholder="Ej. -106.411100" inputmode="decimal">
+          <label>Longitud (Auto)</label>
+          <input type="text" id="mLon" placeholder="-106.411100" inputmode="decimal">
         </div>
       </div>
     </div>
 
     <div class="f-grp">
-      <label>Nombre comercial *</label>
-      <input type="text" id="fNombre" placeholder="Ej. Abarrotes La Esquina" required>
-    </div>
-
-    <div class="f-grid">
-      <div class="f-grp">
-        <label>Calle exacta</label>
-        <input type="text" id="fCalle" placeholder="Ej. Av. Emilio Barragán">
-      </div>
-      <div class="f-grp">
-        <label>Número exacto</label>
-        <input type="text" id="fNum" placeholder="Ej. 1245">
+      <label>Estatus del registro</label>
+      <div class="seg-row" id="mSegStatus">
+        <button type="button" class="seg-btn on prosp" data-val="prospecto">🎯 Prospecto</button>
+        <button type="button" class="seg-btn nuevo" data-val="cliente_nuevo">✅ Cliente Nuevo</button>
       </div>
     </div>
 
     <div class="f-grid">
       <div class="f-grp">
-        <label>Colonia</label>
-        <input type="text" id="fColonia" placeholder="Ej. Gabriel Leyva">
+        <label>Ruta asignada *</label>
+        <select id="mRuta"></select>
       </div>
       <div class="f-grp">
-        <label>Código Postal</label>
-        <input type="text" id="fCp" placeholder="Ej. 82040" inputmode="numeric">
+        <label>Localidad / Municipio *</label>
+        <input type="text" id="mLocalidad" value="Mazatlán" placeholder="Ej. Mazatlán / Rosario">
+      </div>
+    </div>
+
+    <div class="f-grp">
+      <label>Negocio a prospectar / Nombre comercial *</label>
+      <input type="text" id="mNegocio" placeholder="Ej. Abarrotes El Sol, Taquería..." required>
+    </div>
+
+    <div class="f-grid">
+      <div class="f-grp">
+        <label>Calle (Auto GPS) *</label>
+        <input type="text" id="mCalle" placeholder="Ej. Av. Rafael Buelna">
+      </div>
+      <div class="f-grp">
+        <label>Número exacto (Auto)</label>
+        <input type="text" id="mNumero" placeholder="Ej. 402 o S/N">
       </div>
     </div>
 
     <div class="f-grid">
       <div class="f-grp">
-        <label>Contacto / Encargado</label>
-        <input type="text" id="fContacto" placeholder="Nombre del encargado">
+        <label>Colonia (Auto GPS)</label>
+        <input type="text" id="mColonia" placeholder="Ej. Colonia Esperanza">
       </div>
       <div class="f-grp">
-        <label>Teléfono</label>
-        <input type="tel" id="fTelefono" placeholder="Ej. 6691234567" inputmode="tel">
+        <label>Código Postal (Auto)</label>
+        <input type="text" id="mCp" placeholder="Ej. 82180" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="f-grid">
+      <div class="f-grp">
+        <label>Nombre de contacto</label>
+        <input type="text" id="mContacto" placeholder="Dueño o encargado">
+      </div>
+      <div class="f-grp">
+        <label>Teléfono / WhatsApp</label>
+        <input type="tel" id="mTelefono" placeholder="Ej. 6691558151" inputmode="tel">
       </div>
     </div>
 
@@ -480,9 +516,31 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       </div>
     </div>
 
+    <div class="photo-box">
+      <div class="photo-top">
+        <span class="photo-lbl">📷 Fotografía de la fachada</span>
+        <div class="photo-acts">
+          <button type="button" class="btn sm" id="btnTakeModalPhoto">Tomar foto</button>
+          <button type="button" class="btn g sm" id="btnPickModalPhoto">Galería</button>
+        </div>
+      </div>
+      <input type="file" id="mFotoInput" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="mGalleryInput" accept="image/*" style="display:none">
+      <div class="small" id="mPhotoStatus">Sin fotografía de fachada adjunta</div>
+      <div class="photo-prev-wrap" id="mPhotoPrevWrap">
+        <img id="mPhotoPreview" class="photo-prev" alt="Vista previa de fachada">
+        <button type="button" class="photo-rm" id="btnRemoveModalPhoto">✕ Quitar</button>
+      </div>
+    </div>
+
+    <div class="f-grp">
+      <label>Notas de prospección (opcional)</label>
+      <input type="text" id="mNotas" placeholder="Ej. Pide enfriador, maneja competencia, horario...">
+    </div>
+
     <div style="display:flex;gap:8px;margin-top:12px">
       <button type="button" class="btn g" id="btnCancelCliModal" style="flex:1">Cancelar</button>
-      <button type="button" class="btn" id="btnSaveCliModal" style="flex:2">Guardar cliente</button>
+      <button type="button" class="btn" id="btnSaveCliModal" style="flex:2">💾 Guardar registro</button>
     </div>
   </div>
 </div>
@@ -1825,6 +1883,76 @@ $('btnGenClientPill').onclick = function(){
 };
 
 var editingClientKey = null;
+var editingRecordId = null;
+var modalFormStatus = 'prospecto';
+var modalFachadaFoto = '';
+var MODAL_MAX_FACHADA_BYTES = 750000;
+var PROSP_TERM_KEY = 'prospeccion-clientes-v1';
+var SHEET_NUEVOS_TERM_KEY = 'hoja-clientes-nuevos-v1';
+var SHEET_PROSP_TERM_KEY = 'hoja-prospectos-v1';
+
+function populateModalRouteSelect(selectedRoute){
+  var sel = $('mRuta');
+  if(!sel) return;
+  sel.innerHTML = RUTAS_PERMITIDAS.map(function(r){
+    return '<option value="' + r + '">Ruta ' + r + '</option>';
+  }).join('');
+  var target = String(selectedRoute || T.ruta || '1');
+  sel.value = isAllowedRoute(target) ? target : '1';
+  $('fRutaLbl').textContent = sel.value;
+}
+
+function setModalFormStatus(val){
+  modalFormStatus = val === 'cliente_nuevo' ? 'cliente_nuevo' : 'prospecto';
+  $('mSegStatus').querySelectorAll('.seg-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.val === modalFormStatus);
+  });
+}
+
+function setModalFachadaPhoto(dataUrl){
+  modalFachadaFoto = dataUrl || '';
+  var wrap = $('mPhotoPrevWrap');
+  var img = $('mPhotoPreview');
+  var st = $('mPhotoStatus');
+  if(modalFachadaFoto){
+    img.src = modalFachadaFoto;
+    wrap.classList.add('show');
+    var approxKb = Math.round((modalFachadaFoto.length * 3) / 4 / 1024);
+    st.textContent = '✅ Fachada lista (~' + approxKb + ' KB)';
+  }else{
+    img.removeAttribute('src');
+    wrap.classList.remove('show');
+    st.textContent = 'Sin fotografía de fachada adjunta';
+  }
+}
+
+function compressModalFacade(file, cb){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1024, w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w >= h){ h = Math.round((h * maxDim) / w); w = maxDim; }
+        else{ w = Math.round((w * maxDim) / h); h = maxDim; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var q = 0.78;
+      var out = canvas.toDataURL('image/jpeg', q);
+      while(out.length > MODAL_MAX_FACHADA_BYTES && q > 0.35){
+        q -= 0.1;
+        out = canvas.toDataURL('image/jpeg', q);
+      }
+      cb(out);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 
 async function syncClientsToCloud(){
   saveLocalData();
@@ -1834,6 +1962,54 @@ async function syncClientsToCloud(){
       clients: S.clients,
       updatedAt: Date.now()
     }, {merge: true});
+    setSyncStatus('En línea', 'ok');
+  }catch(err){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
+}
+
+async function saveProspectOrNewClientRecord(rec){
+  var isNew = rec.estatus === 'cliente_nuevo';
+  var recs = [];
+  var sheetNew = [];
+  var sheetProsp = [];
+  try{ recs = JSON.parse(localStorage.getItem(PROSP_TERM_KEY) || '[]'); if(!Array.isArray(recs)) recs = []; }catch(e){}
+  try{ sheetNew = JSON.parse(localStorage.getItem(SHEET_NUEVOS_TERM_KEY) || '[]'); if(!Array.isArray(sheetNew)) sheetNew = []; }catch(e){}
+  try{ sheetProsp = JSON.parse(localStorage.getItem(SHEET_PROSP_TERM_KEY) || '[]'); if(!Array.isArray(sheetProsp)) sheetProsp = []; }catch(e){}
+
+  var idxR = recs.findIndex(function(x){ return x.id === rec.id; });
+  if(idxR >= 0) recs[idxR] = rec; else recs.unshift(rec);
+
+  if(isNew){
+    sheetNew = sheetNew.filter(function(x){ return x.id !== rec.id; });
+    sheetNew.unshift(Object.assign({}, rec, {hoja: 'Clientes Nuevos'}));
+    sheetProsp = sheetProsp.filter(function(x){ return x.id !== rec.id; });
+  }else{
+    sheetProsp = sheetProsp.filter(function(x){ return x.id !== rec.id; });
+    sheetProsp.unshift(Object.assign({}, rec, {hoja: 'Prospectos'}));
+  }
+
+  try{
+    localStorage.setItem(PROSP_TERM_KEY, JSON.stringify(recs));
+    localStorage.setItem(SHEET_NUEVOS_TERM_KEY, JSON.stringify(sheetNew));
+    localStorage.setItem(SHEET_PROSP_TERM_KEY, JSON.stringify(sheetProsp));
+  }catch(e){}
+
+  if(!FB) return;
+  try{
+    await FB.doc('prospeccion/' + rec.id).set(rec, {merge: true});
+    if(isNew){
+      await Promise.all([
+        FB.doc('clientes_nuevos/' + rec.id).set(Object.assign({}, rec, {hoja: 'Clientes Nuevos'}), {merge: true}),
+        FB.doc('hojas_prospeccion/clientes_nuevos').set({hoja: 'Clientes Nuevos', rows: sheetNew, updatedAt: Date.now()}, {merge: true}),
+        FB.doc('hojas_prospeccion/prospectos').set({hoja: 'Prospectos', rows: sheetProsp, updatedAt: Date.now()}, {merge: true})
+      ]);
+    }else{
+      await Promise.all([
+        FB.doc('prospectos/' + rec.id).set(Object.assign({}, rec, {hoja: 'Prospectos'}), {merge: true}),
+        FB.doc('hojas_prospeccion/prospectos').set({hoja: 'Prospectos', rows: sheetProsp, updatedAt: Date.now()}, {merge: true})
+      ]);
+    }
     setSyncStatus('En línea', 'ok');
   }catch(err){
     setSyncStatus('Offline (Local)', 'bad');
@@ -1860,9 +2036,18 @@ $('fDaysWrap').onclick = function(e){
   if(b) b.classList.toggle('on');
 };
 
+$('mSegStatus').onclick = function(e){
+  var b = e.target.closest('.seg-btn');
+  if(b) setModalFormStatus(b.dataset.val);
+};
+
+$('mRuta').onchange = function(){
+  $('fRutaLbl').textContent = this.value;
+};
+
 async function reverseGeocodeFill(lat, lon){
   var stEl = $('geoCaptureStatus');
-  stEl.textContent = '⏳ Obteniendo calle, número y CP...';
+  stEl.textContent = '⏳ Extrayendo calle, número, colonia y CP...';
   try{
     var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon) + '&addressdetails=1';
     var res = await fetch(url, {headers: {'Accept-Language': 'es'}});
@@ -1873,13 +2058,15 @@ async function reverseGeocodeFill(lat, lon){
     var house = a.house_number || '';
     var suburb = a.neighbourhood || a.suburb || a.residential || a.quarter || a.city_district || '';
     var postcode = a.postcode || '';
+    var city = a.city || a.town || a.village || a.municipality || '';
 
-    if(road) $('fCalle').value = road;
-    if(house) $('fNum').value = house;
-    if(suburb && !$('fColonia').value) $('fColonia').value = suburb;
-    if(postcode) $('fCp').value = postcode;
+    if(road){ $('mCalle').value = road; $('mCalle').classList.add('auto-filled'); }
+    if(house){ $('mNumero').value = house; $('mNumero').classList.add('auto-filled'); }
+    if(suburb){ $('mColonia').value = suburb; $('mColonia').classList.add('auto-filled'); }
+    if(postcode){ $('mCp').value = postcode; $('mCp').classList.add('auto-filled'); }
+    if(city && !$('mLocalidad').value){ $('mLocalidad').value = city; }
 
-    stEl.textContent = '✅ Ubicación y domicilio capturados';
+    stEl.textContent = '✅ Ubicación y domicilio capturados automáticamente';
   }catch(err){
     stEl.textContent = '✅ Coordenadas GPS capturadas (completa calle/CP si falta)';
   }
@@ -1888,23 +2075,25 @@ async function reverseGeocodeFill(lat, lon){
 function captureAutoGeoForForm(){
   var stEl = $('geoCaptureStatus');
   if(!navigator.geolocation){
-    stEl.textContent = '⚠️ GPS no disponible en este navegador';
+    stEl.textContent = '⚠️ GPS no disponible en este dispositivo';
     return;
   }
-  stEl.textContent = '⏳ Obteniendo coordenadas GPS exactas...';
+  stEl.textContent = '⏳ Obteniendo coordenadas GPS...';
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat = Number(pos.coords.latitude.toFixed(6));
     var lon = Number(pos.coords.longitude.toFixed(6));
-    $('fLat').value = lat;
-    $('fLon').value = lon;
+    $('mLat').value = lat;
+    $('mLon').value = lon;
+    $('mLat').classList.add('auto-filled');
+    $('mLon').classList.add('auto-filled');
     updateUserLocationLayer(lat, lon, false);
     reverseGeocodeFill(lat, lon);
   }, function(){
     if(myPos){
       var lat = Number(myPos.lat.toFixed(6));
       var lon = Number(myPos.lon.toFixed(6));
-      $('fLat').value = lat;
-      $('fLon').value = lon;
+      $('mLat').value = lat;
+      $('mLon').value = lon;
       reverseGeocodeFill(lat, lon);
     }else{
       stEl.textContent = '⚠️ No se pudo obtener el GPS. Revisa los permisos.';
@@ -1913,114 +2102,175 @@ function captureAutoGeoForForm(){
 }
 
 function openClientModal(clientObj){
-  $('fRutaLbl').textContent = T.ruta;
   if(clientObj){
     editingClientKey = clientKey(clientObj);
-    $('cliModalTitle').textContent = 'Editar cliente';
-    $('fNombre').value = clientObj.nombre || '';
-    $('fCalle').value = clientObj.calle || '';
-    $('fNum').value = clientObj.num || '';
-    $('fColonia').value = clientObj.colonia || '';
-    $('fCp').value = clientObj.cp || '';
-    $('fContacto').value = clientObj.contacto || '';
-    $('fTelefono').value = clientObj.telefono || '';
-    $('fLat').value = clientObj.lat != null ? clientObj.lat : '';
-    $('fLon').value = clientObj.lon != null ? clientObj.lon : '';
+    editingRecordId = clientObj.id || null;
+    populateModalRouteSelect(clientObj.ruta || T.ruta);
+    setModalFormStatus(clientObj.clienteNuevo === false ? 'prospecto' : 'cliente_nuevo');
+    $('cliModalTitle').textContent = 'Editar Registro';
+    $('mNegocio').value = clientObj.nombre || '';
+    $('mCalle').value = clientObj.calle || '';
+    $('mNumero').value = clientObj.num || '';
+    $('mColonia').value = clientObj.colonia || '';
+    $('mCp').value = clientObj.cp || '';
+    $('mLocalidad').value = clientObj.localidad || 'Mazatlán';
+    $('mContacto').value = clientObj.contacto || '';
+    $('mTelefono').value = clientObj.telefono || '';
+    $('mLat').value = clientObj.lat != null ? clientObj.lat : '';
+    $('mLon').value = clientObj.lon != null ? clientObj.lon : '';
+    $('mNotas').value = clientObj.notas || '';
+    setModalFachadaPhoto(clientObj.fachadaFoto || '');
     setModalDays(clientObj.dias || []);
     $('geoCaptureStatus').textContent = (clientObj.lat != null && clientObj.lon != null)
       ? '📍 Coordenadas registradas'
       : '📍 Sin coordenadas GPS';
   }else{
     editingClientKey = null;
-    $('cliModalTitle').textContent = 'Registrar cliente nuevo';
-    $('fNombre').value = '';
-    $('fCalle').value = '';
-    $('fNum').value = '';
-    $('fColonia').value = '';
-    $('fCp').value = '';
-    $('fContacto').value = '';
-    $('fTelefono').value = '';
-    $('fLat').value = '';
-    $('fLon').value = '';
+    editingRecordId = null;
+    populateModalRouteSelect(T.ruta);
+    setModalFormStatus('prospecto');
+    $('cliModalTitle').textContent = 'Nuevo Prospecto / Cliente';
+    $('mNegocio').value = '';
+    $('mCalle').value = '';
+    $('mNumero').value = '';
+    $('mColonia').value = '';
+    $('mCp').value = '';
+    $('mLocalidad').value = 'Mazatlán';
+    $('mContacto').value = '';
+    $('mTelefono').value = '';
+    $('mLat').value = '';
+    $('mLon').value = '';
+    $('mNotas').value = '';
+    ['mLat','mLon','mCalle','mNumero','mColonia','mCp'].forEach(function(id){
+      $(id).classList.remove('auto-filled');
+    });
+    setModalFachadaPhoto('');
     var defDay = (T.dayFilter && T.dayFilter !== 'ALL') ? [T.dayFilter] : (todayDayCode() !== 'ALL' ? [todayDayCode()] : ['Lu']);
     setModalDays(defDay);
     captureAutoGeoForForm();
   }
   $('cliModal').hidden = false;
-  setTimeout(function(){ $('fNombre').focus(); }, 60);
+  setTimeout(function(){ $('mNegocio').focus(); }, 60);
 }
 
 function closeClientModal(){
   $('cliModal').hidden = true;
   editingClientKey = null;
+  editingRecordId = null;
 }
 
 $('btnNewClient').onclick = function(){ openClientModal(null); };
 $('btnAutoGeo').onclick = function(){ captureAutoGeoForForm(); };
 $('btnCloseCliModal').onclick = closeClientModal;
 $('btnCancelCliModal').onclick = closeClientModal;
+$('btnTakeModalPhoto').onclick = function(){ $('mFotoInput').click(); };
+$('btnPickModalPhoto').onclick = function(){ $('mGalleryInput').click(); };
+$('btnRemoveModalPhoto').onclick = function(){
+  $('mFotoInput').value = '';
+  $('mGalleryInput').value = '';
+  setModalFachadaPhoto('');
+};
+$('mFotoInput').onchange = function(){
+  if(this.files && this.files[0]) compressModalFacade(this.files[0], setModalFachadaPhoto);
+};
+$('mGalleryInput').onchange = function(){
+  if(this.files && this.files[0]) compressModalFacade(this.files[0], setModalFachadaPhoto);
+};
+$('mPhotoPreview').onclick = function(){
+  if(!modalFachadaFoto) return;
+  var w = window.open('', '_blank');
+  if(w) w.document.write('<title>Fachada</title><body style="margin:0;background:#14213d;display:grid;place-items:center;min-height:100vh"><img src="' + modalFachadaFoto + '" style="max-width:96vw;max-height:96vh;border-radius:12px"></body>');
+};
 
 $('btnSaveCliModal').onclick = async function(){
-  var nombre = normStr($('fNombre').value);
-  if(!nombre){
-    alert('Por favor ingresa el nombre comercial del cliente.');
-    $('fNombre').focus();
+  var negocio = normStr($('mNegocio').value);
+  if(!negocio){
+    alert('Por favor ingresa el nombre del negocio a prospectar.');
+    $('mNegocio').focus();
     return;
   }
-  var lat = normNum($('fLat').value);
-  var lon = normNum($('fLon').value);
+  var rutaSel = String($('mRuta').value || T.ruta || '1');
+  var lat = normNum($('mLat').value);
+  var lon = normNum($('mLon').value);
   var dias = getModalDays();
   var nowStr = getTodayKey();
+  var isClientNew = modalFormStatus === 'cliente_nuevo';
 
-  if(editingClientKey){
-    var idx = S.clients.findIndex(function(c){ return clientKey(c) === editingClientKey; });
-    if(idx >= 0){
-      var prev = S.clients[idx];
-      var updated = Object.assign({}, prev, {
-        nombre: nombre,
-        calle: normStr($('fCalle').value),
-        num: normStr($('fNum').value),
-        colonia: normStr($('fColonia').value),
-        cp: normStr($('fCp').value),
-        contacto: normStr($('fContacto').value),
-        telefono: normStr($('fTelefono').value),
-        lat: lat,
-        lon: lon,
-        dias: dias
-      });
-      var newCk = clientKey(updated);
-      var tk = getTodayKey();
-      if(T.visits[tk] && T.visits[tk][editingClientKey] && newCk !== editingClientKey){
-        T.visits[tk][newCk] = T.visits[tk][editingClientKey];
-        delete T.visits[tk][editingClientKey];
-        saveTermState();
-      }
-      S.clients[idx] = updated;
-    }
-    showToast('Cliente actualizado');
-  }else{
+  var rec = {
+    id: editingRecordId || ('PR_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+    estatus: modalFormStatus,
+    ruta: rutaSel,
+    negocio: negocio,
+    calle: normStr($('mCalle').value),
+    numero: normStr($('mNumero').value),
+    colonia: normStr($('mColonia').value),
+    cp: normStr($('mCp').value),
+    localidad: normStr($('mLocalidad').value) || 'Mazatlán',
+    contacto: normStr($('mContacto').value),
+    telefono: normStr($('mTelefono').value),
+    lat: lat,
+    lon: lon,
+    dias: dias,
+    notas: normStr($('mNotas').value),
+    fachadaFoto: modalFachadaFoto || '',
+    fechaAlta: nowStr,
+    updatedAt: Date.now()
+  };
+
+  if(isClientNew){
     var newCli = {
-      ruta: String(T.ruta || '1'),
-      nombre: nombre,
-      calle: normStr($('fCalle').value),
-      num: normStr($('fNum').value),
-      colonia: normStr($('fColonia').value),
-      cp: normStr($('fCp').value),
-      contacto: normStr($('fContacto').value),
-      telefono: normStr($('fTelefono').value),
+      id: rec.id,
+      ruta: rutaSel,
+      nombre: negocio,
+      calle: rec.calle,
+      num: rec.numero,
+      colonia: rec.colonia,
+      cp: rec.cp,
+      localidad: rec.localidad,
+      contacto: rec.contacto,
+      telefono: rec.telefono,
       lat: lat,
       lon: lon,
       dias: dias,
+      notas: rec.notas,
+      fachadaFoto: rec.fachadaFoto,
       clienteNuevo: true,
       fechaAlta: nowStr
     };
-    S.clients.unshift(newCli);
-    showToast('Cliente nuevo registrado');
+    if(editingClientKey){
+      var idx = S.clients.findIndex(function(c){ return clientKey(c) === editingClientKey; });
+      if(idx >= 0){
+        var updated = Object.assign({}, S.clients[idx], newCli);
+        var newCk = clientKey(updated);
+        var tk = getTodayKey();
+        if(T.visits[tk] && T.visits[tk][editingClientKey] && newCk !== editingClientKey){
+          T.visits[tk][newCk] = T.visits[tk][editingClientKey];
+          delete T.visits[tk][editingClientKey];
+          saveTermState();
+        }
+        S.clients[idx] = updated;
+      }else{
+        S.clients.unshift(newCli);
+      }
+      showToast('Cliente nuevo actualizado');
+    }else{
+      S.clients.unshift(newCli);
+      showToast('✅ Agregado a Ruta ' + rutaSel + ' y hoja Clientes Nuevos');
+    }
+    T.ruta = rutaSel;
+    saveTermState();
+    await syncClientsToCloud();
+  }else{
+    if(editingClientKey){
+      S.clients = S.clients.filter(function(c){ return clientKey(c) !== editingClientKey; });
+      await syncClientsToCloud();
+    }
+    showToast('🎯 Guardado en hoja Prospectos');
   }
 
+  await saveProspectOrNewClientRecord(rec);
   closeClientModal();
   renderAll(true);
-  await syncClientsToCloud();
 };
 
 $('cliList').onclick = async function(e){
