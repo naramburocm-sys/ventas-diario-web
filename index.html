@@ -108,6 +108,15 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:
 .pc-title{font-size:13.5px;font-weight:800;color:var(--ink)}
 .pc-meta{font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.35}
 .pc-badge{flex:none;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink)}
+
+.pc-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.pc-item-acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.mini-lnk.ok{background:#e8f7ee;border-color:#8ed8ad;color:#116b36}
+.pc-edit-box{margin-top:8px;padding:10px;border-radius:12px;background:#fffdf4;border:1.5px solid var(--or)}
+.pc-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pc-edit-box input,.pc-edit-box select{width:100%;font:inherit;font-size:12px;font-weight:700;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.pc-edit-btns{display:flex;gap:6px;margin-top:8px}
+
 </style>
 </head>
 <body>
@@ -1595,6 +1604,163 @@ async function refreshPCViewer(fetchRemote){
   }
 }
 
+function buildClienteNuevoStruct(item){
+  var rk=String(item.ruta||'1');
+  if(!isAllowedRoute(rk))rk='1';
+  var dias=Array.isArray(item.dias)?item.dias.filter(function(d){return['Lu','Ma','Mi','Ju','Vi','Sa'].indexOf(d)>=0}):[];
+  return {
+    ruta:rk,
+    nombre:normStr(item.nombre),
+    calle:normStr(item.calle),
+    num:normStr(item.num),
+    colonia:normStr(item.colonia),
+    cp:normStr(item.cp),
+    contacto:normStr(item.contacto),
+    telefono:normStr(item.telefono),
+    lat:item.lat!==undefined?normNum(item.lat):null,
+    lon:item.lon!==undefined?normNum(item.lon):null,
+    dias:dias,
+    clienteNuevo:true,
+    fechaAlta:normStr(item.fechaAlta)||kd(new Date())
+  };
+}
+
+function pcRecordKey(item,isNuevo){
+  if(item&&item.id)return (isNuevo?'N:':'P:')+String(item.id);
+  return (isNuevo?'N:':'P:')+clientKey(item||{});
+}
+
+async function persistProspOrNuevoChange(listType,updatedItem,isDelete){
+  if(listType==='nuevos'){
+    var targetN=PC_STATE._targetItem;
+    var nextClients=(S.clients||[]).filter(function(c){
+      if(!targetN)return true;
+      return clientKey(c)!==clientKey(targetN);
+    });
+    if(!isDelete&&updatedItem){
+      var structCli=buildClienteNuevoStruct(updatedItem);
+      var idxCli=nextClients.findIndex(function(c){return clientKey(c)===clientKey(structCli)});
+      if(idxCli>=0)nextClients[idxCli]=structCli;
+      else nextClients.unshift(structCli);
+    }
+    S.clients=sanitizeClients(nextClients);
+    syncClientsCloud();
+    lists();
+
+    if(FB){
+      var targetId=(targetN&&targetN.id)||(updatedItem&&updatedItem.id)||'';
+      if(isDelete&&targetId){
+        try{await FB.collection('clientes_nuevos').doc(String(targetId)).delete()}catch(e){}
+      }else if(updatedItem){
+        var docId=targetId||('CN_'+Date.now());
+        try{
+          await FB.collection('clientes_nuevos').doc(String(docId)).set(Object.assign({},updatedItem,{id:docId,tipo:'cliente_nuevo',clienteNuevo:true,updatedAt:Date.now()}),{merge:true});
+        }catch(e){}
+      }
+    }
+  }else{
+    var targetP=PC_STATE._targetItem;
+    var nextProsp=PC_STATE.prospectos.filter(function(p){
+      if(!targetP)return true;
+      if(targetP.id&&p.id)return String(p.id)!==String(targetP.id);
+      return clientKey(p)!==clientKey(targetP);
+    });
+    if(!isDelete&&updatedItem){
+      nextProsp.unshift(Object.assign({},updatedItem,{esProspecto:true,clienteNuevo:false,estatus:updatedItem.estatus||'Prospecto'}));
+    }
+    PC_STATE.prospectos=nextProsp;
+
+    try{
+      var rawP=localStorage.getItem('prospeccion-clientes-v1');
+      if(rawP){
+        var arrP=JSON.parse(rawP);
+        if(Array.isArray(arrP)){
+          var filtP=arrP.filter(function(x){
+            if(!targetP)return true;
+            if(targetP.id&&x.id)return String(x.id)!==String(targetP.id);
+            return normStr(x.negocio||x.nombre)!==normStr(targetP.nombre);
+          });
+          if(!isDelete&&updatedItem){
+            filtP.unshift({
+              id:updatedItem.id||('PR_'+Date.now()),
+              estatus:'prospecto',
+              ruta:String(updatedItem.ruta||'1'),
+              negocio:updatedItem.nombre||'',
+              calle:updatedItem.calle||'',
+              numero:updatedItem.num||'',
+              colonia:updatedItem.colonia||'',
+              cp:updatedItem.cp||'',
+              contacto:updatedItem.contacto||'',
+              telefono:updatedItem.telefono||'',
+              lat:updatedItem.lat!=null?updatedItem.lat:null,
+              lon:updatedItem.lon!=null?updatedItem.lon:null,
+              dias:Array.isArray(updatedItem.dias)?updatedItem.dias:[],
+              notas:updatedItem.notas||'',
+              fechaAlta:updatedItem.fechaAlta||kd(new Date()),
+              updatedAt:Date.now()
+            });
+          }
+          localStorage.setItem('prospeccion-clientes-v1',JSON.stringify(filtP));
+        }
+      }
+    }catch(e){}
+
+    if(FB){
+      var pId=(targetP&&targetP.id)||(updatedItem&&updatedItem.id)||'';
+      if(isDelete&&pId){
+        try{await FB.collection('prospectos').doc(String(pId)).delete()}catch(e){}
+        try{await FB.collection('prospeccion').doc(String(pId)).delete()}catch(e){}
+      }else if(updatedItem){
+        var docPId=pId||('PR_'+Date.now());
+        var payloadP=Object.assign({},updatedItem,{
+          id:docPId,
+          negocio:updatedItem.nombre,
+          numero:updatedItem.num,
+          estatus:'prospecto',
+          esProspecto:true,
+          clienteNuevo:false,
+          updatedAt:Date.now()
+        });
+        try{await FB.collection('prospectos').doc(String(docPId)).set(payloadP,{merge:true})}catch(e){}
+        try{await FB.collection('prospeccion').doc(String(docPId)).set(payloadP,{merge:true})}catch(e){}
+      }
+    }
+  }
+}
+
+async function promoteProspectoToClienteNuevo(item){
+  if(!item)return;
+  var newCli=buildClienteNuevoStruct(Object.assign({},item,{clienteNuevo:true,fechaAlta:item.fechaAlta||kd(new Date())}));
+  var nextClients=(S.clients||[]).slice();
+  var idx=nextClients.findIndex(function(c){return clientKey(c)===clientKey(newCli)});
+  if(idx>=0)nextClients[idx]=Object.assign({},nextClients[idx],newCli);
+  else nextClients.unshift(newCli);
+
+  S.clients=sanitizeClients(nextClients);
+  syncClientsCloud();
+  lists();
+
+  PC_STATE._targetItem=item;
+  await persistProspOrNuevoChange('prospectos',null,true);
+  PC_STATE._targetItem=null;
+
+  if(FB){
+    var cnId=item.id?('CN_'+String(item.id).replace(/^PR_/i,'')):('CN_'+Date.now());
+    try{
+      await FB.collection('clientes_nuevos').doc(cnId).set(Object.assign({},newCli,{
+        id:cnId,
+        tipo:'cliente_nuevo',
+        estatus:'Cliente Nuevo',
+        updatedAt:Date.now()
+      }),{merge:true});
+    }catch(e){}
+  }
+
+  PC_STATE.editingKey=null;
+  await refreshPCViewer(true);
+  setMsgCli('"'+(newCli.nombre||'Registro')+'" agregado como Cliente Nuevo a la base de clientes (Ruta '+newCli.ruta+').',false);
+}
+
 function renderPCViewer(){
   var cntN=$('pcCntNuevos'),cntP=$('pcCntProsp');
   if(cntN)cntN.textContent=PC_STATE.nuevos.length;
@@ -1630,7 +1796,9 @@ function renderPCViewer(){
     return;
   }
 
-  lv.innerHTML=filtered.map(function(it){
+  PC_STATE._shown=filtered;
+
+  lv.innerHTML=filtered.map(function(it,idx){
     var dir=[it.calle,it.num,it.colonia].filter(Boolean).join(' ');
     var diasStr=Array.isArray(it.dias)&&it.dias.length?'Días: '+it.dias.join(', '):'';
     var metaParts=[
@@ -1642,18 +1810,123 @@ function renderPCViewer(){
       it.fechaAlta?('Alta: '+it.fechaAlta):'',
       it.notas?('Obs: '+it.notas):''
     ].filter(Boolean);
+
+    var rKey=pcRecordKey(it,isN);
+    var isEditing=PC_STATE.editingKey===rKey;
+    var rutaOpts=RUTAS_PERMITIDAS.map(function(r){
+      return '<option value="'+r+'"'+(String(it.ruta)===String(r)?' selected':'')+'>Ruta '+r+'</option>';
+    }).join('');
+    var diasVal=Array.isArray(it.dias)?it.dias.join(', '):'';
+
+    var editFormHtml='';
+    if(isEditing){
+      editFormHtml='<div class="pc-edit-box">'
+        +'<div class="pc-edit-grid">'
+        +'<input type="text" data-ef="nombre" value="'+esc(it.nombre)+'" placeholder="Nombre comercial">'
+        +'<select data-ef="ruta">'+rutaOpts+'</select>'
+        +'<input type="text" data-ef="calle" value="'+esc(it.calle||'')+'" placeholder="Calle">'
+        +'<input type="text" data-ef="num" value="'+esc(it.num||'')+'" placeholder="Número">'
+        +'<input type="text" data-ef="colonia" value="'+esc(it.colonia||'')+'" placeholder="Colonia">'
+        +'<input type="text" data-ef="cp" value="'+esc(it.cp||'')+'" placeholder="C.P.">'
+        +'<input type="text" data-ef="contacto" value="'+esc(it.contacto||'')+'" placeholder="Contacto">'
+        +'<input type="text" data-ef="telefono" value="'+esc(it.telefono||'')+'" placeholder="Teléfono">'
+        +'<input type="text" data-ef="dias" value="'+esc(diasVal)+'" placeholder="Días (Lu, Ma, Mi...)">'
+        +'<input type="text" data-ef="notas" value="'+esc(it.notas||'')+'" placeholder="Observaciones">'
+        +'</div>'
+        +'<div class="pc-edit-btns">'
+        +'<button type="button" class="mini-lnk ok" data-pcact="save" data-pidx="'+idx+'">✓ Guardar</button>'
+        +'<button type="button" class="mini-lnk" data-pcact="cancel">Cancelar</button>'
+        +'</div>'
+        +'</div>';
+    }
+
+    var addClientBtn=!isN
+      ?'<button type="button" class="mini-lnk ok" data-pcact="addcli" data-pidx="'+idx+'">+ Cliente nuevo</button>'
+      :'';
+
     return '<div class="pc-item">'
       +'<div style="min-width:0;flex:1">'
+      +'<div class="pc-item-top">'
       +'<div class="pc-title">'+esc(it.nombre)+'</div>'
-      +'<div class="pc-meta">'+esc(metaParts.join(' · ')||'Sin detalle adicional')+'</div>'
-      +'</div>'
       +'<span class="pc-badge">Ruta '+esc(it.ruta)+'</span>'
+      +'</div>'
+      +'<div class="pc-meta">'+esc(metaParts.join(' · ')||'Sin detalle adicional')+'</div>'
+      +'<div class="pc-item-acts">'
+      +'<button type="button" class="mini-lnk" data-pcact="edit" data-pidx="'+idx+'">Editar</button>'
+      +addClientBtn
+      +'<button type="button" class="mini-lnk del" data-pcact="del" data-pidx="'+idx+'">Eliminar</button>'
+      +'</div>'
+      +editFormHtml
+      +'</div>'
       +'</div>';
   }).join('');
 }
 
-$('pcTabNuevos').onclick=function(){PC_STATE.tab='nuevos';renderPCViewer()};
-$('pcTabProsp').onclick=function(){PC_STATE.tab='prospectos';renderPCViewer()};
+$('pcListView').onclick=async function(e){
+  var btn=e.target.closest('[data-pcact]');
+  if(!btn)return;
+  var act=btn.dataset.pcact;
+  var idx=parseInt(btn.dataset.pidx,10);
+  var listType=PC_STATE.tab;
+  var item=(PC_STATE._shown&&PC_STATE._shown[idx])||null;
+
+  if(act==='edit'&&item){
+    PC_STATE.editingKey=pcRecordKey(item,listType==='nuevos');
+    renderPCViewer();
+    return;
+  }
+
+  if(act==='cancel'){
+    PC_STATE.editingKey=null;
+    renderPCViewer();
+    return;
+  }
+
+  if(act==='save'&&item){
+    var box=btn.closest('.pc-edit-box');
+    if(!box)return;
+    var valOf=function(k){var el=box.querySelector('[data-ef="'+k+'"]');return el?normStr(el.value):''};
+    var nuevoNombre=valOf('nombre');
+    if(!nuevoNombre){setMsgCli('El nombre comercial no puede quedar vacío.',true);return}
+    var updated=Object.assign({},item,{
+      nombre:nuevoNombre,
+      ruta:valOf('ruta')||item.ruta||'1',
+      calle:valOf('calle'),
+      num:valOf('num'),
+      colonia:valOf('colonia'),
+      cp:valOf('cp'),
+      contacto:valOf('contacto'),
+      telefono:valOf('telefono'),
+      dias:parseDiasField(valOf('dias')),
+      notas:valOf('notas')
+    });
+    PC_STATE._targetItem=item;
+    PC_STATE.editingKey=null;
+    await persistProspOrNuevoChange(listType,updated,false);
+    PC_STATE._targetItem=null;
+    await refreshPCViewer(false);
+    setMsgCli('Registro "'+(updated.nombre)+'" actualizado.',false);
+    return;
+  }
+
+  if(act==='addcli'&&item){
+    await promoteProspectoToClienteNuevo(item);
+    return;
+  }
+
+  if(act==='del'&&item){
+    if(!confirm('¿Eliminar "'+(item.nombre||'este registro')+'"?'))return;
+    PC_STATE._targetItem=item;
+    if(PC_STATE.editingKey===pcRecordKey(item,listType==='nuevos'))PC_STATE.editingKey=null;
+    await persistProspOrNuevoChange(listType,null,true);
+    PC_STATE._targetItem=null;
+    await refreshPCViewer(false);
+    setMsgCli('Registro "'+(item.nombre||'')+'" eliminado.',true);
+  }
+};
+
+$('pcTabNuevos').onclick=function(){PC_STATE.tab='nuevos';PC_STATE.editingKey=null;renderPCViewer()};
+$('pcTabProsp').onclick=function(){PC_STATE.tab='prospectos';PC_STATE.editingKey=null;renderPCViewer()};
 $('pcRutaFilter').onchange=function(e){PC_STATE.ruta=e.target.value;renderPCViewer()};
 $('pcSearchInp').oninput=function(e){PC_STATE.q=e.target.value;renderPCViewer()};
 $('btnRefreshPC').onclick=function(){refreshPCViewer(true)};
