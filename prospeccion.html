@@ -53,6 +53,16 @@ header p{margin:2px 0 0;color:var(--mute);font-size:12.5px}
 .btn.full{width:100%}
 
 /* Formulario */
+
+.photo-box{background:#f8f9fc;border:1.5px dashed var(--line);border-radius:15px;padding:10px 12px;margin-bottom:10px}
+.photo-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.photo-lbl{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.2px}
+.photo-acts{display:flex;gap:6px;align-items:center}
+.photo-prev-wrap{margin-top:8px;position:relative;display:none}
+.photo-prev-wrap.show{display:block}
+.photo-prev{width:100%;max-height:190px;object-fit:cover;border-radius:12px;border:1.5px solid var(--line);display:block;background:#eef2f7}
+.photo-rm{position:absolute;top:7px;right:7px;background:rgba(20,33,61,.82);color:#fff;border:0;border-radius:99px;padding:4px 9px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+
 .geo-box{background:#fffdf4;border:1.5px solid var(--or);border-radius:15px;padding:10px 12px;margin-bottom:12px}
 .geo-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
 .geo-st{font-size:12px;font-weight:800;color:var(--ink)}
@@ -126,6 +136,16 @@ header p{margin:2px 0 0;color:var(--mute);font-size:12.5px}
 .bar-fill.ok{background:linear-gradient(90deg,#34d399,var(--ok))}
 .bar-fill.blue{background:linear-gradient(90deg,#60a5fa,var(--blue))}
 
+
+.photo-prev{cursor:zoom-in}
+.photo-modal{position:fixed;inset:0;background:rgba(20,33,61,.88);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.photo-modal.show{display:flex}
+.photo-modal-box{position:relative;max-width:96vw;max-height:90vh;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 45px rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;gap:8px}
+.photo-modal-box img{max-width:90vw;max-height:76vh;object-fit:contain;border-radius:12px;display:block;background:#0f172a}
+.photo-modal-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 4px}
+.photo-modal-title{font-size:13px;font-weight:800;color:var(--ink)}
+.photo-modal-close{border:0;background:var(--ink);color:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 10px 25px rgba(20,33,61,.28);z-index:120;transition:transform .25s ease;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -138,6 +158,15 @@ nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
 </head>
 <body>
 <div class="toast" id="toast">Guardado</div>
+<div class="photo-modal" id="photoModal" role="dialog" aria-modal="true" aria-label="Vista ampliada de fachada">
+  <div class="photo-modal-box">
+    <div class="photo-modal-top">
+      <span class="photo-modal-title" id="photoModalTitle">Fotografía de fachada</span>
+      <button type="button" class="photo-modal-close" id="btnClosePhotoModal">✕ Cerrar</button>
+    </div>
+    <img id="photoModalImg" alt="Fotografía de fachada ampliada">
+  </div>
+</div>
 <div class="app">
   <header>
     <div class="logo" id="logo">
@@ -245,6 +274,23 @@ nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
         </div>
       </div>
 
+      <div class="photo-box">
+        <div class="photo-top">
+          <span class="photo-lbl">📷 Fotografía de la fachada</span>
+          <div class="photo-acts">
+            <button type="button" class="btn sm" id="btnTakePhoto">Tomar foto</button>
+            <button type="button" class="btn g sm" id="btnPickPhoto">Galería</button>
+          </div>
+        </div>
+        <input type="file" id="fFotoInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="fGalleryInput" accept="image/*" style="display:none">
+        <div class="small" id="photoStatus">Sin fotografía de fachada adjunta</div>
+        <div class="photo-prev-wrap" id="photoPrevWrap">
+          <img id="photoPreview" class="photo-prev" alt="Vista previa de fachada">
+          <button type="button" class="photo-rm" id="btnRemovePhoto">✕ Quitar</button>
+        </div>
+      </div>
+
       <div class="f-grp">
         <label>Notas de prospección (opcional)</label>
         <input type="text" id="fNotas" placeholder="Ej. Pide enfriador, maneja competencia, horario...">
@@ -286,6 +332,75 @@ var appClients = [];
 var appLogo = '';
 var editingId = null;
 var formStatus = 'prospecto';
+var currentFachadaFoto = '';
+var MAX_FACHADA_BYTES = 750000;
+
+
+function openFachadaModal(srcUrl, titleText){
+  if(!srcUrl) return;
+  $('photoModalImg').src = srcUrl;
+  $('photoModalTitle').textContent = titleText || 'Fotografía de fachada';
+  $('photoModal').classList.add('show');
+}
+
+function closeFachadaModal(){
+  $('photoModal').classList.remove('show');
+  $('photoModalImg').removeAttribute('src');
+}
+
+function setFachadaPhoto(dataUrl){
+  currentFachadaFoto = dataUrl || '';
+  var wrap = $('photoPrevWrap');
+  var img = $('photoPreview');
+  var st = $('photoStatus');
+  if(currentFachadaFoto){
+    img.src = currentFachadaFoto;
+    wrap.classList.add('show');
+    var approxKb = Math.round((currentFachadaFoto.length * 3) / 4 / 1024);
+    st.textContent = '✅ Fachada lista (~' + approxKb + ' KB)';
+  }else{
+    img.removeAttribute('src');
+    wrap.classList.remove('show');
+    st.textContent = 'Sin fotografía de fachada adjunta';
+  }
+}
+
+function compressFacadeImage(file, callback){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1024;
+      var w = img.width;
+      var h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w >= h){
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        }else{
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      var quality = 0.78;
+      var out = canvas.toDataURL('image/jpeg', quality);
+      while(out.length > MAX_FACHADA_BYTES && quality > 0.35){
+        quality -= 0.1;
+        out = canvas.toDataURL('image/jpeg', quality);
+      }
+      callback(out);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 
 var flt = {
   ruta: 'ALL',
@@ -445,6 +560,7 @@ function resetForm(autoGeo){
   $('fContacto').value = '';
   $('fTelefono').value = '';
   $('fNotas').value = '';
+  setFachadaPhoto('');
   ['fLat','fLon','fCalle','fNumero','fColonia','fCp'].forEach(function(id){
     $(id).classList.remove('auto-filled');
   });
@@ -470,6 +586,7 @@ function loadRecordIntoForm(rec){
   $('fLat').value = rec.lat != null ? rec.lat : '';
   $('fLon').value = rec.lon != null ? rec.lon : '';
   $('fNotas').value = rec.notas || '';
+  setFachadaPhoto(rec.fachadaFoto || rec.fotoFachada || '');
   setFormDays(rec.dias || []);
   $('geoStatus').textContent = (rec.lat != null && rec.lon != null) ? '📍 Coordenadas guardadas' : '📍 Sin coordenadas';
   switchTab('form');
@@ -525,7 +642,9 @@ function formatSheetRow(rec, hojaNombre){
     lon: rec.lon != null ? rec.lon : null,
     dias: Array.isArray(rec.dias) ? rec.dias : [],
     notas: rec.notas || '',
+    fachadaFoto: rec.fachadaFoto || '',
     fechaAlta: rec.fechaAlta || kd(new Date()),
+    fachadaFoto: rec.fachadaFoto || '',
     updatedAt: rec.updatedAt || Date.now()
   };
 }
@@ -668,7 +787,8 @@ function downloadParallelSheetsExcel(){
       'Dias Visita': Array.isArray(r.dias) ? r.dias.join(', ') : '',
       'Latitud': r.lat != null ? r.lat : '',
       'Longitud': r.lon != null ? r.lon : '',
-      'Notas': r.notas || ''
+      'Notas': r.notas || '',
+      'Foto Fachada': r.fachadaFoto ? 'Adjunta' : 'No'
     };
   };
   var wb = XLSX.utils.book_new();
@@ -689,6 +809,37 @@ $('btnRefreshGeo').onclick = captureGPS;
 $('btnCancelEdit').onclick = function(){ resetForm(true); };
 $('btnClearForm').onclick = function(){ resetForm(true); };
 $('btnExportSheets').onclick = downloadParallelSheetsExcel;
+$('btnTakePhoto').onclick = function(){ $('fFotoInput').click(); };
+$('btnPickPhoto').onclick = function(){ $('fGalleryInput').click(); };
+$('photoPreview').onclick = function(){
+  if(!currentFachadaFoto) return;
+  var biz = normStr($('fNegocio').value);
+  openFachadaModal(currentFachadaFoto, biz ? ('Fachada · ' + biz) : 'Fotografía de fachada');
+};
+$('btnClosePhotoModal').onclick = closeFachadaModal;
+$('photoModal').onclick = function(e){
+  if(e.target === $('photoModal')) closeFachadaModal();
+};
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && $('photoModal').classList.contains('show')){
+    closeFachadaModal();
+  }
+});
+$('btnRemovePhoto').onclick = function(){
+  $('fFotoInput').value = '';
+  $('fGalleryInput').value = '';
+  setFachadaPhoto('');
+};
+$('fFotoInput').onchange = function(){
+  if(this.files && this.files[0]){
+    compressFacadeImage(this.files[0], function(dataUrl){ setFachadaPhoto(dataUrl); });
+  }
+};
+$('fGalleryInput').onchange = function(){
+  if(this.files && this.files[0]){
+    compressFacadeImage(this.files[0], function(dataUrl){ setFachadaPhoto(dataUrl); });
+  }
+};
 
 $('segStatus').onclick = function(e){
   var b = e.target.closest('.seg-btn');
@@ -724,6 +875,7 @@ $('btnSaveRecord').onclick = async function(){
     lon: normNum($('fLon').value),
     dias: getFormDays(),
     notas: normStr($('fNotas').value),
+    fachadaFoto: currentFachadaFoto || '',
     fechaAlta: editingId
       ? ((records.find(function(x){ return x.id === editingId; }) || {}).fechaAlta || kd(new Date()))
       : kd(new Date()),
