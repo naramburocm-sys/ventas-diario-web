@@ -428,7 +428,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       <h3 id="cliModalTitle">Nuevo Prospecto / Cliente</h3>
       <button type="button" class="btn g sm" id="btnCloseCliModal">✕</button>
     </div>
-    <p class="small" style="margin:0 0 10px">Captura automática por GPS de domicilio y alta directa al padrón de ruta</p>
+    <p class="small" id="cliModalSub" style="margin:0 0 10px">Captura automática por GPS de domicilio y alta directa al padrón de ruta</p>
 
     <div class="geo-box">
       <div class="geo-top">
@@ -447,7 +447,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       </div>
     </div>
 
-    <div class="f-grp">
+    <div class="f-grp" id="mStatusGrp">
       <label>Estatus del registro</label>
       <div class="seg-row" id="mSegStatus">
         <button type="button" class="seg-btn on prosp" data-val="prospecto">🎯 Prospecto</button>
@@ -467,7 +467,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     </div>
 
     <div class="f-grp">
-      <label>Negocio a prospectar / Nombre comercial *</label>
+      <label id="mNegocioLbl">Negocio a prospectar / Nombre comercial *</label>
       <input type="text" id="mNegocio" placeholder="Ej. Abarrotes El Sol, Taquería..." required>
     </div>
 
@@ -477,7 +477,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
         <input type="text" id="mCalle" placeholder="Ej. Av. Rafael Buelna">
       </div>
       <div class="f-grp">
-        <label>Número exacto (Auto)</label>
+        <label>Número (Auto)</label>
         <input type="text" id="mNumero" placeholder="Ej. 402 o S/N">
       </div>
     </div>
@@ -734,6 +734,10 @@ function sanitizeClients(raw){
       telefono: normStr(c.telefono || c.TELEFONO),
       lat: c.lat !== undefined ? normNum(c.lat) : normNum(c.COORD_LAT),
       lon: c.lon !== undefined ? normNum(c.lon) : normNum(c.COORD_LON),
+      id: normStr(c.id),
+      localidad: normStr(c.localidad),
+      notas: normStr(c.notas),
+      fachadaFoto: normStr(c.fachadaFoto),
       dias: Array.isArray(c.dias) ? c.dias.filter(function(d){ return ['Lu','Ma','Mi','Ju','Vi','Sa'].indexOf(d) >= 0; }) : [],
       clienteNuevo: !!(c.clienteNuevo || normStr(c['CLIENTE NUEVO'])),
       fechaAlta: normStr(c.fechaAlta || c.FECHA_ALTA)
@@ -2106,8 +2110,11 @@ function openClientModal(clientObj){
     editingClientKey = clientKey(clientObj);
     editingRecordId = clientObj.id || null;
     populateModalRouteSelect(clientObj.ruta || T.ruta);
-    setModalFormStatus(clientObj.clienteNuevo === false ? 'prospecto' : 'cliente_nuevo');
-    $('cliModalTitle').textContent = 'Editar Registro';
+    $('mStatusGrp').hidden = true;
+    $('cliModalTitle').textContent = 'Editar Cliente';
+    $('cliModalSub').textContent = 'Actualiza los datos directamente en la base de datos del padrón de ruta';
+    $('mNegocioLbl').textContent = 'Nombre comercial *';
+    $('btnSaveCliModal').textContent = '💾 Guardar cambios';
     $('mNegocio').value = clientObj.nombre || '';
     $('mCalle').value = clientObj.calle || '';
     $('mNumero').value = clientObj.num || '';
@@ -2128,8 +2135,12 @@ function openClientModal(clientObj){
     editingClientKey = null;
     editingRecordId = null;
     populateModalRouteSelect(T.ruta);
+    $('mStatusGrp').hidden = false;
     setModalFormStatus('prospecto');
     $('cliModalTitle').textContent = 'Nuevo Prospecto / Cliente';
+    $('cliModalSub').textContent = 'Captura automática por GPS de domicilio y alta directa al padrón de ruta';
+    $('mNegocioLbl').textContent = 'Negocio a prospectar / Nombre comercial *';
+    $('btnSaveCliModal').textContent = '💾 Guardar registro';
     $('mNegocio').value = '';
     $('mCalle').value = '';
     $('mNumero').value = '';
@@ -2185,7 +2196,7 @@ $('mPhotoPreview').onclick = function(){
 $('btnSaveCliModal').onclick = async function(){
   var negocio = normStr($('mNegocio').value);
   if(!negocio){
-    alert('Por favor ingresa el nombre del negocio a prospectar.');
+    alert('Por favor ingresa el nombre comercial del negocio.');
     $('mNegocio').focus();
     return;
   }
@@ -2194,8 +2205,47 @@ $('btnSaveCliModal').onclick = async function(){
   var lon = normNum($('mLon').value);
   var dias = getModalDays();
   var nowStr = getTodayKey();
-  var isClientNew = modalFormStatus === 'cliente_nuevo';
 
+  if(editingClientKey){
+    var idx = S.clients.findIndex(function(c){ return clientKey(c) === editingClientKey; });
+    if(idx >= 0){
+      var prev = S.clients[idx];
+      var updated = Object.assign({}, prev, {
+        ruta: rutaSel,
+        nombre: negocio,
+        calle: normStr($('mCalle').value),
+        num: normStr($('mNumero').value),
+        colonia: normStr($('mColonia').value),
+        cp: normStr($('mCp').value),
+        localidad: normStr($('mLocalidad').value) || 'Mazatlán',
+        contacto: normStr($('mContacto').value),
+        telefono: normStr($('mTelefono').value),
+        lat: lat,
+        lon: lon,
+        dias: dias,
+        notas: normStr($('mNotas').value),
+        fachadaFoto: modalFachadaFoto || '',
+        updatedAt: Date.now()
+      });
+      var newCk = clientKey(updated);
+      var tk = getTodayKey();
+      if(T.visits[tk] && T.visits[tk][editingClientKey] && newCk !== editingClientKey){
+        T.visits[tk][newCk] = T.visits[tk][editingClientKey];
+        delete T.visits[tk][editingClientKey];
+        saveTermState();
+      }
+      S.clients[idx] = updated;
+    }
+    T.ruta = rutaSel;
+    saveTermState();
+    await syncClientsToCloud();
+    showToast('✅ Cliente actualizado en la base de datos');
+    closeClientModal();
+    renderAll(true);
+    return;
+  }
+
+  var isClientNew = modalFormStatus === 'cliente_nuevo';
   var rec = {
     id: editingRecordId || ('PR_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
     estatus: modalFormStatus,
@@ -2237,34 +2287,12 @@ $('btnSaveCliModal').onclick = async function(){
       clienteNuevo: true,
       fechaAlta: nowStr
     };
-    if(editingClientKey){
-      var idx = S.clients.findIndex(function(c){ return clientKey(c) === editingClientKey; });
-      if(idx >= 0){
-        var updated = Object.assign({}, S.clients[idx], newCli);
-        var newCk = clientKey(updated);
-        var tk = getTodayKey();
-        if(T.visits[tk] && T.visits[tk][editingClientKey] && newCk !== editingClientKey){
-          T.visits[tk][newCk] = T.visits[tk][editingClientKey];
-          delete T.visits[tk][editingClientKey];
-          saveTermState();
-        }
-        S.clients[idx] = updated;
-      }else{
-        S.clients.unshift(newCli);
-      }
-      showToast('Cliente nuevo actualizado');
-    }else{
-      S.clients.unshift(newCli);
-      showToast('✅ Agregado a Ruta ' + rutaSel + ' y hoja Clientes Nuevos');
-    }
+    S.clients.unshift(newCli);
+    showToast('✅ Agregado a Ruta ' + rutaSel + ' y hoja Clientes Nuevos');
     T.ruta = rutaSel;
     saveTermState();
     await syncClientsToCloud();
   }else{
-    if(editingClientKey){
-      S.clients = S.clients.filter(function(c){ return clientKey(c) !== editingClientKey; });
-      await syncClientsToCloud();
-    }
     showToast('🎯 Guardado en hoja Prospectos');
   }
 
