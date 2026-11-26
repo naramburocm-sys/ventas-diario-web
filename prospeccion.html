@@ -154,6 +154,33 @@ nav button{flex:1;max-width:140px;font:inherit;font-size:12px;font-weight:800;ba
 nav button svg{width:21px;height:21px}
 nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
 [hidden]{display:none!important}
+
+.top-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--soft);padding:4px;border-radius:15px;border:1px solid var(--line);margin-bottom:14px}
+.top-tabs button{font:inherit;font-size:12.5px;font-weight:800;border:0;border-radius:11px;padding:9px 10px;background:transparent;color:var(--mute);cursor:pointer}
+.top-tabs button[aria-selected="true"]{background:var(--ink);color:#fff;box-shadow:0 3px 8px rgba(20,33,61,.18)}
+
+.pc-box{margin-top:4px}
+.pc-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);padding:4px;border-radius:12px;border:1px solid var(--line);margin-bottom:10px}
+.pc-tabs button{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:9px;padding:7px 8px;background:transparent;color:var(--mute);cursor:pointer}
+.pc-tabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.pc-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pc-filters select,.pc-filters input{font:inherit;font-size:13px;font-weight:700;padding:8px 10px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);width:100%}
+.pc-list{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fafbfe}
+.pc-item{padding:10px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pc-item:first-child{border-top:0}
+.pc-title{font-size:13.5px;font-weight:800;color:var(--ink)}
+.pc-meta{font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.35}
+.pc-badge{flex:none;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.pc-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.pc-item-acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.mini-lnk{font:inherit;font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.mini-lnk.ok{background:#e8f7ee;border-color:#8ed8ad;color:#116b36}
+.mini-lnk.del{color:var(--bad);background:#fff1f1;border-color:#f2b8b8}
+.pc-edit-box{margin-top:8px;padding:10px;border-radius:12px;background:#fffdf4;border:1.5px solid var(--or)}
+.pc-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pc-edit-box input,.pc-edit-box select{width:100%;font:inherit;font-size:12px;font-weight:700;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.pc-edit-btns{display:flex;gap:6px;margin-top:8px}
+
 </style>
 </head>
 <body>
@@ -178,6 +205,11 @@ nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
     </div>
     <span class="sync" id="syncBadge">Local</span>
   </header>
+
+  <div class="top-tabs" role="tablist" aria-label="Secciones del módulo">
+    <button type="button" id="tabCaptura" role="tab" aria-selected="true">📝 Captura en campo</button>
+    <button type="button" id="tabRegistros" role="tab" aria-selected="false">📋 Registros capturados</button>
+  </div>
 
   <!-- VISTA 1: FORMULARIO DE CAPTURA -->
   <main id="v-form">
@@ -304,6 +336,41 @@ nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
         <span class="small" id="sheetCountsLbl" style="margin:0">Clientes Nuevos: 0 · Prospectos: 0</span>
         <button type="button" class="btn g sm" id="btnExportSheets">📥 Descargar hojas (.xlsx)</button>
       </div>
+    </div>
+  </main>
+
+  <!-- VISTA 2: CONSULTA DE REGISTROS CAPTURADOS -->
+  <main id="v-registros" hidden>
+    <p class="hi">Registros capturados</p>
+    <p class="sub">Consulta, edita, elimina o pasa prospectos a clientes nuevos</p>
+    <div class="card">
+      <div class="pc-box" id="pcViewerBox">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="lbl" style="margin:0;color:var(--ink)">Consulta de registros capturados</div>
+        <button type="button" class="mini-lnk" id="btnRefreshPC">↻ Actualizar</button>
+      </div>
+      <div class="pc-tabs" role="group" aria-label="Tipo de registro capturado">
+        <button type="button" id="pcTabNuevos" aria-pressed="true">Clientes nuevos (<span id="pcCntNuevos">0</span>)</button>
+        <button type="button" id="pcTabProsp" aria-pressed="false">Prospectos (<span id="pcCntProsp">0</span>)</button>
+      </div>
+      <div class="pc-filters">
+        <select id="pcRutaFilter" aria-label="Filtrar por ruta">
+          <option value="ALL">Todas las rutas</option>
+          <option value="1">Ruta 1</option>
+          <option value="4">Ruta 4</option>
+          <option value="5">Ruta 5</option>
+          <option value="6">Ruta 6</option>
+          <option value="7">Ruta 7</option>
+          <option value="10">Ruta 10</option>
+          <option value="11">Ruta 11</option>
+          <option value="13">Ruta 13</option>
+          <option value="14">Ruta 14</option>
+          <option value="15">Ruta 15</option>
+        </select>
+        <input type="search" id="pcSearchInp" placeholder="Buscar nombre, colonia..." aria-label="Buscar registro" style="padding:8px 10px;font-size:13px">
+      </div>
+      <div id="pcSummaryLine" class="small" style="margin:0 0 6px"></div>
+      <div id="pcListView" class="pc-list"><div class="small" style="padding:12px">Cargando registros...</div></div>
     </div>
   </main>
 
@@ -892,6 +959,601 @@ $('btnSaveRecord').onclick = async function(){
   }
   resetForm(true);
 };
+
+
+var PC_STATE={tab:'nuevos',ruta:'ALL',q:'',nuevos:[],prospectos:[],loading:false,editingKey:null,_shown:[],_targetItem:null};
+
+function isAllowedRoute(r){return RUTAS_PERMITIDAS.indexOf(String(r))>=0}
+function clientKey(c){return[normStr(c.ruta),normStr(c.nombre||c.negocio).toUpperCase(),normStr(c.calle).toUpperCase(),normStr(c.num||c.numero).toUpperCase(),normStr(c.colonia).toUpperCase()].join('|')}
+
+function parseDiasField(rawDias){
+  if(Array.isArray(rawDias)){
+    return rawDias.map(function(d){
+      var s=normStr(d).slice(0,2).toLowerCase();
+      return s==='lu'?'Lu':s==='ma'?'Ma':(s==='mi'||s==='mí')?'Mi':s==='ju'?'Ju':s==='vi'?'Vi':(s==='sa'||s==='sá')?'Sa':'';
+    }).filter(Boolean);
+  }
+  if(typeof rawDias==='string'&&rawDias.trim()){
+    return rawDias.split(/[,;|/\s]+/).map(function(d){
+      var s=normStr(d).slice(0,2).toLowerCase();
+      return s==='lu'?'Lu':s==='ma'?'Ma':(s==='mi'||s==='mí')?'Mi':s==='ju'?'Ju':s==='vi'?'Vi':(s==='sa'||s==='sá')?'Sa':'';
+    }).filter(Boolean);
+  }
+  return [];
+}
+
+function buildClienteNuevoStruct(item){
+  var rk=String(item.ruta||'1');
+  if(!isAllowedRoute(rk))rk='1';
+  var dias=Array.isArray(item.dias)?item.dias.filter(function(d){return['Lu','Ma','Mi','Ju','Vi','Sa'].indexOf(d)>=0}):[];
+  return {
+    ruta:rk,
+    nombre:normStr(item.nombre||item.negocio),
+    calle:normStr(item.calle),
+    num:normStr(item.num||item.numero),
+    colonia:normStr(item.colonia),
+    cp:normStr(item.cp),
+    contacto:normStr(item.contacto),
+    telefono:normStr(item.telefono),
+    lat:item.lat!==undefined?normNum(item.lat):null,
+    lon:item.lon!==undefined?normNum(item.lon):null,
+    dias:dias,
+    clienteNuevo:true,
+    fechaAlta:normStr(item.fechaAlta)||kd(new Date())
+  };
+}
+
+function pcRecordKey(item,isNuevo){
+  if(item&&item.id)return (isNuevo?'N:':'P:')+String(item.id);
+  return (isNuevo?'N:':'P:')+clientKey(item||{});
+}
+
+function syncAppClientsLocalAndCloud(nextClients){
+  appClients=nextClients;
+  try{
+    var rawApp={name:'Terminal de Ruta',user:'equipo',logo:'',metas:{},sales:{},sku:{},off:[],clients:[]};
+    var parsed=JSON.parse(localStorage.getItem(APP_KEY));
+    if(parsed&&typeof parsed==='object')rawApp=Object.assign(rawApp,parsed);
+    rawApp.clients=nextClients;
+    localStorage.setItem(APP_KEY,JSON.stringify(rawApp));
+  }catch(e){}
+  if(FB){
+    FB.doc('app/clients').set({clients:nextClients,updatedAt:Date.now()},{merge:true}).catch(function(){});
+  }
+}
+
+async function fetchProspeccionYClientes(){
+  var nuevosMap={};
+  var prospMap={};
+
+  (appClients||[]).forEach(function(c){
+    if(c&&isAllowedRoute(c.ruta)&&(c.clienteNuevo||normStr(c['CLIENTE NUEVO']))){
+      var cn=buildClienteNuevoStruct(c);
+      nuevosMap[clientKey(cn)]=cn;
+    }
+  });
+
+  (clientesNuevosSheet||[]).forEach(function(nc){
+    if(nc&&isAllowedRoute(nc.ruta)){
+      var cn=buildClienteNuevoStruct(nc);
+      nuevosMap[clientKey(cn)]=cn;
+    }
+  });
+
+  (prospectosSheet||[]).forEach(function(ps){
+    if(ps&&isAllowedRoute(ps.ruta)){
+      var pRec={
+        id:normStr(ps.id||''),
+        ruta:String(ps.ruta||'1'),
+        nombre:normStr(ps.negocio||ps.nombre),
+        calle:normStr(ps.calle),
+        num:normStr(ps.numero||ps.num),
+        colonia:normStr(ps.colonia),
+        cp:normStr(ps.cp),
+        contacto:normStr(ps.contacto),
+        telefono:normStr(ps.telefono),
+        lat:ps.lat!=null?normNum(ps.lat):null,
+        lon:ps.lon!=null?normNum(ps.lon):null,
+        dias:parseDiasField(ps.dias),
+        fechaAlta:normStr(ps.fechaAlta)||kd(new Date()),
+        notas:normStr(ps.notas),
+        estatus:'Prospecto',
+        esProspecto:true,
+        clienteNuevo:false
+      };
+      if(pRec.nombre)prospMap[pRec.id||clientKey(pRec)]=pRec;
+    }
+  });
+
+  (records||[]).forEach(function(r){
+    if(!r||!isAllowedRoute(r.ruta))return;
+    var nom=normStr(r.negocio||r.nombre);
+    if(!nom)return;
+    if(r.estatus==='cliente_nuevo'){
+      var cn=buildClienteNuevoStruct(Object.assign({},r,{nombre:nom}));
+      nuevosMap[clientKey(cn)]=cn;
+    }else{
+      var pr={
+        id:normStr(r.id||''),
+        ruta:String(r.ruta||'1'),
+        nombre:nom,
+        calle:normStr(r.calle),
+        num:normStr(r.numero||r.num),
+        colonia:normStr(r.colonia),
+        cp:normStr(r.cp),
+        contacto:normStr(r.contacto),
+        telefono:normStr(r.telefono),
+        lat:r.lat!=null?normNum(r.lat):null,
+        lon:r.lon!=null?normNum(r.lon):null,
+        dias:parseDiasField(r.dias),
+        fechaAlta:normStr(r.fechaAlta)||kd(new Date()),
+        notas:normStr(r.notas),
+        estatus:'Prospecto',
+        esProspecto:true,
+        clienteNuevo:false
+      };
+      prospMap[pr.id||clientKey(pr)]=pr;
+    }
+  });
+
+  if(FB){
+    try{
+      var snapC=await FB.doc('app/clients').get();
+      if(snapC.exists&&Array.isArray(snapC.data().clients)){
+        appClients=snapC.data().clients;
+        appClients.forEach(function(c){
+          if(c&&isAllowedRoute(c.ruta)&&(c.clienteNuevo||normStr(c['CLIENTE NUEVO']))){
+            var cn=buildClienteNuevoStruct(c);
+            nuevosMap[clientKey(cn)]=cn;
+          }
+        });
+      }
+    }catch(e){}
+
+    try{
+      var qsCN=await FB.collection('clientes_nuevos').get();
+      qsCN.forEach(function(doc){
+        var d=doc.data()||{};
+        if(isAllowedRoute(d.ruta)){
+          var cn=buildClienteNuevoStruct(Object.assign({},d,{id:d.id||doc.id}));
+          if(cn.nombre)nuevosMap[clientKey(cn)]=cn;
+        }
+      });
+    }catch(e){}
+
+    try{
+      var qsP=await FB.collection('prospectos').get();
+      qsP.forEach(function(doc){
+        var d=doc.data()||{};
+        var rk=String(d.ruta||'1');
+        var nom=normStr(d.negocio||d.nombre);
+        if(nom&&isAllowedRoute(rk)){
+          var pr={
+            id:normStr(d.id||doc.id),
+            ruta:rk,
+            nombre:nom,
+            calle:normStr(d.calle),
+            num:normStr(d.numero||d.num),
+            colonia:normStr(d.colonia),
+            cp:normStr(d.cp),
+            contacto:normStr(d.contacto),
+            telefono:normStr(d.telefono),
+            lat:d.lat!=null?normNum(d.lat):null,
+            lon:d.lon!=null?normNum(d.lon):null,
+            dias:parseDiasField(d.dias),
+            fechaAlta:normStr(d.fechaAlta)||kd(new Date()),
+            notas:normStr(d.notas),
+            estatus:'Prospecto',
+            esProspecto:true,
+            clienteNuevo:false
+          };
+          prospMap[pr.id||clientKey(pr)]=pr;
+        }
+      });
+    }catch(e){}
+  }
+
+  return{
+    clientesNuevos:Object.keys(nuevosMap).map(function(k){return nuevosMap[k]}),
+    prospectos:Object.keys(prospMap).map(function(k){return prospMap[k]})
+  };
+}
+
+async function refreshPCViewer(fetchRemote){
+  if(PC_STATE.loading)return;
+  PC_STATE.loading=true;
+  try{
+    var modData=fetchRemote!==false?await fetchProspeccionYClientes():{prospectos:PC_STATE.prospectos,clientesNuevos:PC_STATE.nuevos};
+    var sortFn=function(a,b){
+      var ra=parseInt(a.ruta,10)||999,rb=parseInt(b.ruta,10)||999;
+      if(ra!==rb)return ra-rb;
+      return normStr(a.nombre).localeCompare(normStr(b.nombre),'es');
+    };
+    PC_STATE.nuevos=(modData.clientesNuevos||[]).slice().sort(sortFn);
+    if(fetchRemote!==false){
+      PC_STATE.prospectos=(modData.prospectos||[]).slice().sort(sortFn);
+    }
+    renderPCViewer();
+  }catch(e){
+    var lv=$('pcListView');
+    if(lv)lv.innerHTML='<div class="small bad" style="padding:12px">No se pudieron consultar los registros.</div>';
+  }finally{
+    PC_STATE.loading=false;
+  }
+}
+
+async function persistProspOrNuevoChange(listType,updatedItem,isDelete){
+  var target=PC_STATE._targetItem;
+  if(listType==='nuevos'){
+    var nextClients=(appClients||[]).filter(function(c){
+      if(!target)return true;
+      return clientKey(c)!==clientKey(target);
+    });
+    if(!isDelete&&updatedItem){
+      var structCli=buildClienteNuevoStruct(updatedItem);
+      var idxCli=nextClients.findIndex(function(c){return clientKey(c)===clientKey(structCli)});
+      if(idxCli>=0)nextClients[idxCli]=Object.assign({},nextClients[idxCli],structCli);
+      else nextClients.unshift(structCli);
+    }
+    syncAppClientsLocalAndCloud(nextClients);
+
+    clientesNuevosSheet=clientesNuevosSheet.filter(function(x){
+      if(!target)return true;
+      return clientKey(x)!==clientKey(target);
+    });
+    if(!isDelete&&updatedItem){
+      clientesNuevosSheet.unshift(formatSheetRow(Object.assign({},updatedItem,{negocio:updatedItem.nombre,numero:updatedItem.num}),'Clientes Nuevos'));
+    }
+
+    records=records.filter(function(r){
+      if(!target)return true;
+      if(target.id&&r.id&&String(r.id)===String(target.id))return false;
+      return clientKey(r)===clientKey(target)&&r.estatus==='cliente_nuevo';
+    });
+    if(!isDelete&&updatedItem){
+      var rNew={
+        id:(target&&target.id)||(updatedItem.id)||('CN_'+Date.now()),
+        estatus:'cliente_nuevo',
+        ruta:String(updatedItem.ruta||'1'),
+        negocio:updatedItem.nombre,
+        calle:updatedItem.calle||'',
+        numero:updatedItem.num||'',
+        colonia:updatedItem.colonia||'',
+        cp:updatedItem.cp||'',
+        contacto:updatedItem.contacto||'',
+        telefono:updatedItem.telefono||'',
+        lat:updatedItem.lat!=null?updatedItem.lat:null,
+        lon:updatedItem.lon!=null?updatedItem.lon:null,
+        dias:Array.isArray(updatedItem.dias)?updatedItem.dias:[],
+        notas:updatedItem.notas||'',
+        fechaAlta:updatedItem.fechaAlta||kd(new Date()),
+        updatedAt:Date.now()
+      };
+      records.unshift(rNew);
+    }
+    saveLocal();
+    saveParallelSheetsLocal();
+
+    if(FB){
+      var targetId=(target&&target.id)||(updatedItem&&updatedItem.id)||'';
+      if(isDelete&&targetId){
+        try{await FB.collection('clientes_nuevos').doc(String(targetId)).delete()}catch(e){}
+      }else if(updatedItem){
+        var docId=targetId||('CN_'+Date.now());
+        try{
+          await FB.collection('clientes_nuevos').doc(String(docId)).set(Object.assign({},updatedItem,{id:docId,tipo:'cliente_nuevo',clienteNuevo:true,updatedAt:Date.now()}),{merge:true});
+        }catch(e){}
+      }
+      try{
+        await FB.doc('hojas_prospeccion/clientes_nuevos').set({hoja:'Clientes Nuevos',rows:clientesNuevosSheet,updatedAt:Date.now()},{merge:true});
+      }catch(e){}
+    }
+  }else{
+    var nextProsp=PC_STATE.prospectos.filter(function(p){
+      if(!target)return true;
+      if(target.id&&p.id)return String(p.id)!==String(target.id);
+      return clientKey(p)!==clientKey(target);
+    });
+    if(!isDelete&&updatedItem){
+      nextProsp.unshift(Object.assign({},updatedItem,{esProspecto:true,clienteNuevo:false,estatus:updatedItem.estatus||'Prospecto'}));
+    }
+    PC_STATE.prospectos=nextProsp;
+
+    prospectosSheet=prospectosSheet.filter(function(x){
+      if(!target)return true;
+      if(target.id&&x.id)return String(x.id)!==String(target.id);
+      return clientKey(x)!==clientKey(target);
+    });
+    if(!isDelete&&updatedItem){
+      prospectosSheet.unshift(formatSheetRow(Object.assign({},updatedItem,{id:updatedItem.id||('PR_'+Date.now()),negocio:updatedItem.nombre,numero:updatedItem.num}),'Prospectos'));
+    }
+
+    records=records.filter(function(r){
+      if(!target)return true;
+      if(target.id&&r.id)return String(r.id)!==String(target.id);
+      return clientKey(r)===clientKey(target)&&r.estatus!=='cliente_nuevo';
+    });
+    if(!isDelete&&updatedItem){
+      records.unshift({
+        id:updatedItem.id||('PR_'+Date.now()),
+        estatus:'prospecto',
+        ruta:String(updatedItem.ruta||'1'),
+        negocio:updatedItem.nombre,
+        calle:updatedItem.calle||'',
+        numero:updatedItem.num||'',
+        colonia:updatedItem.colonia||'',
+        cp:updatedItem.cp||'',
+        contacto:updatedItem.contacto||'',
+        telefono:updatedItem.telefono||'',
+        lat:updatedItem.lat!=null?updatedItem.lat:null,
+        lon:updatedItem.lon!=null?updatedItem.lon:null,
+        dias:Array.isArray(updatedItem.dias)?updatedItem.dias:[],
+        notas:updatedItem.notas||'',
+        fechaAlta:updatedItem.fechaAlta||kd(new Date()),
+        updatedAt:Date.now()
+      });
+    }
+    saveLocal();
+    saveParallelSheetsLocal();
+
+    if(FB){
+      var pId=(target&&target.id)||(updatedItem&&updatedItem.id)||'';
+      if(isDelete&&pId){
+        try{await FB.collection('prospectos').doc(String(pId)).delete()}catch(e){}
+        try{await FB.collection('prospeccion').doc(String(pId)).delete()}catch(e){}
+      }else if(updatedItem){
+        var docPId=pId||('PR_'+Date.now());
+        var payloadP=Object.assign({},updatedItem,{
+          id:docPId,
+          negocio:updatedItem.nombre,
+          numero:updatedItem.num,
+          estatus:'prospecto',
+          esProspecto:true,
+          clienteNuevo:false,
+          updatedAt:Date.now()
+        });
+        try{await FB.collection('prospectos').doc(String(docPId)).set(payloadP,{merge:true})}catch(e){}
+        try{await FB.collection('prospeccion').doc(String(docPId)).set(payloadP,{merge:true})}catch(e){}
+      }
+      try{
+        await FB.doc('hojas_prospeccion/prospectos').set({hoja:'Prospectos',rows:prospectosSheet,updatedAt:Date.now()},{merge:true});
+      }catch(e){}
+    }
+  }
+}
+
+async function promoteProspectoToClienteNuevo(item){
+  if(!item)return;
+  var newCli=buildClienteNuevoStruct(Object.assign({},item,{clienteNuevo:true,fechaAlta:item.fechaAlta||kd(new Date())}));
+  var nextClients=(appClients||[]).slice();
+  var idx=nextClients.findIndex(function(c){return clientKey(c)===clientKey(newCli)});
+  if(idx>=0)nextClients[idx]=Object.assign({},nextClients[idx],newCli);
+  else nextClients.unshift(newCli);
+  syncAppClientsLocalAndCloud(nextClients);
+
+  var rowNew=formatSheetRow(Object.assign({},item,{negocio:newCli.nombre,numero:newCli.num,clienteNuevo:true}),'Clientes Nuevos');
+  clientesNuevosSheet=clientesNuevosSheet.filter(function(x){return clientKey(x)!==clientKey(newCli)});
+  clientesNuevosSheet.unshift(rowNew);
+
+  PC_STATE._targetItem=item;
+  await persistProspOrNuevoChange('prospectos',null,true);
+  PC_STATE._targetItem=null;
+
+  records=records.filter(function(r){
+    if(item.id&&r.id&&String(r.id)===String(item.id))return false;
+    return clientKey(r)===clientKey(item);
+  });
+  records.unshift(Object.assign({},item,{
+    id:item.id?('CN_'+String(item.id).replace(/^PR_/i,'')):('CN_'+Date.now()),
+    estatus:'cliente_nuevo',
+    negocio:newCli.nombre,
+    numero:newCli.num,
+    updatedAt:Date.now()
+  }));
+  saveLocal();
+  saveParallelSheetsLocal();
+
+  if(FB){
+    var cnId=item.id?('CN_'+String(item.id).replace(/^PR_/i,'')):('CN_'+Date.now());
+    try{
+      await FB.collection('clientes_nuevos').doc(cnId).set(Object.assign({},newCli,{
+        id:cnId,
+        tipo:'cliente_nuevo',
+        estatus:'Cliente Nuevo',
+        updatedAt:Date.now()
+      }),{merge:true});
+    }catch(e){}
+    try{
+      await FB.doc('hojas_prospeccion/clientes_nuevos').set({hoja:'Clientes Nuevos',rows:clientesNuevosSheet,updatedAt:Date.now()},{merge:true});
+    }catch(e){}
+  }
+
+  PC_STATE.editingKey=null;
+  await refreshPCViewer(true);
+  showToast('"'+(newCli.nombre||'Registro')+'" agregado como Cliente Nuevo (Ruta '+newCli.ruta+')');
+}
+
+function renderPCViewer(){
+  var cntN=$('pcCntNuevos'),cntP=$('pcCntProsp');
+  if(cntN)cntN.textContent=PC_STATE.nuevos.length;
+  if(cntP)cntP.textContent=PC_STATE.prospectos.length;
+
+  var isN=PC_STATE.tab==='nuevos';
+  if($('pcTabNuevos'))$('pcTabNuevos').setAttribute('aria-pressed',isN);
+  if($('pcTabProsp'))$('pcTabProsp').setAttribute('aria-pressed',!isN);
+
+  var src=isN?PC_STATE.nuevos:PC_STATE.prospectos;
+  var q=normStr(PC_STATE.q).toLowerCase();
+  var rf=PC_STATE.ruta;
+
+  var filtered=src.filter(function(item){
+    if(rf&&rf!=='ALL'&&String(item.ruta)!==String(rf))return false;
+    if(!q)return true;
+    var hay=[
+      item.nombre,item.calle,item.num,item.colonia,item.contacto,
+      item.telefono,item.giro,item.vendedor,item.estatus,item.notas
+    ].join(' ').toLowerCase();
+    return hay.indexOf(q)>=0;
+  });
+
+  var sumEl=$('pcSummaryLine');
+  if(sumEl){
+    sumEl.textContent='Mostrando '+filtered.length+' de '+src.length+(isN?' cliente(s) nuevo(s)':' prospecto(s)')+(rf!=='ALL'?' en Ruta '+rf:'')+'.';
+  }
+
+  var lv=$('pcListView');
+  if(!lv)return;
+  if(!filtered.length){
+    lv.innerHTML='<div class="small" style="padding:12px">No hay registros que coincidan con el filtro seleccionado.</div>';
+    return;
+  }
+
+  PC_STATE._shown=filtered;
+
+  lv.innerHTML=filtered.map(function(it,idx){
+    var dir=[it.calle,it.num,it.colonia].filter(Boolean).join(' ');
+    var diasStr=Array.isArray(it.dias)&&it.dias.length?'Días: '+it.dias.join(', '):'';
+    var metaParts=[
+      dir,
+      it.contacto?('Contacto: '+it.contacto):'',
+      it.telefono?('Tel: '+it.telefono):'',
+      it.giro?('Giro: '+it.giro):'',
+      diasStr,
+      it.fechaAlta?('Alta: '+it.fechaAlta):'',
+      it.notas?('Obs: '+it.notas):''
+    ].filter(Boolean);
+
+    var rKey=pcRecordKey(it,isN);
+    var isEditing=PC_STATE.editingKey===rKey;
+    var rutaOpts=RUTAS_PERMITIDAS.map(function(r){
+      return '<option value="'+r+'"'+(String(it.ruta)===String(r)?' selected':'')+'>Ruta '+r+'</option>';
+    }).join('');
+    var diasVal=Array.isArray(it.dias)?it.dias.join(', '):'';
+
+    var editFormHtml='';
+    if(isEditing){
+      editFormHtml='<div class="pc-edit-box">'
+        +'<div class="pc-edit-grid">'
+        +'<input type="text" data-ef="nombre" value="'+esc(it.nombre)+'" placeholder="Nombre comercial">'
+        +'<select data-ef="ruta">'+rutaOpts+'</select>'
+        +'<input type="text" data-ef="calle" value="'+esc(it.calle||'')+'" placeholder="Calle">'
+        +'<input type="text" data-ef="num" value="'+esc(it.num||'')+'" placeholder="Número">'
+        +'<input type="text" data-ef="colonia" value="'+esc(it.colonia||'')+'" placeholder="Colonia">'
+        +'<input type="text" data-ef="cp" value="'+esc(it.cp||'')+'" placeholder="C.P.">'
+        +'<input type="text" data-ef="contacto" value="'+esc(it.contacto||'')+'" placeholder="Contacto">'
+        +'<input type="text" data-ef="telefono" value="'+esc(it.telefono||'')+'" placeholder="Teléfono">'
+        +'<input type="text" data-ef="dias" value="'+esc(diasVal)+'" placeholder="Días (Lu, Ma, Mi...)">'
+        +'<input type="text" data-ef="notas" value="'+esc(it.notas||'')+'" placeholder="Observaciones">'
+        +'</div>'
+        +'<div class="pc-edit-btns">'
+        +'<button type="button" class="mini-lnk ok" data-pcact="save" data-pidx="'+idx+'">✓ Guardar</button>'
+        +'<button type="button" class="mini-lnk" data-pcact="cancel">Cancelar</button>'
+        +'</div>'
+        +'</div>';
+    }
+
+    var addClientBtn=!isN
+      ?'<button type="button" class="mini-lnk ok" data-pcact="addcli" data-pidx="'+idx+'">+ Cliente nuevo</button>'
+      :'';
+
+    return '<div class="pc-item">'
+      +'<div style="min-width:0;flex:1">'
+      +'<div class="pc-item-top">'
+      +'<div class="pc-title">'+esc(it.nombre)+'</div>'
+      +'<span class="pc-badge">Ruta '+esc(it.ruta)+'</span>'
+      +'</div>'
+      +'<div class="pc-meta">'+esc(metaParts.join(' · ')||'Sin detalle adicional')+'</div>'
+      +'<div class="pc-item-acts">'
+      +'<button type="button" class="mini-lnk" data-pcact="edit" data-pidx="'+idx+'">Editar</button>'
+      +addClientBtn
+      +'<button type="button" class="mini-lnk del" data-pcact="del" data-pidx="'+idx+'">Eliminar</button>'
+      +'</div>'
+      +editFormHtml
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+$('pcListView').onclick=async function(e){
+  var btn=e.target.closest('[data-pcact]');
+  if(!btn)return;
+  var act=btn.dataset.pcact;
+  var idx=parseInt(btn.dataset.pidx,10);
+  var listType=PC_STATE.tab;
+  var item=(PC_STATE._shown&&PC_STATE._shown[idx])||null;
+
+  if(act==='edit'&&item){
+    PC_STATE.editingKey=pcRecordKey(item,listType==='nuevos');
+    renderPCViewer();
+    return;
+  }
+
+  if(act==='cancel'){
+    PC_STATE.editingKey=null;
+    renderPCViewer();
+    return;
+  }
+
+  if(act==='save'&&item){
+    var box=btn.closest('.pc-edit-box');
+    if(!box)return;
+    var valOf=function(k){var el=box.querySelector('[data-ef="'+k+'"]');return el?normStr(el.value):''};
+    var nuevoNombre=valOf('nombre');
+    if(!nuevoNombre){showToast('El nombre comercial no puede quedar vacío');return}
+    var updated=Object.assign({},item,{
+      nombre:nuevoNombre,
+      ruta:valOf('ruta')||item.ruta||'1',
+      calle:valOf('calle'),
+      num:valOf('num'),
+      colonia:valOf('colonia'),
+      cp:valOf('cp'),
+      contacto:valOf('contacto'),
+      telefono:valOf('telefono'),
+      dias:parseDiasField(valOf('dias')),
+      notas:valOf('notas')
+    });
+    PC_STATE._targetItem=item;
+    PC_STATE.editingKey=null;
+    await persistProspOrNuevoChange(listType,updated,false);
+    PC_STATE._targetItem=null;
+    await refreshPCViewer(false);
+    showToast('Registro "'+(updated.nombre)+'" actualizado');
+    return;
+  }
+
+  if(act==='addcli'&&item){
+    await promoteProspectoToClienteNuevo(item);
+    return;
+  }
+
+  if(act==='del'&&item){
+    if(!confirm('¿Eliminar "'+(item.nombre||'este registro')+'"?'))return;
+    PC_STATE._targetItem=item;
+    if(PC_STATE.editingKey===pcRecordKey(item,listType==='nuevos'))PC_STATE.editingKey=null;
+    await persistProspOrNuevoChange(listType,null,true);
+    PC_STATE._targetItem=null;
+    await refreshPCViewer(false);
+    showToast('Registro "'+(item.nombre||'')+'" eliminado');
+  }
+};
+
+$('pcTabNuevos').onclick=function(){PC_STATE.tab='nuevos';PC_STATE.editingKey=null;renderPCViewer()};
+$('pcTabProsp').onclick=function(){PC_STATE.tab='prospectos';PC_STATE.editingKey=null;renderPCViewer()};
+$('pcRutaFilter').onchange=function(e){PC_STATE.ruta=e.target.value;renderPCViewer()};
+$('pcSearchInp').oninput=function(e){PC_STATE.q=e.target.value;renderPCViewer()};
+$('btnRefreshPC').onclick=function(){refreshPCViewer(true)};
+
+function switchProspTab(which){
+  var isReg=which==='registros';
+  $('v-form').hidden=isReg;
+  $('v-registros').hidden=!isReg;
+  $('tabCaptura').setAttribute('aria-selected',!isReg);
+  $('tabRegistros').setAttribute('aria-selected',isReg);
+  window.scrollTo(0,0);
+  if(isReg)refreshPCViewer(true);
+}
+$('tabCaptura').onclick=function(){switchProspTab('form')};
+$('tabRegistros').onclick=function(){switchProspTab('registros')};
 
 /* ==================== BOOT ==================== */
 async function boot(){
