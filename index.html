@@ -97,6 +97,17 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:
 .dow-btn{font:inherit;font-size:12px;font-weight:800;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
 .dow-btn[aria-pressed="true"]{background:var(--or);border-color:var(--or);color:var(--ink)}
 .rng-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.pc-box{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.pc-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);padding:4px;border-radius:12px;border:1px solid var(--line);margin-bottom:10px}
+.pc-tabs button{font:inherit;font-size:12px;font-weight:800;border:0;border-radius:9px;padding:7px 8px;background:transparent;color:var(--mute);cursor:pointer}
+.pc-tabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.pc-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pc-list{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fafbfe}
+.pc-item{padding:10px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pc-item:first-child{border-top:0}
+.pc-title{font-size:13.5px;font-weight:800;color:var(--ink)}
+.pc-meta{font-size:11.5px;color:var(--mute);margin-top:2px;line-height:1.35}
+.pc-badge{flex:none;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -279,9 +290,39 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--or);outline-offset:
     <label for="fCli">Archivo de clientes (.xls / .xlsx)</label>
     <input id="fCli" type="file" accept=".xls,.xlsx">
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+      <button class="btn g" id="dlCli" type="button">📥 Descargar base actualizada (.xlsx)</button>
       <button class="btn del" id="clrCli" type="button">Eliminar base de clientes</button>
     </div>
     <div id="msgCli" class="small" role="status" aria-live="polite" style="min-height:18px;margin-top:8px;font-weight:600"></div>
+
+    <div class="pc-box" id="pcViewerBox">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="lbl" style="margin:0;color:var(--ink)">Consulta de registros capturados</div>
+        <button type="button" class="mini-lnk" id="btnRefreshPC">↻ Actualizar</button>
+      </div>
+      <div class="pc-tabs" role="group" aria-label="Tipo de registro capturado">
+        <button type="button" id="pcTabNuevos" aria-pressed="true">Clientes nuevos (<span id="pcCntNuevos">0</span>)</button>
+        <button type="button" id="pcTabProsp" aria-pressed="false">Prospectos (<span id="pcCntProsp">0</span>)</button>
+      </div>
+      <div class="pc-filters">
+        <select id="pcRutaFilter" aria-label="Filtrar por ruta">
+          <option value="ALL">Todas las rutas</option>
+          <option value="1">Ruta 1</option>
+          <option value="4">Ruta 4</option>
+          <option value="5">Ruta 5</option>
+          <option value="6">Ruta 6</option>
+          <option value="7">Ruta 7</option>
+          <option value="10">Ruta 10</option>
+          <option value="11">Ruta 11</option>
+          <option value="13">Ruta 13</option>
+          <option value="14">Ruta 14</option>
+          <option value="15">Ruta 15</option>
+        </select>
+        <input type="search" id="pcSearchInp" placeholder="Buscar nombre, colonia..." aria-label="Buscar registro" style="padding:8px 10px;font-size:13px">
+      </div>
+      <div id="pcSummaryLine" class="small" style="margin:0 0 6px"></div>
+      <div id="pcListView" class="pc-list"><div class="small" style="padding:12px">Cargando registros...</div></div>
+    </div>
   </div>
 
   <h2>Cargado</h2>
@@ -1173,16 +1214,449 @@ $('fCli').onchange=function(e){
     S.clients=finalList;
     syncClientsCloud();
     lists();
+    refreshPCViewer(false);
     setMsgCli((modo==='replace'?'Base sustituida: ':'Base actualizada: ')+finalList.length+' cliente(s) en rutas permitidas'+(res.omitidos?' ('+res.omitidos+' omitido(s) de rutas no permitidas).':'.'),false);
   });
 };
+function parseDiasField(rawDias){
+  if(Array.isArray(rawDias)){
+    return rawDias.map(function(d){
+      var s=normStr(d).slice(0,2).toLowerCase();
+      return s==='lu'?'Lu':s==='ma'?'Ma':(s==='mi'||s==='mí')?'Mi':s==='ju'?'Ju':s==='vi'?'Vi':(s==='sa'||s==='sá')?'Sa':'';
+    }).filter(Boolean);
+  }
+  if(typeof rawDias==='string'&&rawDias.trim()){
+    return rawDias.split(/[,;|/\s]+/).map(function(d){
+      var s=normStr(d).slice(0,2).toLowerCase();
+      return s==='lu'?'Lu':s==='ma'?'Ma':(s==='mi'||s==='mí')?'Mi':s==='ju'?'Ju':s==='vi'?'Vi':(s==='sa'||s==='sá')?'Sa':'';
+    }).filter(Boolean);
+  }
+  return [];
+}
+
+function normalizeProspOrClient(raw,docId,fallbackType,fallbackRuta){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw)||typeof raw.get==='function')return null;
+  var rawR=normStr(raw.ruta||raw.route||raw.RUTA||raw.rutaId||fallbackRuta||'').replace(/^RUTA\s*/i,'');
+  var rk=/^\d+$/.test(rawR)?String(parseInt(rawR,10)):rawR;
+  var nombre=normStr(raw.nombre||raw.nombreComercial||raw['NOMBRE COMERCIAL']||raw.negocio||raw.comercio||raw.cliente||'');
+  if(!nombre||!isAllowedRoute(rk))return null;
+
+  var tipoRaw=normStr(raw.tipo||raw.type||raw.categoria||raw.category||raw.status||raw.estado||fallbackType||'').toLowerCase();
+  var esProspecto=(tipoRaw.indexOf('prosp')>=0||tipoRaw==='lead'||raw.esProspecto===true||raw.isProspect===true);
+  var esClienteNuevo=(!esProspecto)&&(tipoRaw.indexOf('nuevo')>=0||tipoRaw.indexOf('client')>=0||raw.clienteNuevo===true||raw.esClienteNuevo===true||hasMark(raw['CLIENTE NUEVO']));
+
+  var dias=parseDiasField(raw.dias||raw.diasVisita||raw.visitDays||raw.frecuencia);
+  if(!dias.length){
+    [['Lu','LU'],['Ma','MA'],['Mi','MI'],['Ju','JU'],['Vi','VI'],['Sa','SA']].forEach(function(p){
+      if(hasMark(raw[p[0]])||hasMark(raw[p[1]]))dias.push(p[0]);
+    });
+  }
+
+  var fechaStr=normStr(raw.fechaAlta||raw.FECHA_ALTA||raw.fecha||raw.date||raw.createdAt||'');
+  if(!fechaStr&&typeof raw.timestamp==='number'){
+    var dtObj=new Date(raw.timestamp);
+    if(!isNaN(dtObj))fechaStr=kd(dtObj);
+  }else if(fechaStr.indexOf('T')>=0){
+    fechaStr=fechaStr.slice(0,10);
+  }
+
+  var lat=raw.lat!==undefined?normNum(raw.lat):(raw.COORD_LAT!==undefined?normNum(raw.COORD_LAT):normNum(raw.latitude));
+  var lon=raw.lon!==undefined?normNum(raw.lon):(raw.COORD_LON!==undefined?normNum(raw.COORD_LON):normNum(raw.longitude));
+  if((lat===null||lon===null)&&raw.coords&&typeof raw.coords==='object'){
+    if(lat===null)lat=normNum(raw.coords.lat!==undefined?raw.coords.lat:raw.coords.latitude);
+    if(lon===null)lon=normNum(raw.coords.lng!==undefined?raw.coords.lng:(raw.coords.lon!==undefined?raw.coords.lon:raw.coords.longitude));
+  }
+
+  return {
+    id:normStr(raw.id||docId||''),
+    ruta:rk,
+    nombre:nombre,
+    calle:normStr(raw.calle||raw.CALLE||raw.direccion||raw.domicilio||''),
+    num:normStr(raw.num||raw.NUM||raw.numero||''),
+    colonia:normStr(raw.colonia||raw.COLONIA||''),
+    cp:normStr(raw.cp||raw.COD_POSTAL||raw.codigoPostal||''),
+    contacto:normStr(raw.contacto||raw.CONTACTO||raw.encargado||''),
+    telefono:normStr(raw.telefono||raw.TELEFONO||raw.tel||raw.celular||''),
+    lat:lat,
+    lon:lon,
+    dias:dias,
+    clienteNuevo:esClienteNuevo||!esProspecto,
+    esProspecto:esProspecto,
+    fechaAlta:fechaStr||kd(new Date()),
+    vendedor:normStr(raw.vendedor||raw.seller||raw.usuario||''),
+    giro:normStr(raw.giro||raw.tipoNegocio||raw.rubro||''),
+    estatus:normStr(raw.estatus||raw.status||(esProspecto?'Prospecto':'Cliente Nuevo')),
+    notas:normStr(raw.notas||raw.note||raw.observaciones||raw.comentarios||'')
+  };
+}
+
+function extractProspRecords(container,pushFn,prefixId,fallbackType,fallbackRuta){
+  if(!container)return;
+  if(Array.isArray(container)){
+    container.forEach(function(it,idx){
+      var rec=normalizeProspOrClient(it,(it&&it.id)||((prefixId||'p')+'_'+idx),fallbackType,fallbackRuta);
+      if(rec)pushFn(rec);
+    });
+    return;
+  }
+  if(typeof container==='object'){
+    var direct=normalizeProspOrClient(container,container.id||prefixId||'',fallbackType,fallbackRuta);
+    if(direct){pushFn(direct);return;}
+    Object.keys(container).forEach(function(k){
+      if(k==='updatedAt'||k==='catalog'||k==='prices'||k==='images')return;
+      var val=container[k];
+      if(!val||typeof val!=='object')return;
+      var parsedK=parseDayRouteKey(k);
+      var nextType=fallbackType||(k.toLowerCase().indexOf('prosp')>=0?'prospecto':(k.toLowerCase().indexOf('client')>=0?'cliente_nuevo':''));
+      extractProspRecords(val,pushFn,(prefixId?prefixId+'_':'')+k,nextType,parsedK.ruta||fallbackRuta||'');
+    });
+  }
+}
+
+async function fetchProspeccionYClientes(){
+  var map={};
+  var pushRec=function(r){
+    if(!r)return;
+    var k=(r.esProspecto?'P':'C')+'|'+clientKey(r);
+    map[k]=r;
+  };
+
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var lk=localStorage.key(i);
+      if(!lk||lk===KEY||lk===KEY+'-cat')continue;
+      if(!/prosp|cliente|client|terminal|bordo|lead/i.test(lk))continue;
+      try{
+        var data=JSON.parse(localStorage.getItem(lk));
+        if(!data||typeof data!=='object')continue;
+        var defR=normStr(data.ruta||data.route||'').replace(/^RUTA\s*/i,'');
+        var defT=/prosp|lead/i.test(lk)?'prospecto':(/cliente_nuevo|nuevos/i.test(lk)?'cliente_nuevo':'');
+        ['prospectos','prospects','leads','clientesNuevos','clientes_nuevos','newClients','new_clients','registros','items','list','data'].forEach(function(prop){
+          if(data[prop]!==undefined){
+            var pType=/prosp|lead/i.test(prop)?'prospecto':(/client/i.test(prop)?'cliente_nuevo':defT);
+            extractProspRecords(data[prop],pushRec,'ls_'+lk+'_'+prop,pType,defR);
+          }
+        });
+        extractProspRecords(data,pushRec,'ls_'+lk,defT,defR);
+      }catch(e){}
+    }
+  }catch(e){}
+
+  if(FB){
+    var colNames=[
+      'prospectos','prospeccion','bordo_prospectos','terminal_prospectos',
+      'clientes_nuevos','nuevos_clientes','bordo_clientes','terminal_clientes','prospeccion_clientes'
+    ];
+    var docNames=[
+      'app/prospectos','app/prospeccion','app/clientes_nuevos','app/prospeccion_clientes',
+      'bordo/prospectos','bordo/prospeccion','bordo/clientes_nuevos','bordo/clientes','bordo/prospeccion_clientes',
+      'terminal/prospectos','terminal/clientes_nuevos','terminal/prospeccion'
+    ];
+
+    await Promise.all(colNames.map(async function(cName){
+      try{
+        var qs=await FB.collection(cName).get();
+        var defT=/prosp/i.test(cName)?'prospecto':'cliente_nuevo';
+        qs.forEach(function(doc){
+          var d=doc.data()||{};
+          var pId=parseDayRouteKey(doc.id);
+          extractProspRecords(d,pushRec,cName+'_'+doc.id,defT,pId.ruta||'');
+        });
+      }catch(e){}
+    }));
+
+    await Promise.all(docNames.map(async function(dPath){
+      try{
+        var sn=await FB.doc(dPath).get();
+        if(!sn.exists)return;
+        var d=sn.data()||{};
+        var defT=/prosp/i.test(dPath)?'prospecto':(/client/i.test(dPath)?'cliente_nuevo':'');
+        ['prospectos','prospects','leads','clientesNuevos','clientes_nuevos','newClients','new_clients','clients','clientes','registros','items','list'].forEach(function(prop){
+          if(d[prop]!==undefined){
+            var pType=/prosp|lead/i.test(prop)?'prospecto':(/client/i.test(prop)?'cliente_nuevo':defT);
+            extractProspRecords(d[prop],pushRec,dPath.replace('/','_')+'_'+prop,pType,'');
+          }
+        });
+        extractProspRecords(d,pushRec,dPath.replace('/','_'),defT,'');
+      }catch(e){}
+    }));
+  }
+
+  var all=Object.keys(map).map(function(k){return map[k]});
+  return {
+    prospectos:all.filter(function(x){return x.esProspecto}),
+    clientesNuevos:all.filter(function(x){return !x.esProspecto})
+  };
+}
+
+function toMasterRow(c,forceNuevo){
+  var dias=Array.isArray(c.dias)?c.dias:[];
+  return {
+    'RUTA':Number(c.ruta)||c.ruta,
+    'NOMBRE COMERCIAL':c.nombre||'',
+    'CALLE':c.calle||'',
+    'NUM':c.num||'',
+    'COLONIA':c.colonia||'',
+    'COD_POSTAL':c.cp||'',
+    'CONTACTO':c.contacto||'',
+    'TELEFONO':c.telefono||'',
+    'LU':dias.indexOf('Lu')>=0?'X':'',
+    'MA':dias.indexOf('Ma')>=0?'X':'',
+    'MI':dias.indexOf('Mi')>=0?'X':'',
+    'JU':dias.indexOf('Ju')>=0?'X':'',
+    'VI':dias.indexOf('Vi')>=0?'X':'',
+    'SA':dias.indexOf('Sa')>=0?'X':'',
+    'COORD_LAT':c.lat!=null?c.lat:'',
+    'COORD_LON':c.lon!=null?c.lon:'',
+    'CLIENTE NUEVO':(forceNuevo||c.clienteNuevo)?'SI':'',
+    'FECHA_ALTA':c.fechaAlta||''
+  };
+}
+
+$('dlCli').onclick=async function(){
+  if(typeof XLSX==='undefined')return setMsgCli('Librería Excel no disponible.',true);
+  var btn=$('dlCli');
+  if(btn)btn.disabled=true;
+  setMsgCli('Sincronizando base maestra, clientes nuevos y prospectos...',false);
+  try{
+    if(FB){
+      try{
+        var snap=await FB.doc('app/clients').get();
+        if(snap.exists&&Array.isArray(snap.data().clients)){
+          S.clients=sanitizeClients(snap.data().clients);
+        }
+      }catch(e){}
+    }
+
+    var modData=await fetchProspeccionYClientes();
+    var nuevosMod=modData.clientesNuevos||[];
+    var prospectosMod=modData.prospectos||[];
+
+    // Fusionar clientes nuevos del módulo en S.clients en su ruta correspondiente
+    var masterMap={};
+    (S.clients||[]).forEach(function(c){
+      if(c&&isAllowedRoute(c.ruta))masterMap[clientKey(c)]=c;
+    });
+
+    var nuevosMap={};
+    (S.clients||[]).forEach(function(c){
+      if(c&&isAllowedRoute(c.ruta)&&c.clienteNuevo)nuevosMap[clientKey(c)]=c;
+    });
+
+    var agregadosCount=0;
+    nuevosMod.forEach(function(nc){
+      var ck=clientKey(nc);
+      var existing=masterMap[ck];
+      var merged={
+        ruta:nc.ruta,
+        nombre:nc.nombre,
+        calle:nc.calle||(existing?existing.calle:''),
+        num:nc.num||(existing?existing.num:''),
+        colonia:nc.colonia||(existing?existing.colonia:''),
+        cp:nc.cp||(existing?existing.cp:''),
+        contacto:nc.contacto||(existing?existing.contacto:''),
+        telefono:nc.telefono||(existing?existing.telefono:''),
+        lat:nc.lat!=null?nc.lat:(existing?existing.lat:null),
+        lon:nc.lon!=null?nc.lon:(existing?existing.lon:null),
+        dias:(nc.dias&&nc.dias.length)?nc.dias:(existing?existing.dias:[]),
+        clienteNuevo:true,
+        fechaAlta:nc.fechaAlta||(existing?existing.fechaAlta:kd(new Date()))
+      };
+      if(!existing)agregadosCount++;
+      masterMap[ck]=merged;
+      nuevosMap[ck]=merged;
+    });
+
+    var sortFn=function(a,b){
+      var ra=parseInt(a.ruta,10)||999,rb=parseInt(b.ruta,10)||999;
+      if(ra!==rb)return ra-rb;
+      return normStr(a.nombre).localeCompare(normStr(b.nombre),'es');
+    };
+
+    var listMaster=Object.keys(masterMap).map(function(k){return masterMap[k]}).sort(sortFn);
+    var listNuevos=Object.keys(nuevosMap).map(function(k){return nuevosMap[k]}).sort(sortFn);
+    var listProspectos=prospectosMod.slice().sort(sortFn);
+
+    if(!listMaster.length&&!listNuevos.length&&!listProspectos.length){
+      return setMsgCli('No hay clientes ni prospectos registrados para descargar.',true);
+    }
+
+    // Persistir la fusión en S.clients (local y nube) si hubo actualizaciones
+    S.clients=listMaster;
+    if(agregadosCount>0)syncClientsCloud();
+    else saveLocal();
+    lists();
+
+    var colsMaster=[
+      {wch:8},{wch:28},{wch:24},{wch:10},{wch:22},{wch:12},
+      {wch:20},{wch:14},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},
+      {wch:13},{wch:14},{wch:15},{wch:13}
+    ];
+
+    var wb=XLSX.utils.book_new();
+
+    // 1. Hoja "Base Master" (incluye base completa + clientes nuevos integrados en su ruta)
+    var rowsMaster=listMaster.map(function(c){return toMasterRow(c,false)});
+    var wsMaster=XLSX.utils.json_to_sheet(rowsMaster);
+    wsMaster['!cols']=colsMaster;
+    XLSX.utils.book_append_sheet(wb,wsMaster,'Base Master');
+
+    // 2. Hoja "clientes nuevos"
+    var rowsNuevos=listNuevos.length?listNuevos.map(function(c){return toMasterRow(c,true)}):[{
+      'RUTA':'','NOMBRE COMERCIAL':'Sin clientes nuevos registrados','CALLE':'','NUM':'','COLONIA':'',
+      'COD_POSTAL':'','CONTACTO':'','TELEFONO':'','LU':'','MA':'','MI':'','JU':'','VI':'','SA':'',
+      'COORD_LAT':'','COORD_LON':'','CLIENTE NUEVO':'','FECHA_ALTA':''
+    }];
+    var wsNuevos=XLSX.utils.json_to_sheet(rowsNuevos);
+    wsNuevos['!cols']=colsMaster;
+    XLSX.utils.book_append_sheet(wb,wsNuevos,'clientes nuevos');
+
+    // 3. Hoja "prospectos"
+    var rowsProsp=listProspectos.length?listProspectos.map(function(p){
+      var dias=Array.isArray(p.dias)?p.dias:[];
+      return {
+        'RUTA':Number(p.ruta)||p.ruta,
+        'NOMBRE COMERCIAL':p.nombre||'',
+        'GIRO':p.giro||'',
+        'CALLE':p.calle||'',
+        'NUM':p.num||'',
+        'COLONIA':p.colonia||'',
+        'COD_POSTAL':p.cp||'',
+        'CONTACTO':p.contacto||'',
+        'TELEFONO':p.telefono||'',
+        'DIAS VISITA':dias.join(', '),
+        'COORD_LAT':p.lat!=null?p.lat:'',
+        'COORD_LON':p.lon!=null?p.lon:'',
+        'VENDEDOR':p.vendedor||'',
+        'ESTATUS':p.estatus||'Prospecto',
+        'FECHA_ALTA':p.fechaAlta||'',
+        'OBSERVACIONES':p.notas||''
+      };
+    }):[{
+      'RUTA':'','NOMBRE COMERCIAL':'Sin prospectos registrados','GIRO':'','CALLE':'','NUM':'','COLONIA':'',
+      'COD_POSTAL':'','CONTACTO':'','TELEFONO':'','DIAS VISITA':'','COORD_LAT':'','COORD_LON':'',
+      'VENDEDOR':'','ESTATUS':'','FECHA_ALTA':'','OBSERVACIONES':''
+    }];
+    var wsProsp=XLSX.utils.json_to_sheet(rowsProsp);
+    wsProsp['!cols']=[
+      {wch:8},{wch:28},{wch:18},{wch:24},{wch:10},{wch:22},{wch:12},
+      {wch:20},{wch:14},{wch:14},{wch:13},{wch:14},{wch:16},{wch:14},{wch:13},{wch:30}
+    ];
+    XLSX.utils.book_append_sheet(wb,wsProsp,'prospectos');
+
+    var fileName='Base_Master_Terminal_'+kd(new Date())+'.xlsx';
+    XLSX.writeFile(wb,fileName);
+    setMsgCli('Excel descargado: '+fileName+' · Base Master: '+listMaster.length+' | clientes nuevos: '+listNuevos.length+' | prospectos: '+listProspectos.length+'.',false);
+  }catch(err){
+    setMsgCli('Error al generar Excel: '+(err&&err.message||'intenta de nuevo'),true);
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+};
+
 $('clrCli').onclick=function(){
   if(!confirm('¿Eliminar por completo la base de clientes para Terminal?'))return;
   S.clients=[];
   syncClientsCloud();
   lists();
+  refreshPCViewer(false);
   setMsgCli('Base de clientes eliminada.',true);
 };
+
+var PC_STATE={tab:'nuevos',ruta:'ALL',q:'',nuevos:[],prospectos:[],loading:false};
+
+async function refreshPCViewer(fetchRemote){
+  if(PC_STATE.loading)return;
+  PC_STATE.loading=true;
+  try{
+    var modData=fetchRemote!==false?await fetchProspeccionYClientes():{prospectos:PC_STATE.prospectos,clientesNuevos:[]};
+    var nuevosMap={};
+    (S.clients||[]).forEach(function(c){
+      if(c&&isAllowedRoute(c.ruta)&&c.clienteNuevo)nuevosMap[clientKey(c)]=c;
+    });
+    (modData.clientesNuevos||[]).forEach(function(nc){
+      if(nc&&isAllowedRoute(nc.ruta))nuevosMap[clientKey(nc)]=nc;
+    });
+    var sortFn=function(a,b){
+      var ra=parseInt(a.ruta,10)||999,rb=parseInt(b.ruta,10)||999;
+      if(ra!==rb)return ra-rb;
+      return normStr(a.nombre).localeCompare(normStr(b.nombre),'es');
+    };
+    PC_STATE.nuevos=Object.keys(nuevosMap).map(function(k){return nuevosMap[k]}).sort(sortFn);
+    if(fetchRemote!==false){
+      PC_STATE.prospectos=(modData.prospectos||[]).slice().sort(sortFn);
+    }
+    renderPCViewer();
+  }catch(e){
+    var lv=$('pcListView');
+    if(lv)lv.innerHTML='<div class="small bad" style="padding:12px">No se pudieron consultar los registros.</div>';
+  }finally{
+    PC_STATE.loading=false;
+  }
+}
+
+function renderPCViewer(){
+  var cntN=$('pcCntNuevos'),cntP=$('pcCntProsp');
+  if(cntN)cntN.textContent=PC_STATE.nuevos.length;
+  if(cntP)cntP.textContent=PC_STATE.prospectos.length;
+
+  var isN=PC_STATE.tab==='nuevos';
+  if($('pcTabNuevos'))$('pcTabNuevos').setAttribute('aria-pressed',isN);
+  if($('pcTabProsp'))$('pcTabProsp').setAttribute('aria-pressed',!isN);
+
+  var src=isN?PC_STATE.nuevos:PC_STATE.prospectos;
+  var q=normStr(PC_STATE.q).toLowerCase();
+  var rf=PC_STATE.ruta;
+
+  var filtered=src.filter(function(item){
+    if(rf&&rf!=='ALL'&&String(item.ruta)!==String(rf))return false;
+    if(!q)return true;
+    var hay=[
+      item.nombre,item.calle,item.num,item.colonia,item.contacto,
+      item.telefono,item.giro,item.vendedor,item.estatus,item.notas
+    ].join(' ').toLowerCase();
+    return hay.indexOf(q)>=0;
+  });
+
+  var sumEl=$('pcSummaryLine');
+  if(sumEl){
+    sumEl.textContent='Mostrando '+filtered.length+' de '+src.length+(isN?' cliente(s) nuevo(s)':' prospecto(s)')+(rf!=='ALL'?' en Ruta '+rf:'')+'.';
+  }
+
+  var lv=$('pcListView');
+  if(!lv)return;
+  if(!filtered.length){
+    lv.innerHTML='<div class="small" style="padding:12px">No hay registros que coincidan con el filtro seleccionado.</div>';
+    return;
+  }
+
+  lv.innerHTML=filtered.map(function(it){
+    var dir=[it.calle,it.num,it.colonia].filter(Boolean).join(' ');
+    var diasStr=Array.isArray(it.dias)&&it.dias.length?'Días: '+it.dias.join(', '):'';
+    var metaParts=[
+      dir,
+      it.contacto?('Contacto: '+it.contacto):'',
+      it.telefono?('Tel: '+it.telefono):'',
+      it.giro?('Giro: '+it.giro):'',
+      diasStr,
+      it.fechaAlta?('Alta: '+it.fechaAlta):'',
+      it.notas?('Obs: '+it.notas):''
+    ].filter(Boolean);
+    return '<div class="pc-item">'
+      +'<div style="min-width:0;flex:1">'
+      +'<div class="pc-title">'+esc(it.nombre)+'</div>'
+      +'<div class="pc-meta">'+esc(metaParts.join(' · ')||'Sin detalle adicional')+'</div>'
+      +'</div>'
+      +'<span class="pc-badge">Ruta '+esc(it.ruta)+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+$('pcTabNuevos').onclick=function(){PC_STATE.tab='nuevos';renderPCViewer()};
+$('pcTabProsp').onclick=function(){PC_STATE.tab='prospectos';renderPCViewer()};
+$('pcRutaFilter').onchange=function(e){PC_STATE.ruta=e.target.value;renderPCViewer()};
+$('pcSearchInp').oninput=function(e){PC_STATE.q=e.target.value;renderPCViewer()};
+$('btnRefreshPC').onclick=function(){refreshPCViewer(true)};
 
 $('iName').oninput=function(e){S.name=e.target.value;save();render()};
 $('iUser').oninput=function(e){S.user=e.target.value;save();render()};
@@ -1327,7 +1801,7 @@ $('aA').onclick=function(){var v=$('dA').value;if(v&&CMP.a.indexOf(v)<0)CMP.a.pu
 $('aB').onclick=function(){var v=$('dB').value;if(v&&CMP.b.indexOf(v)<0)CMP.b.push(v);$('dB').value='';cmpRender()};
 
 function tab(a){$('v-res').hidden=a!==1;$('v-cmp').hidden=a!==3;$('v-dat').hidden=a!==2;[1,2,3].forEach(function(i){$('t'+i).setAttribute('aria-selected',a===i)});if(a===3)cmpRender();window.scrollTo(0,0)}
-$('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2)};$('t3').onclick=function(){tab(3)};
+$('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2);refreshPCViewer(true)};$('t3').onclick=function(){tab(3)};
 function hideSheet(){$('sheet').hidden=true;document.body.style.overflow=''}
 function showRoute(r){
   var n=WK.days.length;if(!n)return;
