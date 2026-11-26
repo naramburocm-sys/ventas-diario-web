@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prospección y Clientes Nuevos · Tonicol</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#ffffff;--card:#ffffff;--ink:#14213d;--mute:#5b6b8c;
+  --or:#f7b500;--or2:#ffd84d;--soft:#fff1bd;
+  --ok:#1a9a4f;--bad:#d62828;--blue:#2563eb;--gray:#64748b;
+  --sh:0 6px 18px rgba(20,33,61,.10);--line:#ece4c4;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+.app{max-width:520px;margin:0 auto;padding:16px 16px 32px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.logo{width:46px;height:46px;border-radius:14px;background:#ffffff;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;box-shadow:var(--sh);flex:none}
+.logo img{width:100%;height:100%;object-fit:cover}
+.logo svg{width:26px;height:26px}
+header h1{font-size:17.5px;margin:0;font-weight:800;line-height:1.15}
+header p{margin:2px 0 0;color:var(--mute);font-size:12.5px}
+.sync{margin-left:auto;font-size:11px;font-weight:800;padding:5px 10px;border-radius:99px;background:var(--soft);color:var(--ink);border:1px solid var(--line);white-space:nowrap}
+.sync.ok{background:#e8f7ee;color:var(--ok);border-color:#bce6cc}
+.sync.bad{background:#fff1f1;color:var(--bad);border-color:#f2b8b8}
+
+.hi{font-size:22px;font-weight:800;margin:0 0 2px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:13px}
+.card{background:var(--card);border-radius:20px;padding:15px;box-shadow:var(--sh);border:1px solid var(--line);margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi-card{background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 4px 12px rgba(20,33,61,.07);border:1px solid var(--line)}
+.lbl{font-size:11.5px;color:var(--mute);font-weight:700}
+.big{font-size:22px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+.small{font-size:11.5px;color:var(--mute);margin-top:3px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.pill.ok{background:#e8f7ee;color:var(--ok)}
+.pill.bad{background:#fff1f1;color:var(--bad)}
+.pill.blue{background:#eff6ff;color:var(--blue)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+
+.btn{font:inherit;font-weight:800;border:0;border-radius:13px;padding:10px 14px;background:var(--or);color:#14213d;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn.g{background:var(--soft);color:var(--ink)}
+.btn.ink{background:var(--ink);color:#fff}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.sm{padding:7px 11px;font-size:12px;border-radius:10px}
+.btn.full{width:100%}
+
+/* Formulario */
+.geo-box{background:#fffdf4;border:1.5px solid var(--or);border-radius:15px;padding:10px 12px;margin-bottom:12px}
+.geo-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.geo-st{font-size:12px;font-weight:800;color:var(--ink)}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.f-grp{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+.f-grp label{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.2px}
+.f-grp input,.f-grp select,.f-grp textarea{font:inherit;font-size:13.5px;font-weight:700;padding:9px 11px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);width:100%}
+.f-grp input:focus,.f-grp select:focus,.f-grp textarea:focus{outline:2px solid var(--or);border-color:var(--or)}
+.f-grp input.auto-filled{background:#f8fdf9;border-color:#bce6cc}
+
+.seg-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.seg-btn{font:inherit;font-size:12.5px;font-weight:800;padding:9px 8px;border-radius:12px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center}
+.seg-btn.on.prosp{background:#fff8db;border-color:var(--or);color:var(--ink)}
+.seg-btn.on.nuevo{background:#e8f7ee;border-color:var(--ok);color:#116b36}
+
+.day-checks{display:flex;gap:5px;flex-wrap:wrap}
+.dchk{font:inherit;font-size:12px;font-weight:800;padding:7px 11px;border-radius:10px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer}
+.dchk.on{background:var(--soft);border-color:var(--or);color:var(--ink)}
+
+/* Filtros y búsqueda */
+.filter-bar{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px;box-shadow:0 3px 10px rgba(20,33,61,.04)}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.filter-row select{font:inherit;font-size:12.5px;font-weight:800;padding:8px 9px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);color:var(--ink);width:100%}
+.search-box{position:relative}
+.search-box input{width:100%;font:inherit;font-size:13.5px;padding:9px 34px 9px 13px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.search-box input:focus{outline:2px solid var(--or);border-color:var(--or)}
+.search-clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:var(--soft);color:var(--ink);width:24px;height:24px;border-radius:50%;font-weight:800;cursor:pointer;display:none}
+
+.st-filter{display:flex;gap:5px;margin-top:8px;overflow-x:auto;scrollbar-width:none}
+.st-filter::-webkit-scrollbar{display:none}
+.stf{flex:1;font:inherit;font-size:11px;font-weight:800;padding:7px 6px;border-radius:10px;border:1.5px solid var(--line);background:#f8f9fc;color:var(--mute);cursor:pointer;text-align:center;white-space:nowrap}
+.stf.on{background:var(--soft);color:var(--ink);border-color:var(--or)}
+.stf[data-st="prosp"].on{background:#fff8db;border-color:#f7b500;color:#7a5600}
+.stf[data-st="nuevo"].on{background:#e8f7ee;border-color:#1a9a4f;color:#116b36}
+.stf[data-st="desc"].on{background:#fff1f1;border-color:#d62828;color:#9e1c1c}
+
+/* Mapa */
+#mapWrap{border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:12px;background:#fff}
+#map{height:220px;width:100%;z-index:1}
+.map-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fff;border-top:1px solid var(--line);font-size:11px;font-weight:700;color:var(--mute)}
+.pin-wrap{display:inline-flex;flex-direction:column;align-items:center;transform:translate(-50%,-7px)}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px #14213d,0 2px 5px rgba(0,0,0,.35)}
+.pin-lbl{margin-top:2px;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.95);color:#14213d;border:1px solid rgba(20,33,61,.25);font-size:10px;font-weight:800;white-space:nowrap;max-width:125px;overflow:hidden;text-overflow:ellipsis}
+
+/* Tarjetas de prospectos / clientes */
+.p-list{display:flex;flex-direction:column;gap:8px}
+.p-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:11px 13px;box-shadow:0 3px 10px rgba(20,33,61,.05)}
+.p-card.st-nuevo{border-color:#8ed8ad;background:#f8fdf9}
+.p-card.st-desc{border-color:#f2b8b8;background:#fffafa;opacity:.85}
+.p-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.p-name{font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.25}
+.p-addr{font-size:12px;color:var(--mute);margin-top:3px;line-height:1.35}
+.p-meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11.5px;color:var(--ink);margin-top:5px;font-weight:600}
+.p-meta a{color:var(--ink);text-decoration:none;border-bottom:1px dashed var(--or)}
+.p-bot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.p-acts{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.ic-btn{height:30px;padding:0 9px;border-radius:9px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;font:inherit;font-size:11px;font-weight:800;text-decoration:none}
+.ic-btn svg{width:14px;height:14px}
+.ic-btn.conv{background:#e8f7ee;border-color:#8ed8ad;color:#116b36}
+.ic-btn.edit{background:var(--soft);border-color:var(--or)}
+.ic-btn.del{background:#fff8f8;border-color:#f2b8b8;color:var(--bad);padding:0 8px}
+.ic-btn.gps{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.ic-btn.gps.disabled{opacity:.4;pointer-events:none}
+
+/* Análisis y barras */
+.bar-row{margin-bottom:10px}
+.bar-row:last-child{margin-bottom:0}
+.bar-hdr{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;margin-bottom:4px}
+.bar-track{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--or2),var(--or));transition:width .35s}
+.bar-fill.ok{background:linear-gradient(90deg,#34d399,var(--ok))}
+.bar-fill.blue{background:linear-gradient(90deg,#60a5fa,var(--blue))}
+
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 10px 25px rgba(20,33,61,.28);z-index:120;transition:transform .25s ease;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+nav{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);box-shadow:0 -6px 20px rgba(20,33,61,.12);display:flex;justify-content:center;gap:8px}
+nav button{flex:1;max-width:140px;font:inherit;font-size:12px;font-weight:800;background:none;border:0;color:var(--mute);padding:7px 4px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:21px;height:21px}
+nav button[aria-selected="true"]{color:var(--ink);background:var(--soft)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="toast" id="toast">Guardado</div>
+<div class="app">
+  <header>
+    <div class="logo" id="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#14213d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    </div>
+    <div>
+      <h1>Prospección y Altas</h1>
+      <p id="hdrSub">Captura en campo · Sincronizado con Terminal</p>
+    </div>
+    <span class="sync" id="syncBadge">Local</span>
+  </header>
+
+  <!-- VISTA 1: FORMULARIO DE CAPTURA -->
+  <main id="v-form">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <p class="hi" id="formTitle">Nuevo Prospecto / Cliente</p>
+      <button type="button" class="btn g sm" id="btnCancelEdit" hidden>Cancelar edición</button>
+    </div>
+    <p class="sub">Captura automática por GPS de domicilio y alta directa al padrón de ruta</p>
+
+    <div class="card">
+      <div class="geo-box">
+        <div class="geo-top">
+          <span class="geo-st" id="geoStatus">⏳ Detectando ubicación GPS...</span>
+          <button type="button" class="btn sm" id="btnRefreshGeo">📍 Capturar GPS</button>
+        </div>
+        <div class="f-grid">
+          <div class="f-grp" style="margin:0">
+            <label>Latitud (Auto)</label>
+            <input type="text" id="fLat" placeholder="23.249400" inputmode="decimal">
+          </div>
+          <div class="f-grp" style="margin:0">
+            <label>Longitud (Auto)</label>
+            <input type="text" id="fLon" placeholder="-106.411100" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="f-grp">
+        <label>Estatus del registro</label>
+        <div class="seg-row" id="segStatus">
+          <button type="button" class="seg-btn on prosp" data-val="prospecto">🎯 Prospecto</button>
+          <button type="button" class="seg-btn nuevo" data-val="cliente_nuevo">✅ Cliente Nuevo</button>
+        </div>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-grp">
+          <label>Ruta asignada *</label>
+          <select id="fRuta"></select>
+        </div>
+        <div class="f-grp">
+          <label>Localidad / Municipio *</label>
+          <input type="text" id="fLocalidad" value="Mazatlán" placeholder="Ej. Mazatlán / Rosario">
+        </div>
+      </div>
+
+      <div class="f-grp">
+        <label>Negocio a prospectar / Nombre comercial *</label>
+        <input type="text" id="fNegocio" placeholder="Ej. Abarrotes El Sol, Taquería..." required>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-grp">
+          <label>Calle (Auto GPS) *</label>
+          <input type="text" id="fCalle" placeholder="Ej. Av. Rafael Buelna">
+        </div>
+        <div class="f-grp">
+          <label>Número exacto (Auto)</label>
+          <input type="text" id="fNumero" placeholder="Ej. 402 o S/N">
+        </div>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-grp">
+          <label>Colonia (Auto GPS)</label>
+          <input type="text" id="fColonia" placeholder="Ej. Colonia Esperanza">
+        </div>
+        <div class="f-grp">
+          <label>Código Postal (Auto)</label>
+          <input type="text" id="fCp" placeholder="Ej. 82180" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-grp">
+          <label>Nombre de contacto</label>
+          <input type="text" id="fContacto" placeholder="Dueño o encargado">
+        </div>
+        <div class="f-grp">
+          <label>Teléfono / WhatsApp</label>
+          <input type="tel" id="fTelefono" placeholder="Ej. 6691558151" inputmode="tel">
+        </div>
+      </div>
+
+      <div class="f-grp">
+        <label>Días de visita sugeridos</label>
+        <div class="day-checks" id="fDays">
+          <button type="button" class="dchk" data-d="Lu">Lu</button>
+          <button type="button" class="dchk" data-d="Ma">Ma</button>
+          <button type="button" class="dchk" data-d="Mi">Mi</button>
+          <button type="button" class="dchk" data-d="Ju">Ju</button>
+          <button type="button" class="dchk" data-d="Vi">Vi</button>
+          <button type="button" class="dchk" data-d="Sa">Sa</button>
+        </div>
+      </div>
+
+      <div class="f-grp">
+        <label>Notas de prospección (opcional)</label>
+        <input type="text" id="fNotas" placeholder="Ej. Pide enfriador, maneja competencia, horario...">
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button type="button" class="btn g" id="btnClearForm" style="flex:1">Limpiar</button>
+        <button type="button" class="btn" id="btnSaveRecord" style="flex:2">💾 Guardar registro</button>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span class="small" id="sheetCountsLbl" style="margin:0">Clientes Nuevos: 0 · Prospectos: 0</span>
+        <button type="button" class="btn g sm" id="btnExportSheets">📥 Descargar hojas (.xlsx)</button>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+
+<script>
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAsmfS7LGI65Pi5DF2BlPutlohqT9FP7vc",
+  authDomain: "db-ventas-73ba6.firebaseapp.com",
+  projectId: "db-ventas-73ba6",
+  storageBucket: "db-ventas-73ba6.firebasestorage.app",
+  messagingSenderId: "768024116078",
+  appId: "1:768024116078:web:0a0948c0fd0bfb09699f7f",
+  measurementId: "G-QCKWXRHJXK"
+};
+
+var APP_KEY = 'ventas-app-v2';
+var PROSP_KEY = 'prospeccion-clientes-v1';
+var TERM_KEY = 'terminal-estado-v1';
+var RUTAS_PERMITIDAS = ['1','4','5','6','7','10','11','13','14','15'];
+
+var FB = null;
+var records = [];
+var appClients = [];
+var appLogo = '';
+var editingId = null;
+var formStatus = 'prospecto';
+
+var flt = {
+  ruta: 'ALL',
+  localidad: 'ALL',
+  colonia: 'ALL',
+  periodo: 'ALL',
+  status: 'ALL',
+  search: ''
+};
+
+var map = null, markersLayer = null;
+var $ = function(id){ return document.getElementById(id); };
+var pad = function(n){ return ('0' + n).slice(-2); };
+var kd = function(t){ return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function normStr(v){ return v == null ? '' : String(v).trim(); }
+function normNum(v){ if(v == null || v === '') return null; var n = Number(String(v).replace(',', '.').trim()); return isFinite(n) ? n : null; }
+
+function todayDayCode(){
+  var mapD = {1:'Lu', 2:'Ma', 3:'Mi', 4:'Ju', 5:'Vi', 6:'Sa'};
+  return mapD[new Date().getDay()] || 'Lu';
+}
+
+function showToast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.classList.remove('show'); }, 2300);
+}
+
+function setSyncStatus(txt, cls){
+  var b = $('syncBadge');
+  b.textContent = txt;
+  b.className = 'sync' + (cls ? ' ' + cls : '');
+}
+
+function loadLocal(){
+  try{
+    var p = JSON.parse(localStorage.getItem(PROSP_KEY));
+    if(Array.isArray(p)) records = p;
+  }catch(e){}
+  try{
+    var a = JSON.parse(localStorage.getItem(APP_KEY));
+    if(a && typeof a === 'object'){
+      if(Array.isArray(a.clients)) appClients = a.clients;
+      if(a.logo) appLogo = a.logo;
+    }
+  }catch(e){}
+  try{
+    var tr = JSON.parse(localStorage.getItem(TERM_KEY));
+    if(tr && tr.ruta && RUTAS_PERMITIDAS.indexOf(String(tr.ruta)) >= 0){
+      $('fRuta').value = String(tr.ruta);
+    }
+  }catch(e){}
+}
+
+function saveLocal(){
+  try{ localStorage.setItem(PROSP_KEY, JSON.stringify(records)); }catch(e){}
+}
+
+/* ==================== GEOLOCALIZACIÓN AUTOMÁTICA ==================== */
+async function reverseGeocode(lat, lon){
+  var st = $('geoStatus');
+  st.textContent = '⏳ Extrayendo calle, número, colonia y CP...';
+  try{
+    var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon) + '&addressdetails=1';
+    var res = await fetch(url, {headers: {'Accept-Language': 'es'}});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var a = (data && data.address) ? data.address : {};
+
+    var calle = a.road || a.pedestrian || a.footway || a.street || a.avenue || '';
+    var numero = a.house_number || '';
+    var colonia = a.neighbourhood || a.suburb || a.residential || a.quarter || a.city_district || '';
+    var cp = a.postcode || '';
+    var loc = a.city || a.town || a.village || a.municipality || '';
+
+    if(calle){ $('fCalle').value = calle; $('fCalle').classList.add('auto-filled'); }
+    if(numero){ $('fNumero').value = numero; $('fNumero').classList.add('auto-filled'); }
+    if(colonia){ $('fColonia').value = colonia; $('fColonia').classList.add('auto-filled'); }
+    if(cp){ $('fCp').value = cp; $('fCp').classList.add('auto-filled'); }
+    if(loc && !$('fLocalidad').value){ $('fLocalidad').value = loc; }
+
+    st.textContent = '✅ Ubicación y domicilio capturados automáticamente';
+  }catch(err){
+    st.textContent = '✅ Coordenadas capturadas (verifica dirección manualmente)';
+  }
+}
+
+function captureGPS(){
+  var st = $('geoStatus');
+  if(!navigator.geolocation){
+    st.textContent = '⚠️ Geolocalización no soportada en este dispositivo';
+    return;
+  }
+  st.textContent = '⏳ Obteniendo coordenadas GPS...';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = Number(pos.coords.latitude.toFixed(6));
+    var lon = Number(pos.coords.longitude.toFixed(6));
+    $('fLat').value = lat;
+    $('fLon').value = lon;
+    $('fLat').classList.add('auto-filled');
+    $('fLon').classList.add('auto-filled');
+    reverseGeocode(lat, lon);
+  }, function(){
+    st.textContent = '⚠️ Sin señal GPS o permiso denegado';
+  }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
+}
+
+/* ==================== FORMULARIO ==================== */
+function initRouteSelect(){
+  var opts = RUTAS_PERMITIDAS.map(function(r){
+    return '<option value="' + r + '">Ruta ' + r + '</option>';
+  }).join('');
+  $('fRuta').innerHTML = opts;
+  try{
+    var tr = JSON.parse(localStorage.getItem(TERM_KEY));
+    if(tr && tr.ruta && RUTAS_PERMITIDAS.indexOf(String(tr.ruta)) >= 0){
+      $('fRuta').value = String(tr.ruta);
+    }
+  }catch(e){}
+}
+
+function setFormStatus(val){
+  formStatus = val;
+  $('segStatus').querySelectorAll('.seg-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.val === val);
+  });
+}
+
+function setFormDays(days){
+  var arr = Array.isArray(days) ? days : [];
+  $('fDays').querySelectorAll('.dchk').forEach(function(b){
+    b.classList.toggle('on', arr.indexOf(b.dataset.d) >= 0);
+  });
+}
+
+function getFormDays(){
+  var arr = [];
+  $('fDays').querySelectorAll('.dchk.on').forEach(function(b){ arr.push(b.dataset.d); });
+  return arr;
+}
+
+function resetForm(autoGeo){
+  editingId = null;
+  $('formTitle').textContent = 'Nuevo Prospecto / Cliente';
+  $('btnCancelEdit').hidden = true;
+  $('btnSaveRecord').textContent = '💾 Guardar registro';
+  setFormStatus('prospecto');
+  $('fNegocio').value = '';
+  $('fCalle').value = '';
+  $('fNumero').value = '';
+  $('fColonia').value = '';
+  $('fCp').value = '';
+  $('fLocalidad').value = 'Mazatlán';
+  $('fContacto').value = '';
+  $('fTelefono').value = '';
+  $('fNotas').value = '';
+  ['fLat','fLon','fCalle','fNumero','fColonia','fCp'].forEach(function(id){
+    $(id).classList.remove('auto-filled');
+  });
+  setFormDays([todayDayCode()]);
+  if(autoGeo) captureGPS();
+}
+
+function loadRecordIntoForm(rec){
+  editingId = rec.id;
+  $('formTitle').textContent = 'Editar Registro';
+  $('btnCancelEdit').hidden = false;
+  $('btnSaveRecord').textContent = '💾 Actualizar registro';
+  setFormStatus(rec.estatus === 'cliente_nuevo' ? 'cliente_nuevo' : 'prospecto');
+  $('fRuta').value = rec.ruta || '1';
+  $('fNegocio').value = rec.negocio || '';
+  $('fCalle').value = rec.calle || '';
+  $('fNumero').value = rec.numero || '';
+  $('fColonia').value = rec.colonia || '';
+  $('fCp').value = rec.cp || '';
+  $('fLocalidad').value = rec.localidad || 'Mazatlán';
+  $('fContacto').value = rec.contacto || '';
+  $('fTelefono').value = rec.telefono || '';
+  $('fLat').value = rec.lat != null ? rec.lat : '';
+  $('fLon').value = rec.lon != null ? rec.lon : '';
+  $('fNotas').value = rec.notas || '';
+  setFormDays(rec.dias || []);
+  $('geoStatus').textContent = (rec.lat != null && rec.lon != null) ? '📍 Coordenadas guardadas' : '📍 Sin coordenadas';
+  switchTab('form');
+}
+
+/* ==================== HOJAS PARALELAS Y SINCRONIZACIÓN TERMINAL ==================== */
+var SHEET_NUEVOS_KEY = 'hoja-clientes-nuevos-v1';
+var SHEET_PROSP_KEY = 'hoja-prospectos-v1';
+var clientesNuevosSheet = [];
+var prospectosSheet = [];
+
+function loadParallelSheetsLocal(){
+  try{
+    var cn = JSON.parse(localStorage.getItem(SHEET_NUEVOS_KEY));
+    if(Array.isArray(cn)) clientesNuevosSheet = cn;
+  }catch(e){}
+  try{
+    var pr = JSON.parse(localStorage.getItem(SHEET_PROSP_KEY));
+    if(Array.isArray(pr)) prospectosSheet = pr;
+  }catch(e){}
+  updateSheetCountsLabel();
+}
+
+function saveParallelSheetsLocal(){
+  try{
+    localStorage.setItem(SHEET_NUEVOS_KEY, JSON.stringify(clientesNuevosSheet));
+    localStorage.setItem(SHEET_PROSP_KEY, JSON.stringify(prospectosSheet));
+  }catch(e){}
+  updateSheetCountsLabel();
+}
+
+function updateSheetCountsLabel(){
+  var el = $('sheetCountsLbl');
+  if(el){
+    el.textContent = 'Clientes Nuevos: ' + clientesNuevosSheet.length + ' · Prospectos: ' + prospectosSheet.length;
+  }
+}
+
+function formatSheetRow(rec, hojaNombre){
+  return {
+    id: rec.id,
+    hoja: hojaNombre,
+    ruta: String(rec.ruta || '1'),
+    negocio: rec.negocio || '',
+    calle: rec.calle || '',
+    numero: rec.numero || '',
+    colonia: rec.colonia || '',
+    cp: rec.cp || '',
+    localidad: rec.localidad || 'Mazatlán',
+    contacto: rec.contacto || '',
+    telefono: rec.telefono || '',
+    lat: rec.lat != null ? rec.lat : null,
+    lon: rec.lon != null ? rec.lon : null,
+    dias: Array.isArray(rec.dias) ? rec.dias : [],
+    notas: rec.notas || '',
+    fechaAlta: rec.fechaAlta || kd(new Date()),
+    updatedAt: rec.updatedAt || Date.now()
+  };
+}
+
+async function addToTerminalRouteBase(rec){
+  var rutaStr = String(rec.ruta || '1');
+  var newClient = {
+    ruta: rutaStr,
+    nombre: rec.negocio,
+    calle: rec.calle || '',
+    num: rec.numero || '',
+    colonia: rec.colonia || '',
+    cp: rec.cp || '',
+    localidad: rec.localidad || 'Mazatlán',
+    contacto: rec.contacto || '',
+    telefono: rec.telefono || '',
+    lat: rec.lat,
+    lon: rec.lon,
+    dias: Array.isArray(rec.dias) ? rec.dias : [],
+    clienteNuevo: true,
+    fechaAlta: rec.fechaAlta || kd(new Date())
+  };
+
+  // 1. Actualizar localStorage de la Terminal (ventas-app-v2)
+  var rawApp = {name:'Terminal de Ruta', user:'equipo', logo:'', metas:{}, sales:{}, sku:{}, off:[], clients:[]};
+  try{
+    var parsed = JSON.parse(localStorage.getItem(APP_KEY));
+    if(parsed && typeof parsed === 'object') rawApp = Object.assign(rawApp, parsed);
+  }catch(e){}
+  if(!Array.isArray(rawApp.clients)) rawApp.clients = [];
+
+  var idxLocal = rawApp.clients.findIndex(function(c){
+    return String(c.ruta) === rutaStr && normStr(c.nombre).toUpperCase() === normStr(newClient.nombre).toUpperCase();
+  });
+  if(idxLocal >= 0){
+    rawApp.clients[idxLocal] = Object.assign({}, rawApp.clients[idxLocal], newClient);
+  }else{
+    rawApp.clients.unshift(newClient);
+  }
+  appClients = rawApp.clients;
+  try{ localStorage.setItem(APP_KEY, JSON.stringify(rawApp)); }catch(e){}
+
+  // 2. Actualizar base de clientes en Firestore (app/clients) para la ruta correspondiente
+  if(FB){
+    var snap = await FB.doc('app/clients').get();
+    var cloudClients = (snap.exists && Array.isArray(snap.data().clients)) ? snap.data().clients.slice() : rawApp.clients.slice();
+    var idxCloud = cloudClients.findIndex(function(c){
+      return String(c.ruta) === rutaStr && normStr(c.nombre).toUpperCase() === normStr(newClient.nombre).toUpperCase();
+    });
+    if(idxCloud >= 0){
+      cloudClients[idxCloud] = Object.assign({}, cloudClients[idxCloud], newClient);
+    }else{
+      cloudClients.unshift(newClient);
+    }
+    await FB.doc('app/clients').set({
+      clients: cloudClients,
+      updatedAt: Date.now()
+    }, {merge: true});
+  }
+}
+
+async function saveParallelSheetsAndTerminal(rec){
+  var isClientNew = rec.estatus === 'cliente_nuevo';
+
+  if(isClientNew){
+    // Guardar en hoja paralela "Clientes Nuevos" y quitar de "Prospectos" si estaba ahí
+    var rowNew = formatSheetRow(rec, 'Clientes Nuevos');
+    clientesNuevosSheet = clientesNuevosSheet.filter(function(x){ return x.id !== rec.id; });
+    clientesNuevosSheet.unshift(rowNew);
+    prospectosSheet = prospectosSheet.filter(function(x){ return x.id !== rec.id; });
+  }else{
+    // Guardar en hoja paralela "Prospectos"
+    var rowProsp = formatSheetRow(rec, 'Prospectos');
+    prospectosSheet = prospectosSheet.filter(function(x){ return x.id !== rec.id; });
+    prospectosSheet.unshift(rowProsp);
+  }
+
+  saveParallelSheetsLocal();
+
+  // Guardar también en colección general de prospección
+  var idx = records.findIndex(function(x){ return x.id === rec.id; });
+  if(idx >= 0) records[idx] = rec;
+  else records.unshift(rec);
+  saveLocal();
+
+  if(!FB) return;
+
+  try{
+    await FB.doc('prospeccion/' + rec.id).set(rec, {merge: true});
+
+    if(isClientNew){
+      await Promise.all([
+        FB.doc('clientes_nuevos/' + rec.id).set(rowNew, {merge: true}),
+        FB.doc('hojas_prospeccion/clientes_nuevos').set({
+          hoja: 'Clientes Nuevos',
+          rows: clientesNuevosSheet,
+          updatedAt: Date.now()
+        }, {merge: true}),
+        FB.doc('hojas_prospeccion/prospectos').set({
+          hoja: 'Prospectos',
+          rows: prospectosSheet,
+          updatedAt: Date.now()
+        }, {merge: true}),
+        addToTerminalRouteBase(rec)
+      ]);
+    }else{
+      await Promise.all([
+        FB.doc('prospectos/' + rec.id).set(rowProsp, {merge: true}),
+        FB.doc('hojas_prospeccion/prospectos').set({
+          hoja: 'Prospectos',
+          rows: prospectosSheet,
+          updatedAt: Date.now()
+        }, {merge: true})
+      ]);
+    }
+    setSyncStatus('En línea', 'ok');
+  }catch(e){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
+}
+
+function downloadParallelSheetsExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('Librería Excel no disponible.');
+    return;
+  }
+  var mapRow = function(r, idx){
+    return {
+      'No.': idx + 1,
+      'Fecha Alta': r.fechaAlta || '',
+      'Ruta': 'Ruta ' + (r.ruta || '1'),
+      'Negocio': r.negocio || '',
+      'Calle': r.calle || '',
+      'Numero': r.numero || '',
+      'Colonia': r.colonia || '',
+      'Codigo Postal': r.cp || '',
+      'Localidad': r.localidad || '',
+      'Contacto': r.contacto || '',
+      'Telefono': r.telefono || '',
+      'Dias Visita': Array.isArray(r.dias) ? r.dias.join(', ') : '',
+      'Latitud': r.lat != null ? r.lat : '',
+      'Longitud': r.lon != null ? r.lon : '',
+      'Notas': r.notas || ''
+    };
+  };
+  var wb = XLSX.utils.book_new();
+  var wsNuevos = XLSX.utils.json_to_sheet(
+    clientesNuevosSheet.length ? clientesNuevosSheet.map(mapRow) : [{'Info': 'Sin registros en Clientes Nuevos'}]
+  );
+  var wsProspectos = XLSX.utils.json_to_sheet(
+    prospectosSheet.length ? prospectosSheet.map(mapRow) : [{'Info': 'Sin registros en Prospectos'}]
+  );
+  XLSX.utils.book_append_sheet(wb, wsNuevos, 'Clientes Nuevos');
+  XLSX.utils.book_append_sheet(wb, wsProspectos, 'Prospectos');
+  XLSX.writeFile(wb, 'Clientes_Nuevos_y_Prospectos_' + kd(new Date()) + '.xlsx');
+  showToast('Excel descargado');
+}
+
+/* ==================== EVENTOS ==================== */
+$('btnRefreshGeo').onclick = captureGPS;
+$('btnCancelEdit').onclick = function(){ resetForm(true); };
+$('btnClearForm').onclick = function(){ resetForm(true); };
+$('btnExportSheets').onclick = downloadParallelSheetsExcel;
+
+$('segStatus').onclick = function(e){
+  var b = e.target.closest('.seg-btn');
+  if(b) setFormStatus(b.dataset.val);
+};
+
+$('fDays').onclick = function(e){
+  var b = e.target.closest('.dchk');
+  if(b) b.classList.toggle('on');
+};
+
+$('btnSaveRecord').onclick = async function(){
+  var negocio = normStr($('fNegocio').value);
+  if(!negocio){
+    alert('Por favor ingresa el nombre del negocio a prospectar.');
+    $('fNegocio').focus();
+    return;
+  }
+  var ruta = normStr($('fRuta').value) || '1';
+  var rec = {
+    id: editingId || ('PR_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+    estatus: formStatus,
+    ruta: ruta,
+    negocio: negocio,
+    calle: normStr($('fCalle').value),
+    numero: normStr($('fNumero').value),
+    colonia: normStr($('fColonia').value),
+    cp: normStr($('fCp').value),
+    localidad: normStr($('fLocalidad').value) || 'Mazatlán',
+    contacto: normStr($('fContacto').value),
+    telefono: normStr($('fTelefono').value),
+    lat: normNum($('fLat').value),
+    lon: normNum($('fLon').value),
+    dias: getFormDays(),
+    notas: normStr($('fNotas').value),
+    fechaAlta: editingId
+      ? ((records.find(function(x){ return x.id === editingId; }) || {}).fechaAlta || kd(new Date()))
+      : kd(new Date()),
+    updatedAt: Date.now()
+  };
+
+  await saveParallelSheetsAndTerminal(rec);
+  if(editingId){
+    showToast('Registro actualizado');
+  }else{
+    showToast(rec.estatus === 'cliente_nuevo'
+      ? '✅ Agregado a Ruta ' + ruta + ' y hoja Clientes Nuevos'
+      : '🎯 Guardado en hoja Prospectos');
+  }
+  resetForm(true);
+};
+
+/* ==================== BOOT ==================== */
+async function boot(){
+  initRouteSelect();
+  loadLocal();
+  loadParallelSheetsLocal();
+  if(appLogo){
+    $('logo').innerHTML = '<img alt="Logo" src="' + appLogo + '">';
+  }
+  resetForm(true);
+
+  if(!window.firebase || !FIREBASE_CONFIG.projectId){
+    setSyncStatus('Solo Local', '');
+    return;
+  }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    FB = firebase.firestore();
+    FB.collection('prospeccion').orderBy('updatedAt', 'desc').onSnapshot(function(snap){
+      var list = [];
+      snap.forEach(function(doc){
+        var d = doc.data();
+        if(d && d.negocio) list.push(Object.assign({id: doc.id}, d));
+      });
+      if(list.length || !records.length){
+        records = list;
+        saveLocal();
+      }
+      setSyncStatus('En línea', 'ok');
+    }, function(){
+      setSyncStatus('Offline (Local)', 'bad');
+    });
+  }catch(e){
+    setSyncStatus('Offline (Local)', 'bad');
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
